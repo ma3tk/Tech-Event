@@ -145,6 +145,7 @@ model GroupMember {
   @@index([userId])
 }
 
+/// TODO: UI実装。グループ BAN 仕様は research/luma/ に存在するが Server Action / UI 未実装。
 model GroupBlacklist {
   id              BigInt   @id @default(autoincrement())
   groupId         BigInt
@@ -218,8 +219,6 @@ model Event {
   bookmarks     Bookmark[]
   notifications Notification[]
   messages      Message[]
-  voucherCodes  VoucherCode[]
-  stat          EventStat?
   calendars     CalendarEvent[]
 
   @@map("events")
@@ -294,37 +293,16 @@ model Payment {
   participantId   BigInt   @unique
   amount          Int
   currency        String   @default("JPY")
-  provider        String   // paypal|voucher
+  provider        String   // paypal
   providerTxnId   String?
-  voucherCodeId   BigInt?
   status          String @db.VarChar(32) // pending|succeeded|refunded|failed
   paidAt          DateTime?
   refundedAt      DateTime?
   receiptIssuedAt DateTime?
 
   participant     Participant   @relation(fields: [participantId], references: [id])
-  voucherCode     VoucherCode?  @relation(fields: [voucherCodeId], references: [id])
 
   @@map("payments")
-}
-
-/// DEPRECATED: 削除候補。voucher (クーポン) 機能は spec 確定まで未実装。
-/// Payment.voucherCodeId からの relation は SetNull で残しているが、src/ からは
-/// 一切参照されない (検索: `grep -rn "voucherCode" src` で 0 件)。
-/// 機能実装時はこのコメントを外し、関連 Server Action を追加する。
-model VoucherCode {
-  id              BigInt   @id @default(autoincrement())
-  eventId         BigInt
-  code            String   @unique
-  discountAmount  Int
-  maxUses         Int?
-  usedCount       Int      @default(0)
-  expiresAt       DateTime?
-
-  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  payments Payment[]
-
-  @@map("voucher_codes")
 }
 
 // ============ Content ============
@@ -469,23 +447,6 @@ model Bookmark {
   @@map("bookmarks")
   // /bookmarks 一覧の orderBy createdAt desc を覆う複合 index
   @@index([userId, createdAt])
-}
-
-/// DEPRECATED: 削除候補。EventStat は seed でのみ書き込まれ、UI 側 (insights / admin) は
-/// `prisma.participant.count` 等で動的計算するため src/ から read 参照は無い。
-/// 集計ジョブを実装するまで保留 (機能再開時はこのコメントを外す)。
-model EventStat {
-  eventId         BigInt   @id
-  pageViews       Int      @default(0)
-  uniqueViewers   Int      @default(0)
-  applyCount      Int      @default(0)
-  cancelCount     Int      @default(0)
-  attendanceRate  Float?
-  updatedAt       DateTime @updatedAt
-
-  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  @@map("event_stats")
 }
 
 model Message {

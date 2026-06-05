@@ -1,0 +1,62 @@
+# Node / pnpm
+node_modules
+npm-debug.log*
+pnpm-debug.log*
+.pnpm-store
+
+# Next.js / build outputs
+.next
+out
+dist
+storybook-static
+
+# Tests / coverage
+coverage
+playwright-report
+test-results
+e2e/__screenshots__
+
+# Local data / dev DB
+*.sqlite
+*.sqlite-journal
+*.db
+dev.db
+dev.db-journal
+
+# Env / secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+.github
+
+# Docs / research (build に不要なものは除外、必要なら個別 unignore)
+research
+screenshots
+debug-storybook.log
+
+# Storybook
+.storybook/cache
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Logs
+logs
+*.log
+
+# CI / lock
+.eslintcache

@@ -24,6 +24,15 @@ export default function GlobalError({
       // eslint-disable-next-line no-console
       console.error("[global error]", error);
     }
+    // Sentry に送信 (dynamic import で SDK 未設定時の bundle 肥大化を避ける)
+    void (async () => {
+      try {
+        const Sentry = await import("@sentry/nextjs");
+        Sentry.captureException(error);
+      } catch {
+        // SDK 未設定時は無視
+      }
+    })();
   }, [error]);
 
   return (

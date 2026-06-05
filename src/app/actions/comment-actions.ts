@@ -22,20 +22,14 @@ import { isNotificationKindEnabled } from "@/lib/notification";
 import { notifyCommentPosted } from "@/lib/slack";
 import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
+import { recordAudit } from "@/lib/audit";
+import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
+import { getStringRaw as formValue } from "@/lib/form-data";
+import { BigIntIdSchema } from "@/lib/schemas";
 
 /* ============================================================
  * バリデーション
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-const BigIntIdSchema = z
-  .string()
-  .regex(/^\d+$/, "id must be digits only")
-  .transform((s) => BigInt(s));
 
 const PostCommentSchema = z.object({
   eventId: BigIntIdSchema,
@@ -98,6 +92,16 @@ export async function postComment(formData: FormData): Promise<void> {
   const user = await getCurrentUser();
   if (!user) {
     loginRedirect(eventId.toString());
+  }
+
+  // ---- レート制限 (user 単位 / 10 回/分) ----
+  try {
+    assertRateLimit(`user:${user.id}:postComment`, RATE_LIMITS.comment);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      throw new ActionError("rate_limited", e.message);
+    }
+    throw e;
   }
 
   await prisma.$transaction(async (tx) => {
@@ -211,6 +215,15 @@ export async function postComment(formData: FormData): Promise<void> {
     /* 通知失敗は無視 (主処理は成功扱い) */
   }
 
+  // 監査ログ (fire-and-forget)
+  void recordAudit({
+    actorUserId: user.id,
+    action: "comment.post",
+    targetType: "Event",
+    targetId: eventId,
+    metadata: { length: body.length },
+  });
+
   revalidateEvent(eventId);
 }
 
@@ -249,6 +262,15 @@ export async function deleteComment(formData: FormData): Promise<void> {
   await prisma.comment.update({
     where: { id: commentId },
     data: { deletedAt: new Date() },
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "comment.delete",
+    targetType: "Comment",
+    targetId: commentId,
+    metadata: { eventId: eventId.toString() },
   });
 
   revalidateEvent(eventId);

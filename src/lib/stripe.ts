@@ -12,6 +12,8 @@
  */
 import Stripe from "stripe";
 
+import { env } from "@/env";
+
 let _stripe: Stripe | null = null;
 
 /**
@@ -20,7 +22,7 @@ let _stripe: Stripe | null = null;
  */
 export function getStripe(): Stripe | null {
   if (_stripe) return _stripe;
-  const key = process.env.STRIPE_SECRET_KEY;
+  const key = env.STRIPE_SECRET_KEY;
   if (!key) return null;
   _stripe = new Stripe(key, {
     // SDK のバージョン互換のため apiVersion を固定しない
@@ -36,15 +38,15 @@ export function getStripe(): Stripe | null {
 
 /** Stripe が利用可能か (= STRIPE_SECRET_KEY が設定済みか) */
 export function isStripeEnabled(): boolean {
-  return !!process.env.STRIPE_SECRET_KEY;
+  return !!env.STRIPE_SECRET_KEY;
 }
 
 /** Stripe Webhook の署名検証に使う secret。未設定なら null。 */
 export function getStripeWebhookSecret(): string | null {
-  return process.env.STRIPE_WEBHOOK_SECRET || null;
+  return env.STRIPE_WEBHOOK_SECRET || null;
 }
 
 /** クライアントサイドで使う公開可能キー (`@stripe/stripe-js` 用) */
 export function getStripePublishableKey(): string | null {
-  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
+  return env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
 }

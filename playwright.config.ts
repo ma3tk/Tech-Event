@@ -22,6 +22,12 @@ export default defineConfig({
     screenshot: "only-on-failure",
     locale: "ja-JP",
     timezoneId: "Asia/Tokyo",
+    // `useNotificationStream` (SSE) は EventSource で長時間接続を貼るため、
+    // Playwright の `networkidle` 待ちと衝突する。E2E では cookie で off にしておき、
+    // SSE 専用テスト (`e2e/sse-notifications.spec.ts`) だけ context cookie で force on する。
+    extraHTTPHeaders: {
+      "x-playwright-test": "1",
+    },
   },
   projects: [
     {

@@ -22,20 +22,12 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { nextId } from "@/lib/id-gen";
+import { recordAudit } from "@/lib/audit";
+import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
 
 /* ============================================================
  * バリデーション
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-
-function formValueRaw(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
 
 const ApproveSchema = z.object({
   eventId: z.string().regex(/^\d+$/),
@@ -195,6 +187,15 @@ export async function approveParticipant(formData: FormData): Promise<void> {
     }
   });
 
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "participant.approve",
+    targetType: "Participant",
+    targetId: participantId,
+    metadata: { eventId: eventId.toString() },
+  });
+
   revalidatePath(`/event/${eventId.toString()}`);
   revalidatePath(`/event/${eventId.toString()}/admin/guests`);
   revalidatePath("/dashboard");
@@ -281,6 +282,15 @@ export async function rejectParticipant(formData: FormData): Promise<void> {
         },
       });
     }
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "participant.reject",
+    targetType: "Participant",
+    targetId: participantId,
+    metadata: { eventId: eventId.toString() },
   });
 
   revalidatePath(`/event/${eventId.toString()}`);

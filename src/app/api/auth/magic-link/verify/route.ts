@@ -24,6 +24,7 @@ import { prisma } from "@/lib/prisma";
 import { setSessionCookie } from "@/lib/auth";
 import { recordAudit } from "@/lib/audit";
 import { nextId as nextIdGen } from "@/lib/id-gen";
+import { getRequestIp } from "@/lib/rate-limit";
 
 const TokenSchema = z.string().uuid();
 
@@ -124,9 +125,11 @@ async function consumeTokenAndLogin(
   // 監査ログ
   void recordAudit({
     actorUserId: user.id,
-    action: "login",
+    action: "magic-link-verify",
     targetType: "User",
     targetId: user.id,
+    ipAddress: getRequestIp(request),
+    userAgent: request.headers.get("user-agent") ?? null,
     metadata: { method: "magic_link" },
   });
 

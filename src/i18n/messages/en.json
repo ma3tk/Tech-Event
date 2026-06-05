@@ -7,11 +7,26 @@
     "search": "Search",
     "back": "Back",
     "next": "Next",
+    "prev": "Previous",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
     "delete": "Delete",
-    "edit": "Edit"
+    "edit": "Edit",
+    "submit": "Submit",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "more": "Show more",
+    "less": "Show less",
+    "showAll": "Show all",
+    "comingSoon": "Coming soon",
+    "share": "Share",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow"
   },
   "header": {
     "explore": "Explore",
@@ -51,7 +66,13 @@
     "join": "Join",
     "cancel": "Cancel",
     "bookmark": "Bookmark",
-    "share": "Share"
+    "share": "Share",
+    "edit": "Edit",
+    "manage": "Manage",
+    "viewAll": "View all",
+    "viewDetails": "View details",
+    "follow": "Follow",
+    "unfollow": "Unfollow"
   },
   "status": {
     "draft": "Draft",
@@ -67,9 +88,26 @@
   },
   "errors": {
     "notFound": "Page not found",
+    "notFoundDescription": "The page you are looking for may have been removed or the URL may be incorrect.",
     "forbidden": "Forbidden",
     "unauthorized": "Please log in",
-    "internal": "Internal server error"
+    "internal": "Internal server error",
+    "internalDescription": "Something went wrong on our side. Please try again in a moment.",
+    "retry": "Try again",
+    "goHome": "Back to home",
+    "goBack": "Back",
+    "validation": {
+      "required": "{field} is required",
+      "email": "Please enter a valid email address",
+      "minLength": "{field} must be at least {min} characters",
+      "maxLength": "{field} must be {max} characters or less",
+      "url": "Please enter a valid URL",
+      "number": "Please enter a number",
+      "passwordMismatch": "Passwords do not match",
+      "slugFormat": "Use lowercase letters, numbers, and hyphens only",
+      "slugReserved": "This slug is reserved and cannot be used",
+      "hexColor": "Please use #RRGGBB hex color format"
+    }
   },
   "top": {
     "heroTitle": "Tech events & meetups for engineers",
@@ -83,21 +121,48 @@
   "event": {
     "details": "Event Details",
     "organizer": "Organizer",
+    "hosts": "Hosts",
+    "groupAdmins": "Group admins",
     "venue": "Venue",
     "online": "Online",
     "offline": "In-person",
     "hybrid": "Hybrid",
     "capacity": "Capacity",
+    "capacityUnlimited": "Unlimited",
+    "remainingSeats": "{count} seats left",
     "applied": "Applied",
     "schedule": "Schedule",
     "tags": "Tags",
     "description": "Description",
     "presentations": "Presentations",
+    "presentationsEmpty": "No presentation materials yet.",
     "comments": "Comments",
+    "commentsEmpty": "No comments yet",
+    "commentPostPlaceholder": "Write a comment",
+    "commentSubmit": "Post",
+    "commentDelete": "Delete",
     "overview": "Overview",
     "participants": "Participants",
+    "participantsAccepted": "Accepted",
+    "participantsWaiting": "Waitlist",
+    "participantsCancelled": "Cancelled",
+    "participantsEmpty": "No participants yet",
     "rolesHeading": "Tickets",
+    "rolesEmpty": "No tickets configured yet",
     "applyHeading": "Register",
+    "addToCalendar": "Add to calendar",
+    "addToGoogleCalendar": "Google Calendar",
+    "addToICal": "iCal (.ics)",
+    "shareTitle": "Share this event",
+    "shareCopyLink": "Copy link",
+    "shareQr": "QR code",
+    "shareEmbed": "Embed",
+    "bookmark": "Bookmark",
+    "bookmarked": "Bookmarked",
+    "lotteryAnnounceAt": "Lottery result: {time}",
+    "acceptsFrom": "Opens: {time}",
+    "acceptsUntil": "Closes: {time}",
+    "soldOut": "Sold out",
     "cta": {
       "open": "Register",
       "full": "Join waitlist",
@@ -130,14 +195,24 @@
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
-    "agreeTerms": "I agree to the Terms of Service"
+    "agreeTerms": "I agree to the Terms of Service",
+    "magicLinkSent": "Login link sent to your email",
+    "oauthTwitter": "Continue with X",
+    "oauthGithub": "Continue with GitHub",
+    "oauthFacebook": "Continue with Facebook"
   },
   "calendar": {
     "title": "Calendars",
     "subtitle": "Subscribe to themed tech calendars",
     "subscribe": "Subscribe",
+    "unsubscribe": "Unsubscribe",
     "subscribers": "Subscribers",
-    "events": "Events"
+    "events": "Events",
+    "createCalendar": "Create calendar",
+    "myCalendars": "My calendars",
+    "emptyEvents": "No events in this calendar yet",
+    "addEvent": "Add event",
+    "manageEvents": "Manage events"
   },
   "discover": {
     "title": "Discover",
@@ -153,7 +228,32 @@
     "upcoming": "Upcoming",
     "bookmarks": "Bookmarks",
     "owned": "Hosting",
-    "history": "History"
+    "history": "History",
+    "drafts": "Drafts",
+    "hosting": "Hosting",
+    "stats": "Stats",
+    "noUpcoming": "No upcoming events",
+    "noBookmarks": "No bookmarks yet",
+    "noOwned": "You haven't hosted any events",
+    "noHistory": "No event history"
+  },
+  "hostDashboard": {
+    "title": "Host dashboard",
+    "tabs": {
+      "overview": "Overview",
+      "participants": "Participants",
+      "registration": "Tickets",
+      "comments": "Comments",
+      "messages": "Messages",
+      "insights": "Insights"
+    },
+    "broadcast": "Send broadcast",
+    "exportCsv": "Export CSV",
+    "exportXlsx": "Export Excel",
+    "exportJson": "Export JSON",
+    "noParticipants": "No participants yet",
+    "checkIn": "Check in",
+    "promoteFromWaiting": "Promote from waitlist"
   },
   "notifications": {
     "title": "Notifications",
@@ -161,20 +261,103 @@
     "unread": "Unread",
     "read": "Read",
     "markAllRead": "Mark all read",
-    "empty": "No notifications"
+    "empty": "No notifications",
+    "kind": {
+      "event_published": "Event published",
+      "event_updated": "Event updated",
+      "event_cancelled": "Event cancelled",
+      "join_accepted": "Registration confirmed",
+      "join_waiting": "Added to waitlist",
+      "promoted_from_waiting": "Promoted from waitlist",
+      "lottery_result_accepted": "Lottery accepted",
+      "lottery_result_lost": "Lottery declined",
+      "approval_pending": "New approval request",
+      "approval_approved": "Registration approved",
+      "approval_rejected": "Registration rejected",
+      "reminder_24h": "Reminder 24h before event",
+      "reminder_1h": "Reminder 1h before event",
+      "comment_posted": "New comment posted",
+      "comment_reply": "Reply to your comment",
+      "host_message": "Message from host",
+      "broadcast": "Broadcast"
+    }
   },
   "group": {
     "members": "Members",
     "events": "Events",
-    "about": "About"
+    "about": "About",
+    "admins": "Admins",
+    "createEvent": "Create event",
+    "joinGroup": "Join group",
+    "leaveGroup": "Leave group",
+    "emptyEvents": "No events in this group yet",
+    "tabs": {
+      "events": "Events",
+      "members": "Members",
+      "about": "About"
+    },
+    "memberCount": "{count} members",
+    "eventCount": "{count} events"
   },
   "user": {
     "profile": "Profile",
     "events": "Events",
-    "groups": "Groups"
+    "groups": "Groups",
+    "bio": "Bio",
+    "affiliation": "Affiliation",
+    "location": "Location",
+    "website": "Website",
+    "tabs": {
+      "events": "Events",
+      "hosted": "Hosted",
+      "groups": "Groups",
+      "presentations": "Presentations"
+    },
+    "noEvents": "No attended events yet",
+    "noHosted": "No hosted events yet",
+    "noGroups": "Not a member of any group",
+    "noPresentations": "No presentations yet"
   },
   "bookmarks": {
     "title": "Bookmarks",
     "empty": "No bookmarks yet"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "account": "Account",
+    "notifications": "Notifications",
+    "saved": "Settings saved",
+    "emailNotifications": "Email notifications",
+    "reminderEmail": "Reminder emails",
+    "recommendationEmail": "Recommendation emails",
+    "preferences": "Notification preferences"
+  },
+  "search": {
+    "placeholder": "Search events",
+    "submit": "Search",
+    "noResults": "No matching events found",
+    "resultCount": "{count} events",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "sortBy": "Sort by",
+    "sort": {
+      "newest": "Newest",
+      "popular": "Popular",
+      "deadline": "Closing soon"
+    }
+  },
+  "toast": {
+    "joined": "You're registered",
+    "joinedWaiting": "Added to waitlist",
+    "joinedPending": "Lottery application submitted",
+    "cancelled": "Registration cancelled",
+    "bookmarked": "Bookmarked",
+    "unbookmarked": "Bookmark removed",
+    "commented": "Comment posted",
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "linkCopied": "Link copied",
+    "errorGeneric": "An error occurred"
   }
 }

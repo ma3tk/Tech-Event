@@ -13,7 +13,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-import { computeInsights } from "../_lib";
+import { computeInsightsSQL } from "../_lib";
 
 export const dynamic = "force-dynamic";
 
@@ -32,9 +32,16 @@ export async function GET(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // SQL 集計に切替えたため participants を include する必要がなくなった (data-model.md High #10)
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    include: { participants: { include: { user: true } } },
+    select: {
+      id: true,
+      groupId: true,
+      title: true,
+      startedAt: true,
+      ownerId: true,
+    },
   });
   if (!event) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -50,7 +57,7 @@ export async function GET(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const insights = await computeInsights(event);
+  const insights = await computeInsightsSQL(event);
 
   return new NextResponse(JSON.stringify(insights, null, 2), {
     status: 200,

@@ -23,7 +23,7 @@ export type FooterProps = {
   className?: string;
 };
 
-function buildDefaultGroups(dict: ReturnType<typeof getEmptyDict>): FooterGroup[] {
+function buildDefaultGroups(dict: Dict): FooterGroup[] {
   return [
     {
       title: t(dict, "footer.help"),
@@ -55,9 +55,6 @@ function buildDefaultGroups(dict: ReturnType<typeof getEmptyDict>): FooterGroup[
 
 // Footer.tsx は Async Server Component。dict は loadDict() で解決する。
 type Dict = Awaited<ReturnType<typeof loadDict>>["dict"];
-function getEmptyDict(): Dict {
-  return {} as Dict;
-}
 
 /**
  * グローバルフッター。

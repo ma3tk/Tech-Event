@@ -12,12 +12,10 @@ import { notFound, redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import {
-  cancelEvent,
-  duplicateEvent,
-} from "@/app/actions/event-admin-actions";
+import { cancelEvent } from "@/app/actions/event-admin-actions";
 
 import CopyUrlButton from "./CopyUrlButton";
+import DuplicateEventModal from "./DuplicateEventModal";
 
 export const dynamic = "force-dynamic";
 
@@ -105,18 +103,11 @@ export default async function EventAdminMorePage({
       <section className="mt-8" data-testid="admin-more-duplicate">
         <h3 className="text-base font-semibold">イベントを複製</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          現在のイベントを draft 状態で複製します。開催日は 1 週間後にシフトします。
+          現在のイベントを draft 状態で複製します。コピーする要素 (参加枠 / タグ / アンケート / 発表資料) と開催日のシフト日数を指定できます。
         </p>
-        <form action={duplicateEvent} className="mt-3">
-          <input type="hidden" name="eventId" value={eventIdStr} />
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center rounded-md border border-border bg-surface px-5 text-sm font-medium hover:bg-brand-orange-soft"
-            data-testid="admin-more-duplicate-button"
-          >
-            このイベントを複製する
-          </button>
-        </form>
+        <div className="mt-3">
+          <DuplicateEventModal eventId={eventIdStr} />
+        </div>
       </section>
 
       {/* ============ イベント中止 ============ */}

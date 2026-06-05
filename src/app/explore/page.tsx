@@ -19,6 +19,7 @@ import Link from "next/link";
 import EventListRow from "@/components/EventListRow";
 import Pagination from "@/components/Pagination";
 import Breadcrumb from "@/components/Breadcrumb";
+import SearchHintsModal from "@/components/SearchHintsModal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SearchX } from "lucide-react";
 
@@ -271,6 +272,7 @@ export default async function ExplorePage({
                 </>
               )}
             </h1>
+            <SearchHintsModal />
           </header>
 
           {/* ソートタブ (常時表示・URLと同期) */}

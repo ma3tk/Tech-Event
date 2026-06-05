@@ -100,6 +100,25 @@ export async function loadDict(
 }
 
 /**
+ * `t()` を locale 固定で curry した関数を返すヘルパ。
+ *
+ * Server Component で 1 ファイル内に多数の翻訳を呼ぶ際、`t(dict, "x.y")` を毎回書くより
+ * `const T = await getT();  T("x.y")` の方が読みやすい。
+ *
+ * 例:
+ * ```ts
+ * const T = await getT();
+ * return <h1>{T("event.applyHeading")}</h1>;
+ * ```
+ */
+export type TFunc = (key: string, vars?: Record<string, string | number>) => string;
+
+export async function getT(locale?: Locale): Promise<TFunc> {
+  const { dict } = await loadDict(locale);
+  return (key, vars) => t(dict, key, vars);
+}
+
+/**
  * "header.explore" のようなドット記法で翻訳をひく。
  * 第3引数で `{year: 2026}` のような置換変数を渡せる。
  * 未定義のキーは key 文字列そのものを返す (フォールバック)。

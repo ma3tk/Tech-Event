@@ -13,7 +13,7 @@
 | --- | --- |
 | フレームワーク | Next.js **16.2.7** (App Router + **Turbopack**) |
 | UI | React **19.2.4** / TypeScript **5.9** / Tailwind CSS **v4** / lucide-react |
-| DB | Prisma **7.8** + SQLite (`@prisma/adapter-better-sqlite3`) |
+| DB | Prisma **7.8** + SQLite (`@prisma/adapter-better-sqlite3`) / PostgreSQL (`@prisma/adapter-pg`) — `DATABASE_URL` の接頭で自動切替 |
 | 認証 | 簡易セッション cookie (`te_session`, HttpOnly) + bcryptjs / Magic Link (メールトークン) / next-auth (一部利用) |
 | Markdown | marked v18 |
 | バリデーション | Zod v4 |
@@ -56,15 +56,24 @@ pnpm db:migrate:pg
 pnpm dev
 ```
 
-注: 現状、`src/lib/prisma.ts` は better-sqlite3 driver adapter 固定。
-PG で起動するには adapter を `@prisma/adapter-pg` に切替える別 PR が必要 (将来作業)。
-`docker compose up postgres` まではすぐ動作確認できる。
+`src/lib/prisma.ts` は `DATABASE_URL` の接頭で driver adapter を自動切替:
+- `file:` → `@prisma/adapter-better-sqlite3` (SQLite)
+- `postgres://` / `postgresql://` → `@prisma/adapter-pg` (PostgreSQL)
+
+そのまま `DATABASE_URL=postgresql://...` を設定するだけで PG 起動できる。
 
 ### 2.3 開発時の手早いログイン
 
 - `http://localhost:3000/api/auth/dev-login?nickname=fast_moon_169` で即セッション cookie 設定 (next= で遷移先指定可)
+  - 本番 (`NODE_ENV=production`) では強制 404。dev でも `.env` の `ENABLE_DEV_LOGIN=1` を要求。
+  - IP 単位で 10 回 / 分 のレート制限あり
 - `/login` ページ最下部の「開発用ログイン」リンク
 - Magic Link テスト: `/login` → 「メールでログイン」→ `/api/auth/magic-link/request` → トークンを `/api/auth/magic-link/verify` で確認
+  - **POST 限定が標準** (Outlook SafeLinks / Gmail prefetch によるトークン先食い対策)。
+    GET でアクセスすると「ログインを続行」ボタンの確認ページが返り、ボタン押下で POST。
+  - 旧 GET 即時消費の挙動を残したい場合は `.env` で `MAGIC_LINK_LEGACY_GET=1` を設定。
+    production のデフォルトは `false` (= POST 限定)。`.env.example` も参照。
+  - リクエスト発行は IP 単位で 3 回 / 15 分。ログインエンドポイントは 5 回 / 5 分。
 
 ### 2.4 完成度サマリー (2026-06-05 時点)
 
@@ -231,22 +240,39 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 production 移行時の追加候補 (現状はコード内デフォルトで動作):
 
 ```bash
-# Magic Link / 主催者 Blast の実送信 (未設定なら console.log フォールバック)
-SMTP_URL=                                # 例: smtp://user:pass@host:587
-SMTP_FROM=                               # 例: noreply@example.com
+# === Mailer (MAIL_PROVIDER で切替) ===
+# 未指定なら SMTP_URL の有無で smtp / console に自動 fallback
+MAIL_PROVIDER=                            # smtp | resend | sendgrid | console
+SMTP_URL=                                 # 例: smtp://user:pass@host:587
+SMTP_FROM=                                # 例: noreply@example.com (全 provider 共通の From)
+RESEND_API_KEY=                           # MAIL_PROVIDER=resend のとき必須
+SENDGRID_API_KEY=                         # MAIL_PROVIDER=sendgrid のとき必須
 
-# 画像アップロード (`STORAGE_PROVIDER` 未設定なら local 動作)
-STORAGE_PROVIDER=local                   # local | s3
+# === 画像アップロード (`STORAGE_PROVIDER` 未設定なら local 動作) ===
+STORAGE_PROVIDER=local                    # local | s3
 S3_BUCKET=
 S3_REGION=us-east-1
 S3_ACCESS_KEY=
 S3_SECRET_KEY=
-S3_ENDPOINT=                             # MinIO 等の S3 互換 endpoint
+S3_ENDPOINT=                              # MinIO / R2 / B2 等の S3 互換 endpoint
+NEXT_PUBLIC_CDN_HOSTNAME=                 # 例: cdn.tech-event.example.com (next/image remotePatterns に動的追加)
 
-# next-auth セッション暗号化 (現状の te_session は単純 cookie で署名のみ)
+# === Observability (任意 / 未設定なら no-op) ===
+# Sentry: NEXT_PUBLIC_ 付きは client bundle に埋め込まれる
+SENTRY_DSN=                               # server / edge runtime 用
+NEXT_PUBLIC_SENTRY_DSN=                   # client (ブラウザ) 用 (同じ DSN で OK)
+SENTRY_ORG=
+SENTRY_PROJECT=
+SENTRY_AUTH_TOKEN=                        # source map upload に必要 (未設定なら skip)
+SENTRY_TRACES_SAMPLE_RATE=0.1             # 0..1, 性能トレースサンプリング
+SENTRY_ENABLE_DEV=                        # 1 で dev でも有効化
+LOG_LEVEL=info                            # fatal/error/warn/info/debug/trace
+METRICS_TOKEN=                            # /api/metrics の Bearer 認証 (未設定なら誰でも取得可)
+
+# === next-auth セッション暗号化 (te_session の HMAC 署名) ===
 AUTH_SECRET=
 
-# OAuth (現状 schema には oauth_identities テーブルあり、UI 未配線)
+# === OAuth ===
 TWITTER_CLIENT_ID=
 TWITTER_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
@@ -286,6 +312,123 @@ pnpm dev
   `group-thumb=120x120`, `group-cover=1200x630`)。出力は `.webp` (GIF はそのまま)。
 - S3 / MinIO に切替えるときは `STORAGE_PROVIDER=s3` + `S3_BUCKET` ほかを設定。
   MinIO は `S3_ENDPOINT=http://localhost:9000` (path-style) で動作する。
+
+### 4.3 メールプロバイダの選び方
+
+`MAIL_PROVIDER` 環境変数で切替える。未指定なら `SMTP_URL` の有無で smtp / console フォールバック (既存挙動と互換)。
+
+| プロバイダ | `MAIL_PROVIDER` | 必須 env | 推奨ユースケース |
+| --- | --- | --- | --- |
+| **SMTP** (nodemailer) | `smtp` | `SMTP_URL`, `SMTP_FROM` | Mailpit (dev), 自社 SMTP, Postfix relay |
+| **Resend** | `resend` | `RESEND_API_KEY`, `SMTP_FROM` | 1 通あたり最安、開発者向け、Domain 認証が簡単。月 3000 通まで無料 |
+| **SendGrid** | `sendgrid` | `SENDGRID_API_KEY`, `SMTP_FROM` | 大量配信 (1 日 10 万通超)、テンプレ管理 UI が必要なとき |
+| **Console** | `console` | (none) | CI / E2E / Storybook etc. ログにのみ出力し実送信しない |
+
+選び方の指針:
+
+- **MVP / dev**: `console` または `smtp` + Mailpit。`pnpm dev` で完結する。
+- **MAU 1 万以下の本番**: `resend`。pricing がフラットで管理画面が軽量。
+- **MAU 10 万以上 / マーケティング配信あり**: `sendgrid` or `ses`。サンプリング配信や分析が必要。
+- **どれも障害時 fallback したい**: 各 provider 実装はエラー時 `console` にフォールバックする。
+  Sentry に `[mail:resend:error]` 等のログが流れるので alert を設定する。
+
+SDK は **dynamic import** で読み込まれるので、未使用 provider の SDK は bundle に含まれない。
+
+### 4.4 画像ストレージ運用ガイド (production 推奨)
+
+ローカルストレージ (`STORAGE_PROVIDER=local`) は dev / 単一サーバ向け。
+本番は以下のいずれかを推奨する。
+
+#### 4.4.1 推奨構成
+
+| プロバイダ | 月額目安 (100GB + 1TB egress) | CDN 連携 | 設定 |
+| --- | --- | --- | --- |
+| **AWS S3 + CloudFront** | $26 + $85 | CloudFront (世界 400+ POP) | 標準 |
+| **Cloudflare R2 + CDN** | $1.5 + $0 (egress 無料) | Cloudflare CDN (含む) | egress 安く、画像 + CDN の鉄板構成 |
+| **Backblaze B2 + Cloudflare** | $0.6 + $0 (Bandwidth Alliance) | Cloudflare CDN 経由なら egress 無料 | コスト最安、Bandwidth Alliance 経由必須 |
+
+`S3_ENDPOINT` を設定すると path-style + dynamic endpoint 動作になる:
+
+```bash
+# Cloudflare R2
+STORAGE_PROVIDER=s3
+S3_BUCKET=tech-event-uploads
+S3_REGION=auto
+S3_ACCESS_KEY=<R2 access key>
+S3_SECRET_KEY=<R2 secret>
+S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
+
+# Backblaze B2 (S3 互換 API)
+STORAGE_PROVIDER=s3
+S3_BUCKET=tech-event-uploads
+S3_REGION=us-west-002
+S3_ACCESS_KEY=<keyID>
+S3_SECRET_KEY=<applicationKey>
+S3_ENDPOINT=https://s3.us-west-002.backblazeb2.com
+```
+
+#### 4.4.2 CDN 経由の public URL
+
+`NEXT_PUBLIC_CDN_HOSTNAME=cdn.tech-event.example.com` を設定すると
+`next/image` の `remotePatterns` に動的追加される。
+S3/R2 origin はキャッシュ寿命 1 年で CDN origin として利用する想定。
+
+#### 4.4.3 next/image 最適化
+
+`next.config.ts` の `remotePatterns` に主要ホストを許可済み:
+
+- `**.amazonaws.com` (AWS S3 直アクセス)
+- `**.cloudfront.net` (CloudFront CDN)
+- `**.r2.cloudflarestorage.com` (R2 直アクセス)
+- `**.backblazeb2.com` (B2 直アクセス)
+- `${NEXT_PUBLIC_CDN_HOSTNAME}` (動的)
+
+Next.js Image Optimization (`/_next/image?...`) は本番では Vercel / 自前 sharp で
+リサイズ + WebP/AVIF 変換される。Storage 側は **canonical な 1 サイズだけ** 保存し、
+表示時最適化は next/image に任せるのが推奨。
+
+#### 4.4.4 バックアップ
+
+`docs/backup-and-restore.md` を参照。S3 Versioning + Cross-Region Replication が
+必須項目。
+
+### 4.5 Observability (Sentry / Logger / Metrics)
+
+#### 4.5.1 Sentry
+
+- 公開ファイル: `sentry.server.config.ts` / `sentry.edge.config.ts` /
+  `sentry.client.config.ts` / `instrumentation.ts`
+- `SENTRY_DSN` (server/edge) + `NEXT_PUBLIC_SENTRY_DSN` (client) が両方未設定なら **完全 no-op**
+  (依存はロードされるが SDK の `init()` を呼ばないので副作用ゼロ)。
+- `next.config.ts` は `SENTRY_DSN` 設定時のみ `withSentryConfig` でラップし、
+  source map upload (`SENTRY_AUTH_TOKEN` 必須) を実施。
+- production 以外は無効。`SENTRY_ENABLE_DEV=1` で dev でも有効化可。
+- `instrumentation.ts > onRequestError` で Server Action / API route の例外を捕捉。
+- `src/app/error.tsx` と `src/app/global-error.tsx` で React 側エラーを `Sentry.captureException` に送信 (dynamic import で SDK 未設定時 no-op)。
+
+#### 4.5.2 構造化ログ (`src/lib/logger.ts`)
+
+- pino ベース。production: JSON 行 (stdout)、dev: pino-pretty で色付き整形。
+- `LOG_LEVEL` で閾値設定 (`fatal|error|warn|info|debug|trace`)。
+- middleware が `x-request-id` を付与し、`logger.withRequestId(headers)` で
+  child logger を作って correlation-id を bind できる。
+- 使用例:
+
+  ```ts
+  import { withRequestId } from "@/lib/logger";
+  const log = withRequestId(request.headers);
+  log.info({ userId, action: "event.create" }, "event created");
+  ```
+
+#### 4.5.3 メトリクス (`/api/metrics`)
+
+- Prometheus exposition format で公開 (text/plain; version=0.0.4)。
+- `METRICS_TOKEN` 未設定なら誰でも取得可、設定時は `Authorization: Bearer <token>` 必須。
+- 公開メトリクス: `tech_event_http_requests_total`, `tech_event_http_request_duration_seconds`,
+  `tech_event_mail_sent_total`, `tech_event_uploads_total`, `tech_event_errors_total`,
+  `tech_event_process_uptime_seconds`。
+- Grafana で `prometheus + tech-event-api:3000/api/metrics` を scrape source として
+  Datasource に追加。`tech_event_*` rate / histogram_quantile で dashboard 作成。
 
 ---
 
@@ -392,6 +535,38 @@ pnpm db:sync-pg                        # prisma/schema.prisma → schema.postgre
 pnpm db:migrate:pg                     # PG 向けマイグレーション (要 DATABASE_URL=postgres://...)
 pnpm db:generate:pg                    # PG 向け Prisma Client 生成 (src/generated/prisma-pg/)
 ```
+
+### 5.10 本番デプロイ (Vercel / Docker)
+
+詳細手順は [`docs/deployment.md`](./docs/deployment.md) を参照。要点のみ:
+
+#### Vercel
+
+1. リポジトリを Vercel に import → Framework は Next.js 自動検出
+2. `vercel.json` で以下を設定済み:
+   - `buildCommand`: `prisma migrate deploy && next build`
+   - `regions`: `nrt1` (Tokyo)
+   - `functions[*].maxDuration`: route ごとに設定 (webhook 30s, cron 60s)
+   - `crons`: `/api/cron/run-lotteries?secret=$CRON_SECRET` を毎時実行
+3. 環境変数 (production 必須): `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_BASE_URL`, `CRON_SECRET`
+4. PG は Neon / Supabase / Railway 等を別途用意
+
+#### Docker (Vercel 以外)
+
+```bash
+docker build -t tech-event:latest .
+docker run -d -p 3000:3000 --env-file .env.production tech-event:latest
+```
+
+- multi-stage build (deps → builder → runner) で `node:22-bookworm-slim` 最小ランタイム (~300MB)
+- Next.js standalone output (`output: "standalone"`) を採用
+- 非 root ユーザー (`nextjs:1001`) で実行
+- `HEALTHCHECK` に `/api/health` を組み込み済み
+
+#### Health / Ready エンドポイント
+
+- `GET /api/health` → `{ok, version, uptime, db, dbLatencyMs, ...}` (DB SELECT 1 込み)
+- `GET /api/ready` → `{ready: true}` (load balancer の readiness probe 用、DB 触らず軽量)
 
 ---
 
@@ -555,6 +730,7 @@ VRT は warn only モード (CI を block しない)。差分が出ても consol
 | [docs/architecture.md](docs/architecture.md) | レイヤーアーキテクチャ / 依存関係 / データフロー / 認証フロー / テスト戦略 |
 | [docs/completion-report.md](docs/completion-report.md) | 完成度サマリ / 機能網羅マトリクス / 残課題 / プロジェクト統計 |
 | [docs/perf-report.md](docs/perf-report.md) | production build / bundle 分析 / 主要 10 ページの応答時間計測 |
+| [docs/deployment.md](docs/deployment.md) | **Vercel / Docker デプロイ手順 + 環境変数完全リスト + PG 移行 + SMTP 選定** |
 | [CHANGELOG.md](CHANGELOG.md) | 主要マイルストーン履歴 (0.1.0 → 0.9.0) |
 
 ### 8.2 デザインシステム
@@ -600,6 +776,47 @@ VRT は warn only モード (CI を block しない)。差分が出ても consol
   (`e2e/global-setup.ts` / `e2e/global-teardown.ts`)
 - PG 対応の準備: `prisma/schema.postgres.prisma` (自動生成) + `docker-compose.yml`
   (postgres + mailpit + minio) + `pnpm db:migrate:pg`
+
+---
+
+## P2 UX 強化 (新規)
+
+### SSE 通知ストリーム
+
+- `GET /api/notifications/stream` で Server-Sent Events を購読 (`text/event-stream`)。
+  認証必須。
+- Header (`src/components/Header.tsx`) が `useNotificationStream` 経由で接続し、
+  新規通知を toast + ベルバッジ未読数 increment で反映する。
+- 現状の実装は **DB を 5 秒間隔で polling** する軽量版 (`SSE_NOTIFICATION_POLL_MS`
+  env でテスト時に短縮可能)。
+- 本番では Redis pub/sub やメッセージング基盤 (NATS / Kafka 等) と差し替えて
+  「DB 書込み時にイベントを fanout する push 型」に切替える想定。差し替え時は
+  `src/app/api/notifications/stream/route.ts` の polling ループだけを置き換えれば
+  クライアントは無変更。
+
+### Excel エクスポート (xlsx)
+
+- 参加者 / Insights / グループメンバーの 3 種を提供:
+  - `GET /event/[id]/admin/guests/export.xlsx`
+  - `GET /event/[id]/admin/insights/export.xlsx`
+  - `GET /group/[subdomain]/admin/members/export.xlsx`
+- `exceljs` は **dynamic import** (`(await import("exceljs")).default`) で読み込み、
+  bundle サイズ増を該当ルートのみに局所化している。
+
+### 検索演算子
+
+- `src/lib/search.ts` の `tokenizeSearchQuery` で:
+  - `"phrase"` (フレーズ完全一致)
+  - `term1 term2` (AND)
+  - `term1 OR term2` (OR)
+  - `-term` (除外 / NOT)
+- FTS5 / LIKE フォールバックの両方で同じ意味論を提供。`/explore` には
+  `/` キーで開く「検索のヒント」モーダル (`SearchHintsModal`) を追加。
+
+### 主催者 → 1:1 メッセージ
+
+- `sendDirectMessage` Server Action と `DirectMessageButton`。受信者の通知センターに
+  `host_direct_message` kind の Notification が追加される (SMTP 送信もあり)。
 
 ---
 

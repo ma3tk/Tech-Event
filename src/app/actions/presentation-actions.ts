@@ -22,8 +22,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { nextId } from "@/lib/id-gen";
-
-const BigIntIdString = z.string().regex(/^\d+$/);
+import { BigIntIdString } from "@/lib/schemas";
+import { getString as formValue } from "@/lib/form-data";
 
 const UrlSchema = z
   .string()
@@ -48,11 +48,6 @@ const RemovePresentationSchema = z.object({
   eventId: BigIntIdString,
   presentationId: BigIntIdString,
 });
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 

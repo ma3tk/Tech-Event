@@ -29,6 +29,7 @@ import {
 import { unbookmarkEvent } from "@/app/actions/event-actions";
 import { createCalendarFromBookmarks } from "@/app/actions/calendar-actions";
 import Breadcrumb from "@/components/Breadcrumb";
+import BookmarksCalendarTool from "./BookmarksCalendarTool";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,14 @@ export default async function BookmarksPage() {
     groupSubdomain: b.event.group.subdomain,
   }));
 
+  // 自分が所有する Calendar (既存に追加するモード用)
+  const ownedCalendars = await prisma.calendar.findMany({
+    where: { ownerUserId: user.id, status: "active" },
+    select: { slug: true, name: true },
+    orderBy: { updatedAt: "desc" },
+    take: 50,
+  });
+
   return (
     <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
       <Breadcrumb
@@ -90,26 +99,35 @@ export default async function BookmarksPage() {
         </div>
 
         {bookmarks.length > 0 && (
-          <form
-            action={createCalendarFromBookmarks}
-            method="post"
-            className="shrink-0"
-            data-testid="bookmarks-create-calendar-form"
-          >
-            <input
-              type="hidden"
-              name="name"
-              value={`${user.displayName}さんの気になる`}
-            />
-            <button
-              type="submit"
-              data-testid="bookmarks-create-calendar"
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-brand-orange px-4 text-sm font-semibold text-white shadow hover:bg-brand-orange-hover"
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* 互換: 旧 form 「全件をカレンダーに追加」(P1) */}
+            <form
+              action={createCalendarFromBookmarks}
+              method="post"
+              data-testid="bookmarks-create-calendar-form"
             >
-              <CalendarPlus aria-hidden className="h-4 w-4" />
-              気になるをカレンダーに追加
-            </button>
-          </form>
+              <input
+                type="hidden"
+                name="name"
+                value={`${user.displayName}さんの気になる`}
+              />
+              <button
+                type="submit"
+                data-testid="bookmarks-create-calendar"
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-brand-orange-soft"
+              >
+                <CalendarPlus aria-hidden className="h-4 w-4" />
+                全件をカレンダーに追加
+              </button>
+            </form>
+
+            {/* P2: 個別選択 + 新規/既存カレンダー追加モーダル */}
+            <BookmarksCalendarTool
+              allEventIds={bookmarks.map((b) => b.event.id)}
+              defaultName={`${user.displayName}さんの気になる`}
+              ownedCalendars={ownedCalendars}
+            />
+          </div>
         )}
       </header>
 
@@ -141,6 +159,17 @@ export default async function BookmarksPage() {
               data-bookmark-id={b.id}
               className="flex gap-4 rounded-md border border-border bg-surface p-4"
             >
+              {/* P2: 個別選択チェックボックス。 BookmarksCalendarTool が
+                  `data-bookmark-event-id` 属性で input を拾って state と双方向同期する。 */}
+              <label className="flex shrink-0 items-start pt-1">
+                <input
+                  type="checkbox"
+                  data-bookmark-event-id={b.event.id}
+                  data-testid={`bookmarks-select-${b.event.id}`}
+                  aria-label={`「${b.event.title}」を選択`}
+                  className="h-4 w-4 rounded border-border accent-brand-orange"
+                />
+              </label>
               <Link
                 href={`/event/${b.event.id}`}
                 className="flex flex-1 gap-4 min-w-0 hover:opacity-90"

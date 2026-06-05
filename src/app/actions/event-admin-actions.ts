@@ -20,38 +20,20 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, getMailProvider } from "@/lib/mailer";
 import { notifyEventPublished } from "@/lib/slack";
 import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
+import { recordAudit } from "@/lib/audit";
+import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+import { incrementCounter, METRIC_NAMES } from "@/lib/metrics";
+import { getString as formValue, getStringRaw as formValueRaw, getInt as formInt } from "@/lib/form-data";
+import { BigIntIdString, UrlOrEmpty } from "@/lib/schemas";
 
 /* ============================================================
  * バリデーション
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-
-function formValueRaw(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-function formInt(form: FormData, key: string): number | undefined {
-  const v = formValue(form, key);
-  if (!v) return undefined;
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.floor(n) : undefined;
-}
-
-const BigIntIdString = z.string().regex(/^\d+$/);
-
-const UrlOrEmpty = z
-  .string()
-  .max(2000)
-  .refine((v) => v === "" || /^https?:\/\//.test(v), "URL は http(s):// で始める");
 
 const EventFormatEnum = z.enum(["offline", "online", "hybrid"]);
 const RecruitmentEnum = z.enum(["fcfs", "lottery"]);
@@ -186,6 +168,19 @@ export async function createEvent(formData: FormData): Promise<void> {
     redirect(`/login?next=${encodeURIComponent("/event/create")}`);
   }
 
+  // ---- レート制限 (user 単位: 5 回/時) ----
+  try {
+    assertRateLimit(
+      `user:${user.id}:createEvent`,
+      RATE_LIMITS.createResource,
+    );
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      throw new ActionError("rate_limited", e.message);
+    }
+    throw e;
+  }
+
   const parsed = EventBaseSchema.safeParse({
     groupId: formValue(formData, "groupId"),
     title: formValue(formData, "title"),
@@ -299,6 +294,15 @@ export async function createEvent(formData: FormData): Promise<void> {
         data: { eventCount: { increment: 1 } },
       });
     }
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.create",
+    targetType: "Event",
+    targetId: newEventId,
+    metadata: { groupId: groupId.toString(), status: finalStatus },
   });
 
   revalidatePath("/dashboard");
@@ -429,6 +433,14 @@ export async function updateEvent(formData: FormData): Promise<void> {
     },
   });
 
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.update",
+    targetType: "Event",
+    targetId: eventId,
+  });
+
   revalidatePath(`/event/${eventId.toString()}`);
   revalidatePath(`/event/${eventId.toString()}/edit`);
   revalidatePath("/dashboard");
@@ -491,6 +503,15 @@ export async function publishEvent(formData: FormData): Promise<void> {
     });
   }
 
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.publish",
+    targetType: "Event",
+    targetId: eventId,
+    metadata: { firstPublish: !wasAlreadyPublished },
+  });
+
   revalidatePath(`/event/${eventId.toString()}`);
   revalidatePath("/dashboard");
   revalidatePath("/explore");
@@ -531,6 +552,14 @@ export async function cancelEvent(formData: FormData): Promise<void> {
         data: { eventCount: { decrement: 1 } },
       });
     }
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.cancel",
+    targetType: "Event",
+    targetId: eventId,
   });
 
   revalidatePath(`/event/${eventId.toString()}`);
@@ -768,9 +797,16 @@ export async function sendBlast(formData: FormData): Promise<void> {
     }
   });
 
-  // SMTP 送信 (SMTP_URL 未設定なら console.log フォールバック)
-  console.log(
-    `[blast] event=${eventIdRaw} audience=${audience} recipients=${uniqueRecipientIds.length} subject=${JSON.stringify(subject)}`,
+  // SMTP / Resend / SendGrid いずれかへ送信。未設定なら sendMail 内で console フォールバック
+  logger.info(
+    {
+      action: "event.blast",
+      eventId: eventIdRaw,
+      audience,
+      recipients: uniqueRecipientIds.length,
+      subject,
+    },
+    "blast queued",
   );
   // body を簡易 HTML 化 (改行を <br/> に)
   const htmlBody = body
@@ -779,7 +815,7 @@ export async function sendBlast(formData: FormData): Promise<void> {
     .replace(/>/g, "&gt;")
     .replace(/\n/g, "<br/>");
   // Promise.all で並列送信。失敗しても sendMail 内部で吸収するので throw しない。
-  await Promise.all(
+  const sendResults = await Promise.all(
     recipientUsers.map((u) =>
       sendMail({
         to: u.email,
@@ -789,13 +825,173 @@ export async function sendBlast(formData: FormData): Promise<void> {
       }),
     ),
   );
+  const provider = getMailProvider();
+  let delivered = 0;
+  for (const r of sendResults) if (r.delivered) delivered += 1;
+  incrementCounter(
+    METRIC_NAMES.MAIL_SENT_TOTAL,
+    { provider, delivered: "true" },
+    delivered,
+  );
+  if (sendResults.length - delivered > 0) {
+    incrementCounter(
+      METRIC_NAMES.MAIL_SENT_TOTAL,
+      { provider, delivered: "false" },
+      sendResults.length - delivered,
+    );
+  }
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.send-blast",
+    targetType: "Event",
+    targetId: eventId,
+    metadata: { audience, recipientCount: uniqueRecipientIds.length },
+  });
 
   revalidatePath(`/event/${eventIdRaw}/admin/blasts`);
   revalidatePath(`/event/${eventIdRaw}/admin`);
   redirect(`/event/${eventIdRaw}/admin/blasts?sent=1`);
 }
 
-/* ---------- duplicateEvent ---------- */
+/* ---------- sendDirectMessage ----------
+ *
+ * 主催者から個別参加者への 1:1 メッセージ送信。
+ *
+ * 既存 `sendBlast` (全体宛て) に対して、対象 1 名にしか飛ばさない軽量バージョン。
+ * `Message.audience = "direct"` で記録し、受信者の通知センター
+ * (`Notification.kind = "host_direct_message"`) にもエントリを追加する。
+ *
+ * 認可: 送信者は (event.ownerId === self) OR GroupAdmin。受信者は同 event の participant
+ *       (status は問わない) であること。
+ */
+
+export async function sendDirectMessage(formData: FormData): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent("/dashboard")}`);
+  }
+  const eventIdRaw = formValue(formData, "eventId");
+  const participantIdRaw = formValue(formData, "participantId");
+  const subject = formValue(formData, "subject");
+  const body = formValueRaw(formData, "body");
+
+  if (!/^\d+$/.test(eventIdRaw)) {
+    throw new ActionError("invalid_input", "イベント ID が不正です");
+  }
+  if (!/^\d+$/.test(participantIdRaw)) {
+    throw new ActionError("invalid_input", "参加者 ID が不正です");
+  }
+  if (!subject || subject.length > 200) {
+    throw new ActionError(
+      "invalid_input",
+      "件名は 200 文字以内で入力してください",
+    );
+  }
+  if (!body || body.length > 20_000) {
+    throw new ActionError(
+      "invalid_input",
+      "本文は 20000 文字以内で入力してください",
+    );
+  }
+  const eventId = BigInt(eventIdRaw);
+  const participantId = BigInt(participantIdRaw);
+
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) throw new ActionError("not_found", "イベントが見つかりません");
+  if (!(await canManageEvent(event.ownerId, event.groupId, user.id))) {
+    throw new ActionError("forbidden", "送信権限がありません");
+  }
+
+  const participant = await prisma.participant.findUnique({
+    where: { id: participantId },
+    include: { user: true },
+  });
+  if (!participant || participant.eventId !== eventId) {
+    throw new ActionError("not_found", "参加者が見つかりません");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const messageId = await nextMessageId(tx);
+    await tx.message.create({
+      data: {
+        id: messageId,
+        eventId,
+        groupId: event.groupId,
+        senderUserId: user.id,
+        audience: "direct",
+        subject,
+        body,
+        recipientCount: 1,
+        sentAt: new Date(),
+      },
+    });
+    const notifId = await nextNotificationId(tx);
+    await tx.notification.create({
+      data: {
+        id: notifId,
+        recipientUserId: participant.userId,
+        kind: "host_direct_message",
+        eventId,
+        payload: JSON.stringify({
+          messageId: messageId.toString(),
+          subject,
+          excerpt: body.slice(0, 80),
+        }),
+        channel: "in_app",
+      },
+    });
+  });
+
+  // SMTP 送信 (失敗は無視 — sendMail 内部で吸収)
+  await sendMail({
+    to: participant.user.email,
+    subject,
+    text: body,
+    html: `<div>${body
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br/>")}</div>`,
+  });
+
+  revalidatePath(`/event/${eventIdRaw}/admin/guests`);
+  redirect(
+    `/event/${eventIdRaw}/admin/guests?toast=direct-message-sent`,
+  );
+}
+
+/* ---------- duplicateEvent ----------
+ *
+ * P2 拡張: 複製時のオプションをモーダルで細かく指定できるよう拡張。
+ *
+ * FormData で受け取るフィールド (boolean は `"1"` のみ true):
+ *   - eventId              : 必須
+ *   - includeTags          : "1" → true (default true, 旧フォーム互換)
+ *   - includeRoles         : "1" → true (default true, 旧フォーム互換)
+ *   - includeSurvey        : "1" → true (default false)
+ *   - includePresentations : "1" → true (default false)
+ *   - shiftDays            : 整数 (default 7)
+ *
+ * 互換性: 旧 form (eventId のみ送信) は `includeTags=true`, `includeRoles=true`,
+ * `shiftDays=7` のデフォルトで動作する。
+ */
+
+const DUPLICATE_OPTION_KEYS = [
+  "includeTags",
+  "includeRoles",
+  "includeSurvey",
+  "includePresentations",
+  "shiftDays",
+] as const;
+
+function hasAnyDuplicateOptionKey(form: FormData): boolean {
+  for (const k of DUPLICATE_OPTION_KEYS) {
+    if (form.has(k)) return true;
+  }
+  return false;
+}
 
 export async function duplicateEvent(formData: FormData): Promise<void> {
   const user = await getCurrentUser();
@@ -808,16 +1004,41 @@ export async function duplicateEvent(formData: FormData): Promise<void> {
 
   const source = await prisma.event.findUnique({
     where: { id: eventId },
-    include: { roles: { orderBy: { displayOrder: "asc" } }, tags: true },
+    include: {
+      roles: { orderBy: { displayOrder: "asc" } },
+      tags: true,
+      surveys: { include: { questions: true } },
+      presentations: true,
+    },
   });
   if (!source) throw new Error("event_not_found");
   if (!(await canManageEvent(source.ownerId, source.groupId, user.id))) {
     throw new Error("forbidden");
   }
 
-  // 開催日時を 1 週間先にシフトしてコピー (差分はホストが編集して詰める想定)
+  // フォームからオプションを読み出す
+  const explicitOpts = hasAnyDuplicateOptionKey(formData);
+  const includeTags = explicitOpts
+    ? formValue(formData, "includeTags") === "1"
+    : true;
+  const includeRoles = explicitOpts
+    ? formValue(formData, "includeRoles") === "1"
+    : true;
+  const includeSurvey = formValue(formData, "includeSurvey") === "1";
+  const includePresentations =
+    formValue(formData, "includePresentations") === "1";
+  const shiftDays = (() => {
+    const raw = formValue(formData, "shiftDays");
+    if (!raw) return 7;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return 7;
+    // -3650 .. 3650 日に丸める (約10年)
+    return Math.max(-3650, Math.min(3650, Math.floor(n)));
+  })();
+
+  // 開催日時を shiftDays 先 (or 前) にシフトしてコピー
   const dayMs = 24 * 60 * 60 * 1000;
-  const shiftMs = 7 * dayMs;
+  const shiftMs = shiftDays * dayMs;
   const newStartedAt = new Date(source.startedAt.getTime() + shiftMs);
   const newEndedAt = new Date(source.endedAt.getTime() + shiftMs);
   const newAcceptsFrom = source.acceptsFrom
@@ -867,41 +1088,115 @@ export async function duplicateEvent(formData: FormData): Promise<void> {
         publishedAt: null,
       },
     });
-    for (let i = 0; i < source.roles.length; i++) {
-      const r = source.roles[i]!;
+    if (includeRoles) {
+      for (let i = 0; i < source.roles.length; i++) {
+        const r = source.roles[i]!;
+        await tx.eventRole.create({
+          data: {
+            id: await nextEventRoleId(tx),
+            eventId: eid,
+            displayOrder: r.displayOrder,
+            name: r.name,
+            description: r.description,
+            capacity: r.capacity,
+            recruitmentMethod: r.recruitmentMethod,
+            pricingType: r.pricingType,
+            price: r.price,
+            currency: r.currency,
+            autoPromoteFromWaiting: r.autoPromoteFromWaiting,
+            visibleAfterFull: r.visibleAfterFull,
+          },
+        });
+      }
+    } else {
+      // ロールを複製しない場合でも最低 1 件 (「一般」) を作成し
+      // Event の公開時の整合性を担保する
       await tx.eventRole.create({
         data: {
           id: await nextEventRoleId(tx),
           eventId: eid,
-          displayOrder: r.displayOrder,
-          name: r.name,
-          description: r.description,
-          capacity: r.capacity,
-          recruitmentMethod: r.recruitmentMethod,
-          pricingType: r.pricingType,
-          price: r.price,
-          currency: r.currency,
-          autoPromoteFromWaiting: r.autoPromoteFromWaiting,
-          visibleAfterFull: r.visibleAfterFull,
+          displayOrder: 1,
+          name: "一般",
+          capacity: source.capacity ?? null,
+          recruitmentMethod: source.recruitmentMethod,
+          pricingType: "free",
+          price: 0,
+          currency: "JPY",
         },
       });
     }
-    for (const t of source.tags) {
-      await tx.eventTag.create({
-        data: {
-          eventId: eid,
-          tagId: t.tagId,
-        },
-      });
-      // Tag.usageCount は EventTag 作成時に increment、削除時に decrement する。
-      // (data-model review Critical #5)
-      await tx.tag.update({
-        where: { id: t.tagId },
-        data: { usageCount: { increment: 1 } },
-      });
+    if (includeTags) {
+      for (const t of source.tags) {
+        await tx.eventTag.create({
+          data: {
+            eventId: eid,
+            tagId: t.tagId,
+          },
+        });
+        // Tag.usageCount は EventTag 作成時に increment、削除時に decrement する。
+        // (data-model review Critical #5)
+        await tx.tag.update({
+          where: { id: t.tagId },
+          data: { usageCount: { increment: 1 } },
+        });
+      }
+    }
+
+    if (includeSurvey) {
+      for (const s of source.surveys) {
+        const surveyId = await nextId(tx, "survey");
+        await tx.survey.create({
+          data: {
+            id: surveyId,
+            eventId: eid,
+            title: s.title,
+            trigger: s.trigger,
+            required: s.required,
+          },
+        });
+        for (const q of s.questions) {
+          await tx.surveyQuestion.create({
+            data: {
+              id: await nextId(tx, "surveyQuestion"),
+              surveyId,
+              displayOrder: q.displayOrder,
+              body: q.body,
+              inputType: q.inputType,
+              options: q.options,
+              required: q.required,
+            },
+          });
+        }
+      }
+    }
+
+    if (includePresentations) {
+      for (const p of source.presentations) {
+        await tx.presentationMaterial.create({
+          data: {
+            id: await nextId(tx, "presentationMaterial"),
+            eventId: eid,
+            presenterUserId: p.presenterUserId,
+            presenterDisplayName: p.presenterDisplayName,
+            title: p.title,
+            url: p.url,
+            thumbnailUrl: p.thumbnailUrl,
+            displayOrder: p.displayOrder,
+          },
+        });
+      }
     }
     // 複製イベントは draft で作るため Group.eventCount は increment しない
     // (publishEvent 経由で初回公開時に +1 する)。
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.duplicate",
+    targetType: "Event",
+    targetId: newId,
+    metadata: { sourceEventId: eventId.toString() },
   });
 
   revalidatePath(`/event/${eventIdRaw}/admin/more`);

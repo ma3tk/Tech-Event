@@ -27,21 +27,12 @@ import { addGroupMember } from "@/lib/group-membership";
 import { recordAudit } from "@/lib/audit";
 import { nextId, withRetry } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
+import { getStringRaw as formValue } from "@/lib/form-data";
+import { BigIntIdSchema } from "@/lib/schemas";
 
 /* ============================================================
  * バリデーションスキーマ
  * ============================================================ */
-
-/** `form` から来る FormDataEntryValue (string|File) を string に正規化 */
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-const BigIntIdSchema = z
-  .string()
-  .regex(/^\d+$/, "id must be digits only")
-  .transform((s) => BigInt(s));
 
 const JoinSchema = z.object({
   eventId: BigIntIdSchema,
@@ -534,6 +525,14 @@ export async function cancelParticipation(formData: FormData): Promise<void> {
     });
   }));
 
+  // 監査ログ (fire-and-forget)
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.cancel-participation",
+    targetType: "Event",
+    targetId: eventId,
+  });
+
   revalidateEvent(eventId);
 }
 
@@ -567,6 +566,13 @@ export async function bookmarkEvent(formData: FormData): Promise<void> {
     });
   }));
 
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.bookmark",
+    targetType: "Event",
+    targetId: eventId,
+  });
+
   revalidateEvent(eventId);
 }
 
@@ -594,6 +600,13 @@ export async function unbookmarkEvent(formData: FormData): Promise<void> {
     .catch(() => {
       // 既に削除済みでも黙る
     });
+
+  void recordAudit({
+    actorUserId: user.id,
+    action: "event.unbookmark",
+    targetType: "Event",
+    targetId: eventId,
+  });
 
   revalidateEvent(eventId);
 }

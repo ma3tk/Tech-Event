@@ -26,31 +26,14 @@ import { validateSlackWebhookUrl } from "@/lib/slack";
 import { recordAudit } from "@/lib/audit";
 import { nextId } from "@/lib/id-gen";
 import { buildRedirectUrlWithFormError } from "@/lib/action-error";
+import { isReservedSlug } from "@/lib/reserved-words";
+import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
+import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
+import { SlugSchema as SubdomainSchema, UrlOrEmpty } from "@/lib/schemas";
 
 /* ============================================================
  * バリデーション
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-
-function formValueRaw(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-const SubdomainSchema = z
-  .string()
-  .min(3, "subdomain は 3 文字以上")
-  .max(63, "subdomain は 63 文字以下")
-  .regex(/^[a-z0-9-]+$/, "subdomain は半角英小文字・数字・ハイフンのみ");
-
-const UrlOrEmpty = z
-  .string()
-  .max(2000)
-  .refine((v) => v === "" || /^https?:\/\//.test(v), "URL は http(s):// で始める");
 
 /**
  * Slack Webhook URL 専用 schema。
@@ -141,6 +124,21 @@ export async function createGroup(formData: FormData): Promise<void> {
     redirect(`/login?next=${encodeURIComponent("/group/create")}`);
   }
 
+  // ---- レート制限 (user 単位: 5 回/時) ----
+  try {
+    assertRateLimit(`user:${user.id}:createGroup`, RATE_LIMITS.createResource);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      redirectWithError(
+        "/group/create",
+        formData,
+        "rate_limited",
+        e.message,
+      );
+    }
+    throw e;
+  }
+
   const parsed = CreateGroupSchema.safeParse({
     subdomain: formValue(formData, "subdomain"),
     name: formValue(formData, "name"),
@@ -165,6 +163,16 @@ export async function createGroup(formData: FormData): Promise<void> {
   }
 
   const data = parsed.data;
+
+  // 予約語チェック (システムパス衝突回避 / フィッシング対策)
+  if (isReservedSlug(data.subdomain)) {
+    redirectWithError(
+      "/group/create",
+      formData,
+      "subdomain_reserved",
+      `サブドメイン "${data.subdomain}" は予約語のため使用できません`,
+    );
+  }
 
   // ユニーク制約の事前チェック (race condition は catch で fallback)
   const dup = await prisma.group.findUnique({
@@ -244,6 +252,15 @@ export async function createGroup(formData: FormData): Promise<void> {
     );
   }
 
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "group.create",
+    targetType: "Group",
+    targetId: BigInt(0), // group.id は採番後に把握できないので 0 ダミー
+    metadata: { subdomain: createdSubdomain ?? data.subdomain },
+  });
+
   revalidatePath("/dashboard");
   revalidatePath("/series");
   revalidatePath("/explore/groups");
@@ -307,6 +324,15 @@ export async function updateGroup(formData: FormData): Promise<void> {
       facebookUrl: data.facebookUrl || null,
       slackWebhookUrl: data.slackWebhookUrl || null,
     },
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "group.update",
+    targetType: "Group",
+    targetId: groupId,
+    metadata: { subdomain: group.subdomain },
   });
 
   revalidatePath(`/group/${group.subdomain}`);
