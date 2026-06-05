@@ -20,6 +20,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
 import { nextId } from "@/lib/id-gen";
+import {
+  RATE_LIMITS,
+  buildRateLimitResponse,
+  getRequestIp,
+  rateLimit,
+} from "@/lib/rate-limit";
 
 // 必ず Node ランタイム (Stripe SDK は Edge 非対応)
 export const runtime = "nodejs";
@@ -60,6 +66,13 @@ async function nextPaymentId(
  * Participant + Payment を作成する。
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // ---- レート制限 (Stripe 側で 1 次防御があるが、念のため IP 単位) ----
+  const ip = getRequestIp(request);
+  const rl = rateLimit(`${ip}:stripe-webhook`, RATE_LIMITS.webhook);
+  if (!rl.ok) {
+    return buildRateLimitResponse(rl);
+  }
+
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature");
   const webhookSecret = getStripeWebhookSecret();

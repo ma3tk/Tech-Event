@@ -21,7 +21,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-import { computeInsights, type Insights } from "./_lib";
+import { computeInsightsSQL, type Insights } from "./_lib";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +41,16 @@ export default async function EventAdminInsightsPage({
     );
   }
 
+  // SQL 集計に切替えたため participants を include する必要がなくなった (data-model.md High #10)
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    include: { participants: { include: { user: true } } },
+    select: {
+      id: true,
+      groupId: true,
+      title: true,
+      startedAt: true,
+      ownerId: true,
+    },
   });
   if (!event) notFound();
   const isOwner = event.ownerId === user.id;
@@ -54,7 +61,7 @@ export default async function EventAdminInsightsPage({
     !!admin && (admin.role === "owner" || admin.role === "admin");
   if (!isOwner && !isAdmin) notFound();
 
-  const insights = await computeInsights(event);
+  const insights = await computeInsightsSQL(event);
 
   return (
     <div data-testid="admin-panel-insights">
@@ -66,13 +73,23 @@ export default async function EventAdminInsightsPage({
             出席率 / 過去イベント比較。集計値のみ表示します。
           </p>
         </div>
-        <Link
-          href={`/event/${raw}/admin/insights/export.json`}
-          data-testid="insights-export-link"
-          className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
-        >
-          JSON エクスポート
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/event/${raw}/admin/insights/export.json`}
+            data-testid="insights-export-link"
+            className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
+          >
+            JSON エクスポート
+          </Link>
+          <a
+            href={`/event/${raw}/admin/insights/export.xlsx`}
+            data-testid="insights-export-xlsx-link"
+            download
+            className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
+          >
+            Excel エクスポート
+          </a>
+        </div>
       </div>
 
       <KpiRow insights={insights} />

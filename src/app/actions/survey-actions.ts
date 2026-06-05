@@ -29,22 +29,12 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
+import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
+import { BigIntIdString } from "@/lib/schemas";
 
 /* ============================================================
  * 共通ヘルパー
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-
-function formValueRaw(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-const BigIntIdString = z.string().regex(/^\d+$/);
 
 const InputTypeEnum = z.enum(["text", "textarea", "single", "multi", "scale"]);
 

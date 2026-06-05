@@ -29,14 +29,10 @@ import {
 } from "@/lib/notification";
 import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
+import { getStringRaw as formValue } from "@/lib/form-data";
 
 const ChannelEnum = z.enum(["email", "in_app", "push"]);
 const KindSchema = z.string().min(1).max(64);
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 

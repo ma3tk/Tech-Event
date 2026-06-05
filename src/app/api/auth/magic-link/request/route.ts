@@ -13,13 +13,22 @@
  *   - レスポンスはアカウントの存在有無を返さない (enumeration attack 対策)
  *   - トークンは UUID v4 (122bit のランダム性)
  *   - 期限は 15 分
+ *   - レート制限: 3 回 / 15 分 / IP (security review Medium #23)
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, getMailProvider } from "@/lib/mailer";
+import { withRequestId } from "@/lib/logger";
+import { incrementCounter, METRIC_NAMES } from "@/lib/metrics";
+import {
+  RATE_LIMITS,
+  buildRateLimitResponse,
+  getRequestIp,
+  rateLimit,
+} from "@/lib/rate-limit";
 
 const RequestSchema = z.object({
   email: z.string().email().max(254),
@@ -49,6 +58,13 @@ async function parseBody(
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // ---- レート制限 (IP 単位) ----
+  const ip = getRequestIp(request);
+  const rl = rateLimit(`${ip}:magic-link-request`, RATE_LIMITS.magicLink);
+  if (!rl.ok) {
+    return buildRateLimitResponse(rl);
+  }
+
   const payload = await parseBody(request);
   if (!payload) {
     return NextResponse.json(
@@ -68,14 +84,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     },
   });
 
-  // メール送信: SMTP_URL が設定されていれば実送信、未設定なら console.log にフォールバック
+  // メール送信: `MAIL_PROVIDER` に従って各プロバイダへ振り分け、未設定なら console フォールバック
   const origin = request.nextUrl.origin;
   const verifyUrl = `${origin}/api/auth/magic-link/verify?token=${token}`;
+  const log = withRequestId(request.headers);
   // 既存 E2E (e2e/magic-link.spec.ts) は console.log の verifyUrl を直接見ているわけでは
-  // ないが、開発時にコンソールへ verify URL を出す互換性を維持するため、ログは sendMail
-  // 内部のフォールバックに任せつつ、ここでも 1 行だけ出力する。
+  // ないが、開発時にコンソールへ verify URL を出す互換性を維持するため、ここでも 1 行だけ出す。
   console.log(`[magic-link] ${verifyUrl}`);
-  await sendMail({
+  log.info({ to: payload.email, action: "magic-link.request" }, "issued magic link");
+  const result = await sendMail({
     to: payload.email,
     subject: "tech-event ログイン用リンク",
     text: [
@@ -93,7 +110,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       "<p>心当たりがない場合は、このメールを無視してください。</p>",
     ].join(""),
   });
+  incrementCounter(METRIC_NAMES.MAIL_SENT_TOTAL, {
+    provider: getMailProvider(),
+    delivered: result.delivered ? "true" : "false",
+  });
 
+  // アカウントの有無を返さない (enumeration 対策)
   return NextResponse.json({
     ok: true,
     message: "メールを送信しました",

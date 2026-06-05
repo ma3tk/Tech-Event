@@ -7,11 +7,26 @@
     "search": "検索",
     "back": "戻る",
     "next": "次へ",
+    "prev": "前へ",
     "save": "保存",
     "cancel": "キャンセル",
     "close": "閉じる",
     "delete": "削除",
-    "edit": "編集"
+    "edit": "編集",
+    "submit": "送信",
+    "yes": "はい",
+    "no": "いいえ",
+    "confirm": "確認",
+    "more": "もっと見る",
+    "less": "閉じる",
+    "showAll": "すべて表示",
+    "comingSoon": "近日公開",
+    "share": "共有",
+    "copyLink": "リンクをコピー",
+    "copied": "コピーしました",
+    "today": "今日",
+    "yesterday": "昨日",
+    "tomorrow": "明日"
   },
   "header": {
     "explore": "イベントを探す",
@@ -51,7 +66,13 @@
     "join": "参加する",
     "cancel": "キャンセルする",
     "bookmark": "ブックマーク",
-    "share": "共有"
+    "share": "共有",
+    "edit": "編集",
+    "manage": "管理",
+    "viewAll": "すべて見る",
+    "viewDetails": "詳細を見る",
+    "follow": "フォロー",
+    "unfollow": "フォロー解除"
   },
   "status": {
     "draft": "下書き",
@@ -67,9 +88,26 @@
   },
   "errors": {
     "notFound": "ページが見つかりません",
+    "notFoundDescription": "お探しのページは削除されたか、URLが間違っている可能性があります。",
     "forbidden": "アクセス権限がありません",
     "unauthorized": "ログインしてください",
-    "internal": "サーバーエラーが発生しました"
+    "internal": "サーバーエラーが発生しました",
+    "internalDescription": "申し訳ありませんが、エラーが発生しました。しばらく時間をおいてから再度お試しください。",
+    "retry": "再試行",
+    "goHome": "トップに戻る",
+    "goBack": "戻る",
+    "validation": {
+      "required": "{field} は必須項目です",
+      "email": "正しいメールアドレスを入力してください",
+      "minLength": "{field} は {min} 文字以上で入力してください",
+      "maxLength": "{field} は {max} 文字以内で入力してください",
+      "url": "正しいURLを入力してください",
+      "number": "数値を入力してください",
+      "passwordMismatch": "パスワードが一致しません",
+      "slugFormat": "半角英小文字・数字・ハイフンで入力してください",
+      "slugReserved": "このslugは予約語のため使用できません",
+      "hexColor": "#RRGGBB 形式のカラーコードを入力してください"
+    }
   },
   "top": {
     "heroTitle": "エンジニアのためのIT勉強会・イベント",
@@ -83,21 +121,48 @@
   "event": {
     "details": "イベント詳細",
     "organizer": "主催者",
+    "hosts": "ホスト",
+    "groupAdmins": "管理者",
     "venue": "会場",
     "online": "オンライン",
     "offline": "オフライン",
     "hybrid": "ハイブリッド",
     "capacity": "定員",
+    "capacityUnlimited": "定員なし",
+    "remainingSeats": "残り{count}席",
     "applied": "申込数",
     "schedule": "開催日時",
     "tags": "タグ",
     "description": "詳細",
     "presentations": "発表資料",
+    "presentationsEmpty": "発表資料はまだ登録されていません。",
     "comments": "コメント",
+    "commentsEmpty": "まだコメントはありません",
+    "commentPostPlaceholder": "コメントを書く",
+    "commentSubmit": "投稿",
+    "commentDelete": "削除",
     "overview": "イベント概要",
     "participants": "参加者",
+    "participantsAccepted": "参加確定",
+    "participantsWaiting": "補欠",
+    "participantsCancelled": "キャンセル",
+    "participantsEmpty": "参加者はまだいません",
     "rolesHeading": "参加枠",
+    "rolesEmpty": "参加枠はまだ設定されていません",
     "applyHeading": "参加申込",
+    "addToCalendar": "カレンダーに追加",
+    "addToGoogleCalendar": "Google カレンダー",
+    "addToICal": "iCal (.ics)",
+    "shareTitle": "このイベントを共有",
+    "shareCopyLink": "リンクをコピー",
+    "shareQr": "QRコード",
+    "shareEmbed": "埋め込みコード",
+    "bookmark": "ブックマーク",
+    "bookmarked": "ブックマーク済み",
+    "lotteryAnnounceAt": "抽選発表: {time}",
+    "acceptsFrom": "受付開始: {time}",
+    "acceptsUntil": "受付終了: {time}",
+    "soldOut": "満員",
     "cta": {
       "open": "参加申込",
       "full": "補欠登録",
@@ -130,14 +195,24 @@
     "forgotPassword": "パスワードを忘れた方",
     "noAccount": "アカウントをお持ちでない方",
     "haveAccount": "すでにアカウントをお持ちの方",
-    "agreeTerms": "利用規約に同意する"
+    "agreeTerms": "利用規約に同意する",
+    "magicLinkSent": "ログインリンクをメールで送信しました",
+    "oauthTwitter": "X でログイン",
+    "oauthGithub": "GitHub でログイン",
+    "oauthFacebook": "Facebook でログイン"
   },
   "calendar": {
     "title": "カレンダー一覧",
     "subtitle": "テーマ別の技術カレンダーを購読",
     "subscribe": "購読する",
+    "unsubscribe": "購読を解除",
     "subscribers": "購読者",
-    "events": "イベント"
+    "events": "イベント",
+    "createCalendar": "カレンダーを作成",
+    "myCalendars": "マイカレンダー",
+    "emptyEvents": "このカレンダーにはまだイベントがありません",
+    "addEvent": "イベントを追加",
+    "manageEvents": "イベントを管理"
   },
   "discover": {
     "title": "Discover",
@@ -153,7 +228,32 @@
     "upcoming": "参加予定",
     "bookmarks": "ブックマーク",
     "owned": "主催",
-    "history": "参加履歴"
+    "history": "参加履歴",
+    "drafts": "下書き",
+    "hosting": "ホスト中",
+    "stats": "統計",
+    "noUpcoming": "参加予定のイベントはありません",
+    "noBookmarks": "ブックマークしたイベントはありません",
+    "noOwned": "主催したイベントはありません",
+    "noHistory": "参加したイベントはありません"
+  },
+  "hostDashboard": {
+    "title": "主催者ダッシュボード",
+    "tabs": {
+      "overview": "概要",
+      "participants": "参加者",
+      "registration": "参加枠",
+      "comments": "コメント",
+      "messages": "メッセージ",
+      "insights": "Insights"
+    },
+    "broadcast": "一斉メッセージを送信",
+    "exportCsv": "CSVエクスポート",
+    "exportXlsx": "Excelエクスポート",
+    "exportJson": "JSONエクスポート",
+    "noParticipants": "参加者はまだいません",
+    "checkIn": "チェックイン",
+    "promoteFromWaiting": "補欠から繰り上げ"
   },
   "notifications": {
     "title": "通知",
@@ -161,20 +261,103 @@
     "unread": "未読",
     "read": "既読",
     "markAllRead": "すべて既読にする",
-    "empty": "通知はありません"
+    "empty": "通知はありません",
+    "kind": {
+      "event_published": "イベントが公開されました",
+      "event_updated": "イベント情報が更新されました",
+      "event_cancelled": "イベントが中止されました",
+      "join_accepted": "参加が確定しました",
+      "join_waiting": "補欠登録されました",
+      "promoted_from_waiting": "補欠から繰り上がりました",
+      "lottery_result_accepted": "抽選で当選しました",
+      "lottery_result_lost": "抽選で落選しました",
+      "approval_pending": "参加リクエストが届いています",
+      "approval_approved": "参加が承認されました",
+      "approval_rejected": "参加が却下されました",
+      "reminder_24h": "イベント開催 24 時間前のリマインド",
+      "reminder_1h": "イベント開催 1 時間前のリマインド",
+      "comment_posted": "コメントが投稿されました",
+      "comment_reply": "あなたのコメントに返信がありました",
+      "host_message": "主催者からのメッセージ",
+      "broadcast": "一斉メッセージ"
+    }
   },
   "group": {
     "members": "メンバー",
     "events": "イベント",
-    "about": "グループについて"
+    "about": "グループについて",
+    "admins": "管理者",
+    "createEvent": "イベントを作成",
+    "joinGroup": "グループに参加",
+    "leaveGroup": "グループから退会",
+    "emptyEvents": "このグループのイベントはまだありません",
+    "tabs": {
+      "events": "イベント",
+      "members": "メンバー",
+      "about": "概要"
+    },
+    "memberCount": "{count}人のメンバー",
+    "eventCount": "{count}件のイベント"
   },
   "user": {
     "profile": "プロフィール",
     "events": "参加イベント",
-    "groups": "所属グループ"
+    "groups": "所属グループ",
+    "bio": "自己紹介",
+    "affiliation": "所属",
+    "location": "活動地域",
+    "website": "Webサイト",
+    "tabs": {
+      "events": "参加イベント",
+      "hosted": "主催イベント",
+      "groups": "所属グループ",
+      "presentations": "発表"
+    },
+    "noEvents": "参加したイベントはありません",
+    "noHosted": "主催したイベントはありません",
+    "noGroups": "所属グループはありません",
+    "noPresentations": "発表資料はありません"
   },
   "bookmarks": {
     "title": "ブックマーク",
     "empty": "ブックマークはまだありません"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "account": "アカウント",
+    "notifications": "通知設定",
+    "saved": "設定を保存しました",
+    "emailNotifications": "メール通知",
+    "reminderEmail": "リマインドメール",
+    "recommendationEmail": "おすすめメール",
+    "preferences": "通知プリファレンス"
+  },
+  "search": {
+    "placeholder": "イベントを検索",
+    "submit": "検索",
+    "noResults": "該当するイベントは見つかりませんでした",
+    "resultCount": "{count}件のイベント",
+    "filters": "絞り込み",
+    "clearFilters": "条件をクリア",
+    "sortBy": "並び替え",
+    "sort": {
+      "newest": "新着順",
+      "popular": "人気順",
+      "deadline": "締切が近い順"
+    }
+  },
+  "toast": {
+    "joined": "参加申込しました",
+    "joinedWaiting": "補欠登録しました",
+    "joinedPending": "抽選に申し込みました",
+    "cancelled": "参加をキャンセルしました",
+    "bookmarked": "ブックマークしました",
+    "unbookmarked": "ブックマークを解除しました",
+    "commented": "コメントを投稿しました",
+    "saved": "保存しました",
+    "deleted": "削除しました",
+    "linkCopied": "リンクをコピーしました",
+    "errorGeneric": "エラーが発生しました"
   }
 }

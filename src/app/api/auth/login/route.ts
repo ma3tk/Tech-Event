@@ -7,6 +7,12 @@
  *   - JSON リクエスト時は JSON でレスポンスを返す。
  * - パスワード未設定のユーザー (`passwordHash IS NULL`) はログイン不可。
  * - 認証失敗時は `?error=invalid` をつけた `/login` にリダイレクト。
+ *
+ * セキュリティ対策:
+ * - レート制限: 5 回 / 5 分 / IP (security review Medium #23)
+ * - User enumeration timing 対策: 存在しないメールでも dummy bcrypt 比較を実行
+ *   して応答時間を一定にする (security review Medium #22)
+ * - エラーメッセージは「メールアドレスまたはパスワードが違います」で統一
  */
 import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
@@ -15,6 +21,12 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { setSessionCookie } from "@/lib/auth";
 import { recordAudit } from "@/lib/audit";
+import {
+  RATE_LIMITS,
+  buildRateLimitResponse,
+  getRequestIp,
+  rateLimit,
+} from "@/lib/rate-limit";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -22,11 +34,17 @@ const LoginSchema = z.object({
   next: z.string().optional(),
 });
 
-/** Open redirect 防止: 相対パスのみ許可。先頭は `/` で始まり `//` (protocol-relative) は禁止。 */
+/**
+ * Open redirect 防止: 相対パスのみ許可。
+ * - 先頭は `/` で始まる
+ * - `//` (protocol-relative) を拒否
+ * - `:` を含むパスは `/javascript:` などの危険パターンを排除するため拒否
+ */
 function safeNextPath(raw: string | undefined | null): string {
   if (!raw) return "/dashboard";
   if (!raw.startsWith("/")) return "/dashboard";
   if (raw.startsWith("//")) return "/dashboard";
+  if (raw.includes(":")) return "/dashboard";
   return raw;
 }
 
@@ -73,7 +91,23 @@ function buildErrorRedirect(request: NextRequest, nextPath: string): NextRespons
   return NextResponse.redirect(url, { status: 303 });
 }
 
+/**
+ * 存在しないユーザーでも bcrypt の作業時間 (~250ms) を消費するための dummy hash。
+ * 12 ラウンドで bcrypt.hash("dummy", 12) を一度生成した固定値。
+ *
+ * user enumeration via timing 対策 (security review Medium #22)。
+ */
+const DUMMY_PASSWORD_HASH =
+  "$2b$12$NQ7tH9.4n.4vGgTpUcAYP.qY3jzqWXvF2/QzGZkXmgYqL9YGv0fJG";
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // ---- レート制限 (IP 単位) ----
+  const ip = getRequestIp(request);
+  const rl = rateLimit(`${ip}:login`, RATE_LIMITS.login);
+  if (!rl.ok) {
+    return buildRateLimitResponse(rl);
+  }
+
   const payload = await parsePayload(request);
 
   if (!payload) {
@@ -90,17 +124,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     where: { email: payload.email },
   });
 
-  if (!user || !user.passwordHash || user.status !== "active") {
-    if (isJsonRequest(request)) {
-      return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
-    }
-    return buildErrorRedirect(request, payload.next);
-  }
+  // ユーザーが存在しないか pwHash 未設定の場合でも、bcrypt.compare を必ず走らせて
+  // 応答時間を一定に揃える。最終的にこのパスは invalid_credentials になる。
+  const hashToCompare = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
+  const passwordOk = await bcrypt.compare(payload.password, hashToCompare);
 
-  const ok = await bcrypt.compare(payload.password, user.passwordHash);
-  if (!ok) {
+  if (!user || !user.passwordHash || user.status !== "active" || !passwordOk) {
+    // 監査ログ (失敗ログイン)
+    void recordAudit({
+      actorUserId: user?.id ?? null,
+      action: "login.failed",
+      targetType: "User",
+      targetId: user?.id ?? BigInt(0),
+      ipAddress: ip,
+      userAgent: request.headers.get("user-agent") ?? null,
+      metadata: { method: "password", reason: !user ? "no_user" : "invalid" },
+    });
     if (isJsonRequest(request)) {
-      return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
+      // メッセージは存在/不一致を区別せず固定文言
+      return NextResponse.json(
+        {
+          error: "invalid_credentials",
+          message: "メールアドレスまたはパスワードが違います",
+        },
+        { status: 401 },
+      );
     }
     return buildErrorRedirect(request, payload.next);
   }
@@ -123,6 +171,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     action: "login",
     targetType: "User",
     targetId: user.id,
+    ipAddress: ip,
+    userAgent: request.headers.get("user-agent") ?? null,
     metadata: { method: "password" },
   });
 

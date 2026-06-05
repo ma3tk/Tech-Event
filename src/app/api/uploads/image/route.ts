@@ -9,17 +9,26 @@
  *
  *   - 認証: `getCurrentUser()` で `te_session` cookie 必須
  *   - 上限: 5MB
+ *   - レート制限: 20 回 / 時 / user (security review Medium #23)
  *   - 戻り値: `{ url: string, provider: "local" | "s3" }`
  *
  * 失敗時:
  *   - 401 (unauthorized)
  *   - 400 (file missing / file too large / unsupported mime / bad kind)
+ *   - 429 (rate limit)
  *   - 500 (sharp / s3 等の予期しない例外)
  */
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
 import { uploadImage, MAX_IMAGE_BYTES, type ImageKind } from "@/lib/storage";
+import { withRequestId } from "@/lib/logger";
+import { incrementCounter, METRIC_NAMES } from "@/lib/metrics";
+import {
+  RATE_LIMITS,
+  buildRateLimitResponse,
+  rateLimit,
+} from "@/lib/rate-limit";
 
 const ALLOWED_KINDS: ImageKind[] = [
   "event-cover",
@@ -35,6 +44,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // ---- レート制限 (user 単位) ----
+  const rl = rateLimit(`user:${user.id}:upload-image`, RATE_LIMITS.imageUpload);
+  if (!rl.ok) {
+    return buildRateLimitResponse(rl);
   }
 
   let form: FormData;
@@ -72,10 +87,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
+  const log = withRequestId(request.headers);
   try {
     const result = await uploadImage(buffer, {
       filename: file.name || "upload",
       mimeType,
+      kind,
+    });
+    incrementCounter(METRIC_NAMES.UPLOADS_TOTAL, {
+      provider: result.provider,
       kind,
     });
     return NextResponse.json({ url: result.url, provider: result.provider });
@@ -93,7 +113,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         { status: 400 },
       );
     }
-    console.error(`[uploads/image] failed: ${message}`);
+    log.error({ err, action: "uploads.image" }, "image upload failed");
+    incrementCounter(METRIC_NAMES.ERRORS_TOTAL, {
+      route: "/api/uploads/image",
+    });
     return NextResponse.json({ error: "upload_failed" }, { status: 500 });
   }
 }

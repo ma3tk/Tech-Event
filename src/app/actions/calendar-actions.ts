@@ -21,39 +21,15 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { nextId } from "@/lib/id-gen";
 import { buildRedirectUrlWithFormError } from "@/lib/action-error";
+import { recordAudit } from "@/lib/audit";
+import { isReservedSlug } from "@/lib/reserved-words";
+import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
+import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
+import { SlugSchema, UrlOrEmpty, HexColorOrEmpty } from "@/lib/schemas";
 
 /* ============================================================
  * 入力ヘルパー
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-
-function formValueRaw(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-const SlugSchema = z
-  .string()
-  .min(3, "slug は 3 文字以上")
-  .max(63, "slug は 63 文字以下")
-  .regex(/^[a-z0-9-]+$/, "slug は半角英小文字・数字・ハイフンのみ");
-
-const UrlOrEmpty = z
-  .string()
-  .max(2000)
-  .refine((v) => v === "" || /^https?:\/\//.test(v), "URL は http(s):// で始める");
-
-const HexColorOrEmpty = z
-  .string()
-  .max(20)
-  .refine(
-    (v) => v === "" || /^#[0-9a-fA-F]{3,8}$/.test(v),
-    "カラーは #RGB / #RRGGBB 形式",
-  );
 
 const CalendarBaseSchema = z.object({
   name: z.string().min(1, "name は必須").max(120),
@@ -133,6 +109,24 @@ export async function createCalendar(formData: FormData): Promise<void> {
     redirect(`/login?next=${encodeURIComponent("/calendar/create")}`);
   }
 
+  // ---- レート制限 (user 単位: 5 回/時) ----
+  try {
+    assertRateLimit(
+      `user:${user.id}:createCalendar`,
+      RATE_LIMITS.createResource,
+    );
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      redirectWithError(
+        "/calendar/create",
+        formData,
+        "rate_limited",
+        e.message,
+      );
+    }
+    throw e;
+  }
+
   const parsed = CreateCalendarSchema.safeParse({
     slug: formValue(formData, "slug"),
     name: formValue(formData, "name"),
@@ -150,6 +144,16 @@ export async function createCalendar(formData: FormData): Promise<void> {
     );
   }
   const data = parsed.data;
+
+  // 予約語チェック (システムパス衝突 / フィッシング対策)
+  if (isReservedSlug(data.slug)) {
+    redirectWithError(
+      "/calendar/create",
+      formData,
+      "slug_reserved",
+      `slug "${data.slug}" は予約語のため使用できません`,
+    );
+  }
 
   const dup = await prisma.calendar.findUnique({
     where: { slug: data.slug },
@@ -201,6 +205,15 @@ export async function createCalendar(formData: FormData): Promise<void> {
       "カレンダーの作成に失敗しました",
     );
   }
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "calendar.create",
+    targetType: "Calendar",
+    targetId: BigInt(0),
+    metadata: { slug: createdSlug ?? data.slug },
+  });
 
   revalidatePath("/calendars");
   revalidatePath("/dashboard");
@@ -292,6 +305,14 @@ export async function subscribeCalendar(formData: FormData): Promise<void> {
       });
     });
   }
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "calendar.subscribe",
+    targetType: "Calendar",
+    targetId: cal.id,
+  });
 
   revalidatePath(`/calendar/${cal.slug}`);
   revalidatePath("/calendars");
@@ -422,22 +443,84 @@ export async function createCalendarFromBookmarks(
     redirect(`/login?next=${encodeURIComponent("/bookmarks")}`);
   }
 
-  // フォームで任意の名前を渡せる (空ならデフォルト)
+  // フォームで任意の名前 / 説明文を渡せる (空ならデフォルト)
   const name = formValue(formData, "name") || "気になるイベント";
+  const description =
+    formValueRaw(formData, "description") ||
+    "自分のブックマークから一括作成したカレンダー";
 
-  // slug 衝突回避のため `bookmarks-<nickname>-<unix>` を採番
-  const baseSlug = `bookmarks-${user.nickname}`
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  const slug = `${baseSlug || "bookmarks"}-${Date.now()}`;
+  // P2 拡張: 個別選択した eventIds が送られていれば、その部分集合のみ使う。
+  // 未送信なら従来通り「自分の Bookmark 全件」を取り込む (旧 UI 互換)。
+  const selectedRaw = formData.getAll("eventIds");
+  const selected = selectedRaw
+    .filter((v): v is string => typeof v === "string")
+    .filter((v) => /^\d+$/.test(v))
+    .map((v) => BigInt(v));
 
   const bookmarks = await prisma.bookmark.findMany({
     where: { userId: user.id },
     select: { eventId: true },
     orderBy: { createdAt: "desc" },
   });
+  // 自分のブックマークと交差させる (任意の eventId を勝手に追加できないようにする)
+  const ownEventIds = new Set(bookmarks.map((b) => b.eventId.toString()));
+  const eventIds: bigint[] =
+    selected.length > 0
+      ? selected.filter((id) => ownEventIds.has(id.toString()))
+      : bookmarks.map((b) => b.eventId);
+
+  // 既存 calendar slug が指定された場合は「既存 calendar に追加」モードに切り替える。
+  const existingSlugRaw = formValue(formData, "existingCalendarSlug");
+  if (existingSlugRaw) {
+    const existing = await prisma.calendar.findUnique({
+      where: { slug: existingSlugRaw },
+      select: { id: true, slug: true, ownerUserId: true },
+    });
+    if (!existing || existing.ownerUserId !== user.id) {
+      // 不正な slug や他人の calendar への混入を防ぐ
+      redirect(`/bookmarks?toast=calendar-add-forbidden`);
+    } else {
+      let added = 0;
+      if (eventIds.length > 0) {
+        await prisma.$transaction(async (tx) => {
+          for (const eid of eventIds) {
+            const exists = await tx.calendarEvent.findUnique({
+              where: {
+                calendarId_eventId: {
+                  calendarId: existing.id,
+                  eventId: eid,
+                },
+              },
+              select: { calendarId: true },
+            });
+            if (exists) continue;
+            await tx.calendarEvent.create({
+              data: { calendarId: existing.id, eventId: eid },
+            });
+            added++;
+          }
+          if (added > 0) {
+            await tx.calendar.update({
+              where: { id: existing.id },
+              data: { eventCount: { increment: added } },
+            });
+          }
+        });
+      }
+      revalidatePath(`/calendar/${existing.slug}`);
+      revalidatePath("/calendars");
+      revalidatePath("/bookmarks");
+      redirect(`/calendar/${existing.slug}?toast=bookmarks-added`);
+    }
+  }
+
+  // 新規 calendar 作成
+  const baseSlug = `bookmarks-${user.nickname}`
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  const slug = `${baseSlug || "bookmarks"}-${Date.now()}`;
 
   let createdSlug = slug;
   await prisma.$transaction(async (tx) => {
@@ -447,7 +530,7 @@ export async function createCalendarFromBookmarks(
         id: calId,
         slug,
         name,
-        description: "自分のブックマークから一括作成したカレンダー",
+        description,
         coverImageUrl: null,
         tintColor: null,
         ownerUserId: user.id,
@@ -458,18 +541,16 @@ export async function createCalendarFromBookmarks(
     });
     createdSlug = slug;
 
-    // CalendarEvent (中間テーブル) は auto id なし: createMany でまとめて追加
-    if (bookmarks.length > 0) {
-      // skipDuplicates 相当: ユーザー Bookmark なら同一 (calendarId,eventId) は無いはず
+    if (eventIds.length > 0) {
       await tx.calendarEvent.createMany({
-        data: bookmarks.map((b) => ({
+        data: eventIds.map((eid) => ({
           calendarId: calId,
-          eventId: b.eventId,
+          eventId: eid,
         })),
       });
       await tx.calendar.update({
         where: { id: calId },
-        data: { eventCount: bookmarks.length },
+        data: { eventCount: eventIds.length },
       });
     }
   });

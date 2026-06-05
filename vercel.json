@@ -1,0 +1,71 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "prisma migrate deploy && next build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "regions": ["nrt1"],
+  "functions": {
+    "src/app/api/cron/run-lotteries/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/payments/webhook/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/uploads/image/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/auth/[...nextauth]/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/auth/login/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/auth/logout/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/auth/dev-login/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/auth/magic-link/request/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/auth/magic-link/verify/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/v2/events/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/v2/groups/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/v2/users/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/v2/calendars/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/health/route.ts": {
+      "maxDuration": 5
+    },
+    "src/app/api/ready/route.ts": {
+      "maxDuration": 5
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/run-lotteries?secret=$CRON_SECRET",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}

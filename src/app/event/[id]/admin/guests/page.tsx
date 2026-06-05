@@ -27,6 +27,8 @@ import {
   rejectParticipant,
 } from "@/app/actions/approval-actions";
 
+import DirectMessageButton from "./DirectMessageButton";
+
 export const dynamic = "force-dynamic";
 
 type PageProps = {
@@ -155,14 +157,24 @@ export default async function EventAdminGuestsPage({
     <div data-testid="admin-panel-guests">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold">Guests</h2>
-        <a
-          href={`/event/${eventIdStr}/admin/guests/export.csv`}
-          className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
-          data-testid="admin-guests-csv-button"
-          download
-        >
-          CSV エクスポート
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/event/${eventIdStr}/admin/guests/export.csv`}
+            className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
+            data-testid="admin-guests-csv-button"
+            download
+          >
+            CSV エクスポート
+          </a>
+          <a
+            href={`/event/${eventIdStr}/admin/guests/export.xlsx`}
+            className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
+            data-testid="admin-guests-xlsx-button"
+            download
+          >
+            Excel エクスポート
+          </a>
+        </div>
       </div>
 
       {/* フィルタ */}
@@ -417,6 +429,11 @@ export default async function EventAdminGuestsPage({
                           </button>
                         </form>
                       )}
+                      <DirectMessageButton
+                        eventId={eventIdStr}
+                        participantId={p.id.toString()}
+                        recipientName={p.user.displayName}
+                      />
                       <form action={removeParticipant}>
                         <input
                           type="hidden"

@@ -19,11 +19,19 @@
 
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/index.js";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+// DATABASE_URL の接頭で adapter を切り替える (SQLite/PG 両対応)。
+// SQLite 専用の挙動を維持しつつ、PG 切替時も同じ seed が動くようにする。
+const databaseUrl = process.env.DATABASE_URL ?? "file:./dev.db";
+const isPostgres =
+  databaseUrl.startsWith("postgres://") ||
+  databaseUrl.startsWith("postgresql://");
+
+const adapter = isPostgres
+  ? new PrismaPg({ connectionString: databaseUrl })
+  : new PrismaBetterSqlite3({ url: databaseUrl });
 const prisma = new PrismaClient({ adapter });
 
 /* ============================================================
@@ -249,7 +257,6 @@ async function cleanup(): Promise<void> {
   await prisma.surveyQuestion.deleteMany();
   await prisma.survey.deleteMany();
   await prisma.payment.deleteMany();
-  await prisma.voucherCode.deleteMany();
   await prisma.participant.deleteMany();
   await prisma.eventRole.deleteMany();
   await prisma.eventTag.deleteMany();
@@ -258,7 +265,6 @@ async function cleanup(): Promise<void> {
   await prisma.bookmark.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.message.deleteMany();
-  await prisma.eventStat.deleteMany();
   // Calendar 系 (Event 削除前に消す: CalendarEvent は Event/Calendar の FK を持つ)
   await prisma.calendarSubscription.deleteMany();
   await prisma.calendarEvent.deleteMany();
@@ -973,21 +979,6 @@ async function seedEvents(
       },
     });
 
-    // EventStat
-    await prisma.eventStat.create({
-      data: {
-        eventId: event.id,
-        pageViews: randInt(100, 3000),
-        uniqueViewers: randInt(50, 1500),
-        applyCount: acceptedCount + waitingCount,
-        cancelCount: randInt(0, 5),
-        attendanceRate:
-          plan.status === "closed"
-            ? 0.6 + Math.random() * 0.3
-            : null,
-      },
-    });
-
     // Comments: 0〜5 件
     const commentCount = randInt(0, 5);
     for (let c = 0; c < commentCount; c++) {
@@ -1248,7 +1239,6 @@ async function main(): Promise<void> {
     eventTags: await prisma.eventTag.count(),
     comments: await prisma.comment.count(),
     presentations: await prisma.presentationMaterial.count(),
-    eventStats: await prisma.eventStat.count(),
     calendars: await prisma.calendar.count(),
     calendarEvents: await prisma.calendarEvent.count(),
     calendarSubscriptions: await prisma.calendarSubscription.count(),

@@ -22,18 +22,15 @@ import {
   isStripeEnabled,
 } from "@/lib/stripe";
 
+import { BigIntIdSchema } from "@/lib/schemas";
+
 /* ============================================================
  * 型 / Schema
  * ============================================================ */
 
-const BigIntIdString = z
-  .string()
-  .regex(/^\d+$/, "id must be digits only")
-  .transform((s) => BigInt(s));
-
 const CheckoutInputSchema = z.object({
-  eventId: BigIntIdString,
-  eventRoleId: BigIntIdString,
+  eventId: BigIntIdSchema,
+  eventRoleId: BigIntIdSchema,
 });
 
 export type CheckoutSessionResult =

@@ -13,9 +13,11 @@ export const DEFAULT_DESCRIPTION =
 
 export const DEFAULT_LOCALE = "ja_JP";
 
+import { env } from "@/env";
+
 /** 環境変数優先。未設定なら localhost にフォールバック。末尾スラッシュは除去。 */
 export const BASE_URL = (
-  process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
+  env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
 ).replace(/\/+$/, "");
 
 /** 相対 path から絶対 URL を組み立てる。 */

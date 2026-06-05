@@ -116,9 +116,25 @@ https://<owner>.github.io/<repo>/
 ### 3.2 リポジトリ設定 (一度だけ)
 
 1. **Settings > Pages**:
-   - "Build and deployment" の Source を **`gh-pages` branch (root)** に設定
+   - 初回は **"Source: Deploy from a branch"** を選択 (まだ branch が無くても OK)
+   - `gh-pages` ブランチは workflow 初回実行時に `peaceiris/actions-gh-pages@v4` が
+     自動で作成・push する
+   - 一度デプロイされたら Source を **`gh-pages` branch (root)** に設定
 2. **Settings > Actions > General**:
    - "Workflow permissions" を **Read and write permissions** に変更
+   - "Allow GitHub Actions to create and approve pull requests" を ON
+
+### 3.2.1 初回デプロイのトリガ手順 (Pages 有効化)
+
+1. `main` に commit を push する (どの src/** 変更でも path filter に一致する)
+2. もしくは Actions タブから **"storybook"** workflow を選び `workflow_dispatch` で
+   手動実行
+3. 成功すると **gh-pages ブランチが自動生成** され、`storybook-static/` の中身が push される
+4. Settings > Pages で Source を `gh-pages` に切替えると、5-10 分後に
+   `https://<owner>.github.io/<repo>/` で公開される
+5. 公開 URL は job summary (Actions の "Print public Storybook URL" step) にも出力される
+
+> 初回だけ Source が `None` のままだと 404 になる。**Settings > Pages を必ず確認すること。**
 
 ### 3.3 path フィルタ
 

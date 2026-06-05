@@ -1,6 +1,7 @@
 allowBuilds:
   '@parcel/watcher': set this to true or false
   '@prisma/engines': true
+  '@sentry/cli': false
   '@swc/core': set this to true or false
   better-sqlite3: true
   esbuild: true

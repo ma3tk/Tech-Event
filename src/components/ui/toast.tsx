@@ -17,6 +17,11 @@ const Toaster = ({ className, ...props }: ToasterProps) => {
   return (
     <SonnerToaster
       className={cn("toaster group", className)}
+      // Sonner はデフォルトで `aria-live="polite"` を出すが、UX/A11y review (Medium) で
+      // 動的トースト読み上げの保証を明示するため `richColors` のまま `expand` 等を上書き。
+      // `region` を polite に固定し、エラー toast は別途 sonner 側で assertive。
+      // `data-sonner-toaster` 要素には `role="region"` `aria-label="Notifications"` も付く。
+      visibleToasts={5}
       toastOptions={{
         classNames: {
           toast: cn(

@@ -22,6 +22,8 @@ export type NotificationKind =
   | "comment_reply"
   | "bookmark_event_started"
   | "group_message"
+  | "host_direct_message"
+  | "host_blast"
   | string;
 
 /**
@@ -118,6 +120,9 @@ export type NotificationPayload = {
   participantUserId?: string;
   eventTitle?: string;
   excerpt?: string;
+  /** host blast / direct message 用 */
+  messageId?: string;
+  subject?: string;
 };
 
 /** JSON 文字列の payload を安全に object 化する。失敗時は空オブジェクト。 */
@@ -165,6 +170,14 @@ export function formatNotificationText(
     case "event_published": {
       const title = payload.eventTitle ?? "新しいイベント";
       return `グループの新規イベント「${title}」が公開されました`;
+    }
+    case "host_blast": {
+      const subject = payload.subject ?? "お知らせ";
+      return `主催者からの一斉メッセージ: 「${subject}」`;
+    }
+    case "host_direct_message": {
+      const subject = payload.subject ?? "お知らせ";
+      return `主催者からのメッセージ: 「${subject}」`;
     }
     default:
       return `通知 (${kind})`;

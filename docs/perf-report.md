@@ -1768,3 +1768,84 @@ Turbopack 出力の chunk から、`build-manifest.json` の `rootMainFiles` + `
 
 - warm 計測で 1500ms を超えるページはなかった (dev サーバ計測のため、production ではさらに改善見込み)。
 
+
+## 2. 主要ページ応答時間 (dev server / Playwright Navigation Timing)
+
+計測日: 2026-06-05T13:01:28.844Z
+
+計測方式:
+- `page.goto(url, { waitUntil: "load" })` 後に `PerformanceNavigationTiming` から TTFB / DOMContentLoaded / Load を取得
+- 各ページを 2 回ロードし、cold (初回コンパイル含む) と warm (2 回目, ブラウザ HTTP キャッシュは無効) を併記
+- 環境: macOS / Node 20 / Next.js 16.2.7 dev サーバ / Chromium Desktop (1280x800)
+
+| ページ | パス | TTFB(cold) | DCL(cold) | Load(cold) | TTFB(warm) | DCL(warm) | Load(warm) |
+| --- | --- | --: | --: | --: | --: | --: | --: |
+| トップ | `/` | 334ms | 426ms | 445ms | 192ms | 278ms | 294ms |
+| イベント一覧 | `/explore` | 162ms | 227ms | 257ms | 157ms | 224ms | 248ms |
+| イベント詳細 | `/event/1` | 204ms | 294ms | 318ms | 204ms | 276ms | 297ms |
+| グループ詳細 | `/group/findy` | 150ms | 209ms | 727ms | 114ms | 170ms | 183ms |
+| ユーザープロフィール | `/user/fast_moon_169` | 287ms | 364ms | 974ms | 207ms | 280ms | 304ms |
+| カレンダー詳細 | `/calendar/ai-developers` | 134ms | 191ms | 585ms | 117ms | 172ms | 187ms |
+| ランキング | `/ranking` | 380ms | 549ms | 549ms | 253ms | 325ms | 367ms |
+| ディスカバー | `/discover` | 707ms | 824ms | 870ms | 388ms | 480ms | 511ms |
+| ブックマーク | `/bookmarks` | 520ms | 582ms | 596ms | 95ms | 162ms | 168ms |
+| 通知センター | `/notifications` | 135ms | 185ms | 196ms | 75ms | 127ms | 138ms |
+
+### 異常に遅いページの仮説
+
+- warm 計測で 1500ms を超えるページはなかった (dev サーバ計測のため、production ではさらに改善見込み)。
+
+
+## 2. 主要ページ応答時間 (dev server / Playwright Navigation Timing)
+
+計測日: 2026-06-05T13:21:13.666Z
+
+計測方式:
+- `page.goto(url, { waitUntil: "load" })` 後に `PerformanceNavigationTiming` から TTFB / DOMContentLoaded / Load を取得
+- 各ページを 2 回ロードし、cold (初回コンパイル含む) と warm (2 回目, ブラウザ HTTP キャッシュは無効) を併記
+- 環境: macOS / Node 20 / Next.js 16.2.7 dev サーバ / Chromium Desktop (1280x800)
+
+| ページ | パス | TTFB(cold) | DCL(cold) | Load(cold) | TTFB(warm) | DCL(warm) | Load(warm) |
+| --- | --- | --: | --: | --: | --: | --: | --: |
+| トップ | `/` | 491ms | 568ms | 602ms | 208ms | 329ms | 329ms |
+| イベント一覧 | `/explore` | 470ms | 533ms | 560ms | 165ms | 243ms | 255ms |
+| イベント詳細 | `/event/1` | 244ms | 330ms | 355ms | 587ms | 775ms | 775ms |
+| グループ詳細 | `/group/findy` | 182ms | 246ms | 465ms | 120ms | 181ms | 213ms |
+| ユーザープロフィール | `/user/fast_moon_169` | 253ms | 340ms | 788ms | 213ms | 284ms | 302ms |
+| カレンダー詳細 | `/calendar/ai-developers` | 155ms | 213ms | 484ms | 112ms | 168ms | 182ms |
+| ランキング | `/ranking` | 196ms | 628ms | 629ms | 338ms | 408ms | 455ms |
+| ディスカバー | `/discover` | 642ms | 730ms | 829ms | 460ms | 540ms | 580ms |
+| ブックマーク | `/bookmarks` | 121ms | 171ms | 571ms | 89ms | 140ms | 154ms |
+| 通知センター | `/notifications` | 96ms | 151ms | 163ms | 75ms | 122ms | 135ms |
+
+### 異常に遅いページの仮説
+
+- warm 計測で 1500ms を超えるページはなかった (dev サーバ計測のため、production ではさらに改善見込み)。
+
+
+## 2. 主要ページ応答時間 (dev server / Playwright Navigation Timing)
+
+計測日: 2026-06-05T13:30:28.638Z
+
+計測方式:
+- `page.goto(url, { waitUntil: "load" })` 後に `PerformanceNavigationTiming` から TTFB / DOMContentLoaded / Load を取得
+- 各ページを 2 回ロードし、cold (初回コンパイル含む) と warm (2 回目, ブラウザ HTTP キャッシュは無効) を併記
+- 環境: macOS / Node 20 / Next.js 16.2.7 dev サーバ / Chromium Desktop (1280x800)
+
+| ページ | パス | TTFB(cold) | DCL(cold) | Load(cold) | TTFB(warm) | DCL(warm) | Load(warm) |
+| --- | --- | --: | --: | --: | --: | --: | --: |
+| トップ | `/` | 308ms | 400ms | 418ms | 188ms | 280ms | 280ms |
+| イベント一覧 | `/explore` | 156ms | 302ms | 325ms | 189ms | 266ms | 285ms |
+| イベント詳細 | `/event/1` | 232ms | 296ms | 330ms | 229ms | 314ms | 326ms |
+| グループ詳細 | `/group/findy` | 141ms | 196ms | 461ms | 113ms | 170ms | 184ms |
+| ユーザープロフィール | `/user/fast_moon_169` | 199ms | 271ms | 764ms | 190ms | 256ms | 278ms |
+| カレンダー詳細 | `/calendar/ai-developers` | 119ms | 189ms | 592ms | 107ms | 177ms | 200ms |
+| ランキング | `/ranking` | 169ms | 236ms | 384ms | 153ms | 221ms | 245ms |
+| ディスカバー | `/discover` | 272ms | 367ms | 403ms | 233ms | 334ms | 350ms |
+| ブックマーク | `/bookmarks` | 198ms | 254ms | 537ms | 88ms | 151ms | 156ms |
+| 通知センター | `/notifications` | 81ms | 130ms | 143ms | 71ms | 128ms | 134ms |
+
+### 異常に遅いページの仮説
+
+- warm 計測で 1500ms を超えるページはなかった (dev サーバ計測のため、production ではさらに改善見込み)。
+

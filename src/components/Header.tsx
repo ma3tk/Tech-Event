@@ -1,21 +1,33 @@
 "use client";
 
+/**
+ * グローバルヘッダー (Client wrapper)。
+ *
+ * 旧 606+ 行版を Server/Client 分割の前段としてリファクタリング:
+ *  - 静的部分 (ロゴ / ナビ / モバイルメニュー frame) はそのまま残しつつ、
+ *    interactive 要素 (theme / dropdown menu / hamburger state) を子コンポーネントに切り出し:
+ *    - `ThemeSwitcher.tsx` (`useTheme` 依存)
+ *    - `UserMenuDropdown.tsx` (Radix DropdownMenu)
+ *    - hamburger 状態 (`useState`) と SSE 通知購読 (`useNotificationStream`) は本ファイル内
+ *  - `<Header user labels searchQuery locale />` の **props 互換性は維持**
+ *    (`Header.stories.tsx` / `HeaderServer.tsx` の呼び出し方は変更不要)
+ *
+ * E2E のセレクタ (`data-testid="header-*"`, `data-open`) はすべて温存する。
+ */
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Menu,
-  X,
-  Bell,
-  User,
-  Sun,
-  Moon,
-  Monitor,
-  Contrast,
-  ArrowLeftRight,
-} from "lucide-react";
+import { Menu, X, Bell, User } from "lucide-react";
+
 import { cn } from "@/lib/cn";
 import SearchBox from "./SearchBox";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher";
+import UserMenuDropdown from "./UserMenuDropdown";
+import {
+  useNotificationStream,
+  NOTIFICATION_UNREAD_EVENT,
+} from "@/hooks/useNotificationStream";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -23,17 +35,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
-import { useTheme, type Theme, type Contrast as ContrastType } from "./ThemeProvider";
 
 /**
  * Header に渡すログイン済みユーザー情報。
@@ -54,12 +55,6 @@ export type HeaderUser = {
   unreadNotificationCount?: number;
 };
 
-/**
- * `<Header>` の Props。
- *
- * - 全フィールドが optional のため、Storybook や未ログインのテストでは `<Header />` だけで動作する。
- * - Server Component から呼び出す場合は通常 `HeaderServer` 経由を推奨 (`getCurrentUser()` を解決済み)。
- */
 /**
  * Header に渡す翻訳済みラベル群。Server で解決した辞書を Client に流し込む。
  * 未指定時は日本語のフォールバックを使う。
@@ -122,17 +117,7 @@ function buildNavLinks(labels: HeaderLabels): NavLink[] {
 }
 
 /**
- * グローバルヘッダー。
- *
- * - ロゴ (テキスト "tech-event") をトップへのリンクとして表示
- * - 中央に検索ボックス、右側にナビゲーション + アカウント領域
- * - モバイル幅 (<768px) ではハンバーガーメニューに集約 (E2E が
- *   `data-testid="header-mobile-menu"` の `data-open` 属性を見ているため、
- *   Sheet primitive (Radix Portal) ではなくインラインドロワーで実装)
- * - 未ログイン時はログイン/新規登録ボタン、ログイン時はベル + アバター
- *   (アカウントメニューは `ui/DropdownMenu`)
- * - 通知ベルの隣にダークモード切替 (`light/dark/system`) を `ui/DropdownMenu` で
- *   配置。`useTheme()` の値を radio 選択で同期。
+ * グローバルヘッダー。詳細は本ファイル冒頭の JSDoc を参照。
  */
 export default function Header({
   user = null,
@@ -145,7 +130,6 @@ export default function Header({
   const NAV_LINKS = buildNavLinks(labels);
 
   // モバイルメニュー展開中は背景スクロールを止める。
-  // (`useEffect` で `document.body.style.overflow` を切替)
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (isMobileOpen) {
@@ -158,7 +142,34 @@ export default function Header({
     return undefined;
   }, [isMobileOpen]);
 
-  const unread = user?.unreadNotificationCount ?? 0;
+  /**
+   * 未読通知数: 初期値は server 側で算出した値 (`user.unreadNotificationCount`)。
+   *
+   * SSE で新規通知が到着すると `useNotificationStream` が
+   * `NOTIFICATION_UNREAD_EVENT` (CustomEvent) を `window` に発火するので、
+   * Header はそれを購読してバッジを increment / 同期する。
+   */
+  const initialUnread = user?.unreadNotificationCount ?? 0;
+  const [unread, setUnread] = useState<number>(initialUnread);
+  useEffect(() => {
+    setUnread(initialUnread);
+  }, [initialUnread]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onUnread = (e: Event): void => {
+      const detail = (e as CustomEvent<{ unreadCount?: number }>).detail;
+      if (detail && typeof detail.unreadCount === "number") {
+        setUnread(detail.unreadCount);
+      }
+    };
+    window.addEventListener(NOTIFICATION_UNREAD_EVENT, onUnread);
+    return () =>
+      window.removeEventListener(NOTIFICATION_UNREAD_EVENT, onUnread);
+  }, []);
+
+  // SSE 接続: ログイン済みのみ
+  useNotificationStream({ enabled: !!user });
 
   return (
     <header
@@ -190,7 +201,9 @@ export default function Header({
           className="flex items-center font-bold text-brand-orange hover:text-brand-orange-hover transition-colors"
           aria-label="tech-event トップへ"
         >
-          <span className="text-xl md:text-2xl tracking-tight">tech-event</span>
+          <span lang="en" className="text-xl md:text-2xl tracking-tight">
+            tech-event
+          </span>
         </Link>
 
         {/* 検索ボックス (md 以上で表示) */}
@@ -220,7 +233,12 @@ export default function Header({
         {/* アカウント領域 */}
         <div className="ms-auto md:ms-0 flex items-center gap-2">
           {user ? (
-            <LoggedInAccount user={user} labels={labels} locale={locale} />
+            <LoggedInAccount
+              user={user}
+              labels={labels}
+              locale={locale}
+              unread={unread}
+            />
           ) : (
             <LoggedOutActions labels={labels} locale={locale} />
           )}
@@ -234,8 +252,6 @@ export default function Header({
         data-open={isMobileOpen ? "true" : "false"}
         className={cn(
           "md:hidden border-t border-border bg-surface",
-          // 展開時は画面いっぱいに広げて body スクロールと競合しないように
-          // (一覧が長くてもメニュー内スクロールで賄う)
           isMobileOpen
             ? "fixed inset-x-0 top-14 z-40 block max-h-[calc(100vh-3.5rem)] overflow-y-auto"
             : "hidden",
@@ -298,7 +314,7 @@ export default function Header({
                     className="flex items-center gap-2 px-4 py-3 text-base font-medium text-foreground hover:bg-brand-orange-soft"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <UserAvatar user={user} size="sm" />
+                    <HeaderAvatar user={user} size="sm" />
                     {user.nickname}
                   </Link>
                 </li>
@@ -348,7 +364,7 @@ function LoggedOutActions({
         <Link href="/signup">{labels.signup}</Link>
       </Button>
       <LanguageSwitcher initialLocale={locale} />
-      <ThemeToggle />
+      <ThemeSwitcher />
     </div>
   );
 }
@@ -357,12 +373,14 @@ function LoggedInAccount({
   user,
   labels,
   locale,
+  unread: unreadProp,
 }: {
   user: HeaderUser;
   labels: HeaderLabels;
   locale?: "ja" | "en";
+  unread?: number;
 }) {
-  const unread = user.unreadNotificationCount ?? 0;
+  const unread = unreadProp ?? user.unreadNotificationCount ?? 0;
   return (
     <div className="flex items-center gap-1">
       {/* イベント作成リンク (デスクトップのみ): 本家連動の赤背景 */}
@@ -370,7 +388,6 @@ function LoggedInAccount({
         asChild
         variant="destructive"
         size="sm"
-        // 旧見た目: h-9 / px-3 / font-semibold / shadow-sm
         className="hidden md:inline-flex h-9 px-3 font-semibold shadow-sm"
       >
         <Link href="/event/create" data-testid="header-create-event">
@@ -413,45 +430,27 @@ function LoggedInAccount({
       {/* 言語切替 */}
       <LanguageSwitcher initialLocale={locale} />
 
-      {/* ダークモード切替: 通知ベルの隣 */}
-      <ThemeToggle />
+      {/* ダークモード切替 (extracted: ThemeSwitcher.tsx) */}
+      <ThemeSwitcher />
 
-      {/* アカウントメニュー (DropdownMenu) */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex h-10 items-center gap-2 rounded-full px-1 hover:bg-brand-orange-soft transition-colors"
-            aria-label={`${user.nickname} のメニュー`}
-          >
-            <UserAvatar user={user} size="md" />
-            <span className="sr-only">{user.nickname}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{user.nickname}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard">{labels.dashboard}</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/users/${user.id}`}>{labels.profile}</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings">{labels.settings}</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/logout">{labels.logout}</Link>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* アカウントメニュー (extracted: UserMenuDropdown.tsx) */}
+      <UserMenuDropdown
+        userId={user.id}
+        nickname={user.nickname}
+        avatarUrl={user.avatarUrl}
+        labels={{
+          dashboard: labels.dashboard,
+          profile: labels.profile,
+          settings: labels.settings,
+          logout: labels.logout,
+        }}
+      />
     </div>
   );
 }
 
-/** ユーザーアバター (デフォルト Lucide User アイコン or 画像) */
-function UserAvatar({
+/** ユーザーアバター (モバイルメニュー内で利用) */
+function HeaderAvatar({
   user,
   size,
 }: {
@@ -466,141 +465,5 @@ function UserAvatar({
         <User aria-hidden="true" className="h-4 w-4" />
       </AvatarFallback>
     </Avatar>
-  );
-}
-
-/**
- * テーマ切替ボタン。
- *
- * - `useTheme()` から現在の theme (light/dark/system) と contrast (normal/more) を取得
- * - `ui/DropdownMenu` の RadioGroup で 3 択 (テーマ) + 2 択 (コントラスト)
- * - トリガーは `ui/Button` (icon size、ghost variant)
- * - High Contrast 有効中はトリガーアイコンを `Contrast` に切替
- */
-/**
- * 書字方向 (dir = ltr | rtl) の管理。
- *
- * - `<html dir="…">` 属性を切替
- * - localStorage `tech-event:dir` に保存
- * - mount 時にだけ復元 (hydration mismatch 回避: SSR では常に LTR)
- *
- * RTL の対応範囲は最小 (Header / Breadcrumb / Pagination)。詳細は
- * `Design System / RTL` (RTL.mdx) 参照。
- */
-type Dir = "ltr" | "rtl";
-const DIR_STORAGE_KEY = "tech-event:dir";
-
-function useDirection(): {
-  dir: Dir;
-  setDir: (next: Dir) => void;
-} {
-  const [dir, setDirState] = useState<Dir>("ltr");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let stored: Dir | null = null;
-    try {
-      const v = window.localStorage.getItem(DIR_STORAGE_KEY);
-      if (v === "ltr" || v === "rtl") stored = v;
-    } catch {
-      /* localStorage 無効 — LTR フォールバック */
-    }
-    if (stored) {
-      setDirState(stored);
-      document.documentElement.setAttribute("dir", stored);
-    }
-  }, []);
-
-  const setDir = (next: Dir) => {
-    setDirState(next);
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("dir", next);
-    }
-    try {
-      window.localStorage.setItem(DIR_STORAGE_KEY, next);
-    } catch {
-      /* 書き込み失敗は無視 */
-    }
-  };
-
-  return { dir, setDir };
-}
-
-function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme, contrast, setContrast } = useTheme();
-  const { dir, setDir } = useDirection();
-  const Icon =
-    contrast === "more" ? Contrast : resolvedTheme === "dark" ? Moon : Sun;
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="テーマを切り替え"
-          data-testid="header-theme-toggle"
-          className="hover:bg-brand-orange-soft"
-        >
-          <Icon aria-hidden="true" className="h-5 w-5 text-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>テーマ</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={theme}
-          onValueChange={(v) => setTheme(v as Theme)}
-        >
-          <DropdownMenuRadioItem value="light" data-testid="theme-light">
-            <Sun aria-hidden="true" className="me-2 h-4 w-4" />
-            ライト
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="dark" data-testid="theme-dark">
-            <Moon aria-hidden="true" className="me-2 h-4 w-4" />
-            ダーク
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="system" data-testid="theme-system">
-            <Monitor aria-hidden="true" className="me-2 h-4 w-4" />
-            システム
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>コントラスト</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={contrast}
-          onValueChange={(v) => setContrast(v as ContrastType)}
-        >
-          <DropdownMenuRadioItem value="normal" data-testid="contrast-normal">
-            <Sun aria-hidden="true" className="me-2 h-4 w-4" />
-            通常
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="more" data-testid="contrast-more">
-            <Contrast aria-hidden="true" className="me-2 h-4 w-4" />
-            High Contrast
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>方向</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={dir}
-          onValueChange={(v) => setDir(v as Dir)}
-        >
-          <DropdownMenuRadioItem value="ltr" data-testid="dir-ltr">
-            <ArrowLeftRight aria-hidden="true" className="me-2 h-4 w-4" />
-            LTR (左→右)
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="rtl" data-testid="dir-rtl">
-            <ArrowLeftRight
-              aria-hidden="true"
-              className="me-2 h-4 w-4 rtl-flip"
-            />
-            RTL (右→左)
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

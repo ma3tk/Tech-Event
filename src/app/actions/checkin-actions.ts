@@ -16,20 +16,12 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getStringRaw as formValue } from "@/lib/form-data";
+import { BigIntIdSchema } from "@/lib/schemas";
 
 /* ============================================================
  * バリデーション
  * ============================================================ */
-
-function formValue(form: FormData, key: string): string {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-}
-
-const BigIntIdSchema = z
-  .string()
-  .regex(/^\d+$/, "id must be digits only")
-  .transform((s) => BigInt(s));
 
 const CheckInSchema = z.object({
   eventId: BigIntIdSchema,
