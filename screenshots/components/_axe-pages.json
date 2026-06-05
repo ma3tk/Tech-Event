@@ -1,0 +1,125 @@
+{
+  "generatedAt": "2026-06-05T00:20:43.125Z",
+  "pages": [
+    {
+      "name": "top",
+      "url": "/",
+      "finalUrl": "http://localhost:3000/",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "explore",
+      "url": "/explore",
+      "finalUrl": "http://localhost:3000/explore",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "event-1",
+      "url": "/event/1",
+      "finalUrl": "http://localhost:3000/event/1",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "group-findy",
+      "url": "/group/findy",
+      "finalUrl": "http://localhost:3000/group/findy",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "user-fast_moon_169",
+      "url": "/user/fast_moon_169",
+      "finalUrl": "http://localhost:3000/user/fast_moon_169",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "calendar-ai-developers",
+      "url": "/calendar/ai-developers",
+      "finalUrl": "http://localhost:3000/calendar/ai-developers",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "ranking",
+      "url": "/ranking",
+      "finalUrl": "http://localhost:3000/ranking",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    },
+    {
+      "name": "login",
+      "url": "/login",
+      "finalUrl": "http://localhost:3000/login",
+      "httpStatusOk": true,
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ],
+      "minor": []
+    },
+    {
+      "name": "signup",
+      "url": "/signup",
+      "finalUrl": "http://localhost:3000/signup",
+      "httpStatusOk": true,
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ],
+      "minor": []
+    },
+    {
+      "name": "dashboard",
+      "url": "/dashboard",
+      "finalUrl": "http://localhost:3000/dashboard",
+      "httpStatusOk": true,
+      "violationCount": 0,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [],
+      "minor": []
+    }
+  ]
+}

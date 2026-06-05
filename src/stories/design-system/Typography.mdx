@@ -1,0 +1,222 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Typography" />
+
+<Title>Typography</Title>
+<Subtitle>フォントスケール xs〜4xl / weight 4 段 / line-height 4 段</Subtitle>
+
+`tech-event` のタイポグラフィは `Noto Sans JP` + 日本語システムフォント (`Hiragino Kaku Gothic ProN`, `Yu Gothic UI`, `Meiryo`) のフォールバック構成です。
+ウェイトは原則 **400 / 600 / 700** の 3 段のみ使い、500 は装飾アイコン用にのみ使用します。
+
+---
+
+## 1. Font scale
+
+| トークン | px | rem | Tailwind |
+| --- | --: | --: | --- |
+| `--font-size-xs` | 12 | 0.75 | `text-xs` |
+| `--font-size-sm` | 14 | 0.875 | `text-sm` |
+| `--font-size-base` | 16 | 1 | `text-base` |
+| `--font-size-lg` | 18 | 1.125 | `text-lg` |
+| `--font-size-xl` | 22 | 1.375 | `text-xl` (連用 h2) |
+| `--font-size-2xl` | 28 | 1.75 | `text-2xl` (連用 h1) |
+| `--font-size-3xl` | 36 | 2.25 | `text-3xl` |
+| `--font-size-4xl` | 48 | 3 | `text-4xl` |
+
+<Unstyled>
+  <div
+    style={{
+      fontFamily: "system-ui, sans-serif",
+      color: "#1a1a1a",
+      borderTop: "1px solid #e5e7eb",
+    }}
+  >
+    {[
+      { name: "4xl", px: 48 },
+      { name: "3xl", px: 36 },
+      { name: "2xl", px: 28 },
+      { name: "xl", px: 22 },
+      { name: "lg", px: 18 },
+      { name: "base", px: 16 },
+      { name: "sm", px: 14 },
+      { name: "xs", px: 12 },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "80px 80px 1fr",
+          alignItems: "baseline",
+          gap: "16px",
+          padding: "12px 0",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <code style={{ fontSize: "12px", color: "#6b7280" }}>{row.name}</code>
+        <code style={{ fontSize: "12px", color: "#6b7280" }}>{row.px}px</code>
+        <span style={{ fontSize: `${row.px}px`, lineHeight: 1.3 }}>
+          Aa あア — 技術イベントは未来をつくる
+        </span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 2. Font weights
+
+| トークン | 数値 | Tailwind |
+| --- | --: | --- |
+| `--font-weight-regular` | 400 | `font-normal` |
+| `--font-weight-medium` | 500 | `font-medium` (限定使用) |
+| `--font-weight-semibold` | 600 | `font-semibold` |
+| `--font-weight-bold` | 700 | `font-bold` |
+
+<Unstyled>
+  <div
+    style={{
+      fontFamily: "system-ui, sans-serif",
+      color: "#1a1a1a",
+      borderTop: "1px solid #e5e7eb",
+    }}
+  >
+    {[
+      { name: "regular", weight: 400 },
+      { name: "medium", weight: 500 },
+      { name: "semibold", weight: 600 },
+      { name: "bold", weight: 700 },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "120px 80px 1fr",
+          alignItems: "baseline",
+          gap: "16px",
+          padding: "12px 0",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <code style={{ fontSize: "12px", color: "#6b7280" }}>{row.name}</code>
+        <code style={{ fontSize: "12px", color: "#6b7280" }}>{row.weight}</code>
+        <span style={{ fontSize: "18px", fontWeight: row.weight, lineHeight: 1.4 }}>
+          技術イベントを探そう — Aa Bb 0123
+        </span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 3. Line-height
+
+| トークン | 値 | 用途 |
+| --- | --: | --- |
+| `--line-height-tight` | 1.2 | 大型見出し (h1/h2) |
+| `--line-height-snug` | 1.4 | カード内タイトル / h3 |
+| `--line-height-normal` | 1.6 | 短い説明文 |
+| `--line-height-relaxed` | 1.7 | 本文 (body デフォルト) |
+
+<Unstyled>
+  <div style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+    {[
+      { name: "tight", lh: 1.2 },
+      { name: "snug", lh: 1.4 },
+      { name: "normal", lh: 1.6 },
+      { name: "relaxed", lh: 1.7 },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          padding: "12px",
+          margin: "8px 0",
+          border: "1px solid #e5e7eb",
+          borderRadius: "6px",
+          background: "#fff",
+        }}
+      >
+        <code style={{ fontSize: "11px", color: "#6b7280" }}>
+          {row.name} ({row.lh})
+        </code>
+        <p style={{ margin: "6px 0 0", fontSize: "14px", lineHeight: row.lh }}>
+          技術イベントは、エンジニア同士が学びを共有しキャリアを広げる場です。
+          本デザインシステムは情報密度を優先しつつ、読み手の負担を抑える行間設計を目指しています。
+          本文の標準は <code>relaxed (1.7)</code> ですが、見出しやカード内タイトルでは
+          <code>tight</code>〜<code>snug</code> に切替えて密度を保ちます。
+        </p>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 4. サンプル — 見出し / 本文 / メタ
+
+実際に組み合わせた状態を示します (`globals.css` のグローバル設定そのまま)。
+
+<Unstyled>
+  <div
+    style={{
+      fontFamily: "system-ui, sans-serif",
+      color: "#1a1a1a",
+      padding: "20px",
+      background: "#fff",
+      border: "1px solid #e5e7eb",
+      borderRadius: "8px",
+      maxWidth: "640px",
+    }}
+  >
+    <h1 style={{ fontSize: "28px", lineHeight: 1.3, fontWeight: 700, margin: "0 0 12px" }}>
+      AI 時代のフロントエンドを語る夜
+    </h1>
+    <div style={{ fontSize: "12px", lineHeight: 1.5, color: "#6b7280", marginBottom: "16px" }}>
+      2026/06/20 (土) 19:00 — 21:00 / オンライン開催 / 主催: Findy Tech
+    </div>
+    <h2 style={{ fontSize: "22px", lineHeight: 1.35, fontWeight: 700, margin: "16px 0 8px" }}>
+      イベント概要
+    </h2>
+    <p style={{ fontSize: "14px", lineHeight: 1.7, margin: "0 0 12px" }}>
+      生成 AI の登場でフロントエンド開発はどう変わったのか。設計、コードレビュー、テスト戦略まで、
+      現場で AI を実用している 4 名のエンジニアが事例を持ち寄り議論します。
+    </p>
+    <h3 style={{ fontSize: "18px", lineHeight: 1.4, fontWeight: 700, margin: "16px 0 8px" }}>
+      タイムテーブル
+    </h3>
+    <p style={{ fontSize: "14px", lineHeight: 1.7, margin: "0 0 8px" }}>
+      19:00 - オープニング / 19:15 - LT × 4 / 20:30 - パネルディスカッション / 21:00 - 終了
+    </p>
+    <h4 style={{ fontSize: "16px", lineHeight: 1.5, fontWeight: 600, margin: "16px 0 4px" }}>
+      参加対象
+    </h4>
+    <p style={{ fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
+      フロントエンドに関わるエンジニア / 興味のあるエンジニア全般。
+    </p>
+  </div>
+</Unstyled>
+
+---
+
+## 5. 連用クラス対応
+
+`docs/design-system.md §3` の対応表を再掲します:
+
+| 要素 | サイズ | 行間 | ウェイト | 用途 |
+| --- | --- | --- | --- | --- |
+| `h1` | 28px (`text-[28px]`) | 1.3 | 700 | ページ主見出し |
+| `h2` | 22px (`text-[22px]`) | 1.35 | 700 | セクション見出し |
+| `h3` | 18px (`text-lg`) | 1.4 | 700 | サブ見出し / カード内タイトル |
+| `h4` | 16px (`text-base`) | 1.5 | 600 | フォームラベル / 小見出し |
+| body | 14px (`text-sm`) | 1.7 | 400 | 本文 |
+| meta | 12px (`text-xs`) | 1.5 | 400 | 補助テキスト・日時・件数 |
+
+---
+
+## 6. 規約まとめ
+
+- 非標準サイズ (13px, 15px 等) は使わない。
+- `font-medium (500)` は通知バッジ等の限定用途のみ。一般文には `regular` か `semibold` を使う。
+- 本文の line-height は常に `relaxed (1.7)`、見出しは `tight`〜`snug`。
+- 日本語と英数字が混在しても破綻しないよう、`Noto Sans JP` を先頭に置く。

@@ -1,0 +1,225 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Component Checklist" />
+
+<Title>Component Checklist</Title>
+<Subtitle>新規コンポーネント追加時の必須項目</Subtitle>
+
+新しいコンポーネントを追加するときに踏むべき手順と、レビュー時に確認するチェックリストをまとめています。
+PR 前にこのページを開いて、すべての項目に「はい」と答えられることを確認してください。
+
+---
+
+## 1. ファイル配置
+
+| 種別 | 配置先 | ファイル名 |
+| --- | --- | --- |
+| UI primitive (汎用 / Radix ラッパー) | `src/components/ui/` | `kebab-case.tsx` (例: `dropdown-menu.tsx`) |
+| Composite component (ドメイン特化) | `src/components/` | `PascalCase.tsx` (例: `EventCard.tsx`) |
+| Story | 実装と同じディレクトリ | `{Name}.stories.tsx` |
+| Server-side wrapper | `src/components/` | `{Name}Server.tsx` (例: `HeaderServer.tsx`) |
+
+---
+
+## 2. 実装テンプレート (Composite component)
+
+```tsx
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
+/**
+ * NewComponent — 簡潔な 1 行説明。
+ *
+ * - 機能 / レイアウトの要点
+ * - 親から受け取る props の意味
+ * - SSR / Client どちらを想定するか
+ */
+export interface NewComponentProps {
+  title: string;
+  description?: string;
+  variant?: "default" | "compact";
+  className?: string;
+  children?: ReactNode;
+}
+
+export function NewComponent({
+  title,
+  description,
+  variant = "default",
+  className,
+  children,
+}: NewComponentProps) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-border bg-surface p-4 shadow-elevation-card",
+        variant === "compact" && "p-3 text-sm",
+        className,
+      )}
+    >
+      <h3 className="text-lg font-bold text-foreground">{title}</h3>
+      {description && (
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      )}
+      {children}
+    </div>
+  );
+}
+```
+
+### 規約
+
+- **default export ではなく named export** を使う (`export function ...`)。
+  Story 側で型推論しやすく、tree-shake もしやすい。
+- props 型は同名 + `Props` で `export` する (`NewComponentProps`)。
+- `className` を受け取り、`cn()` で merge する (`tailwind-merge` 経由)。
+- 色 / spacing / radius / shadow はすべて **semantic クラス** を使う (生の値・hex は禁止)。
+- variant 切替は条件式 or `cva` で行う (新規導入なら `cva` を推奨)。
+
+---
+
+## 3. Storybook stories 必須項目
+
+`{Name}.stories.tsx`:
+
+```tsx
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { NewComponent } from "./NewComponent";
+
+const meta: Meta<typeof NewComponent> = {
+  title: "Components/NewComponent",
+  component: NewComponent,
+  parameters: { layout: "centered" },
+  argTypes: {
+    variant: {
+      control: "inline-radio",
+      options: ["default", "compact"],
+    },
+  },
+  args: {
+    title: "見本タイトル",
+    description: "見本の説明文",
+  },
+};
+export default meta;
+
+type Story = StoryObj<typeof NewComponent>;
+
+export const Default: Story = {};
+export const Compact: Story = { args: { variant: "compact" } };
+export const WithoutDescription: Story = { args: { description: undefined } };
+export const LongText: Story = {
+  args: {
+    title: "とても長いタイトルが入った場合の見た目を確認するためのサンプル",
+    description: "本文も長くなる想定で、行折り返しと line-height のバランスを確認します。",
+  },
+};
+```
+
+### Story チェックリスト
+
+- [ ] `title` は `UI/{Name}` (primitive) or `Components/{Name}` (composite) の形。
+- [ ] **Default** story 必須。
+- [ ] 各 **variant** ごとに Story を作る (default / secondary / outline 等)。
+- [ ] **状態違い**: disabled / loading / error / empty / selected 等。該当があれば Story 化。
+- [ ] **エッジケース**: 空の場合 / 長いテキスト / 多数項目 (10+) 等。
+- [ ] `argTypes` で `control` を指定 (boolean / inline-radio / object / text)。
+- [ ] `parameters.layout` を `"centered"` か `"fullscreen"` か `"padded"` で適切に指定。
+- [ ] interactive な props (onClick 等) は `fn()` でモック (`@storybook/test`)。
+- [ ] サイドバーで a11y タブを開き violation 0 を確認。
+
+---
+
+## 4. UI primitive の場合の追加項目
+
+`src/components/ui/{name}.tsx`:
+
+- Radix UI をラップする場合は、`<Primitive.Root>` 等の各サブコンポーネントを **そのまま re-export** + className 注入する形にする。
+  shadcn のテンプレートを踏襲。
+- `displayName` を設定 (DevTools での視認性 + Storybook Source 表示)。
+- 例: `Button` のように `forwardRef` で `ref` を通す (Radix がこれを期待することが多い)。
+
+```tsx
+import * as React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+
+const Dialog = DialogPrimitive.Root;
+Dialog.displayName = "Dialog";
+
+const DialogTrigger = DialogPrimitive.Trigger;
+DialogTrigger.displayName = "DialogTrigger";
+
+// ... 各サブ要素も同様
+```
+
+---
+
+## 5. アクセシビリティ確認項目
+
+実装中・PR 提出前に必ず確認:
+
+- [ ] **キーボードのみで操作可能** (マウス使わず Tab / Enter / Esc で全機能を試す)。
+- [ ] `:focus-visible` のリング (orange 2px) が見える。`outline: none` で消していない。
+- [ ] **ARIA 状態属性** を適切に付与: `aria-pressed`, `aria-expanded`, `aria-haspopup`, `aria-selected`, `aria-disabled`, `aria-invalid` 等。
+- [ ] **アイコンのみのボタン** に `aria-label` あり。装飾アイコンに `aria-hidden="true"`。
+- [ ] **`<label htmlFor>`** ですべての入力要素にラベル接続。
+- [ ] **見出し階層** をスキップしない (Story 内では `h2` から開始でも可)。
+- [ ] **タッチターゲット** 最小 36 × 36 px (`min-h-9 min-w-9`)。
+- [ ] **コントラスト**: テキスト vs 背景 4.5:1 以上。
+  特に淡色背景 (`bg-brand-orange-soft` 等) の上で `text-muted` を使わない (`text-muted-foreground` を使う)。
+- [ ] **色だけに依存しない**: ステータスは色 + テキスト両方で表現。
+- [ ] **動画 / アニメーション**: CSS `transition-*` のみで実装 (`prefers-reduced-motion` 自動尊重)。
+- [ ] **Storybook a11y タブ** で violation 0 を確認。
+- [ ] **dark テーマ**でも視認性 OK (`<html data-theme="dark">` で確認)。
+
+---
+
+## 6. テスト
+
+- **Vitest** (`@storybook/addon-vitest` 統合): Story が `play` 関数を持つ場合、CI で自動実行。
+- **Playwright** (`e2e/`): ページレベルで使われる component は `e2e/{name}.spec.ts` に visual + interaction テストを追加。
+- **axe-core**: `e2e/components-a11y.spec.ts` の対象一覧に新規コンポーネントを追加 (ショーケースページがあれば自動)。
+
+```bash
+# 開発
+pnpm storybook
+
+# 静的ビルド
+pnpm build-storybook
+
+# 型チェック
+pnpm tsc --noEmit
+
+# E2E
+npx playwright test --project=chromium-desktop -j 2
+```
+
+---
+
+## 7. ドキュメント更新
+
+新規コンポーネントが composite で、ユーザー向け説明が必要な場合:
+
+- [ ] `docs/design-system.md` の §12 「既存コンポーネント一覧」に 1 行追加。
+- [ ] 大きな変更 (新カテゴリ追加 / トークン追加) があれば `src/stories/design-system/Components.mdx` も更新。
+- [ ] 新しいトークンを追加した場合は `src/stories/design-system/Tokens.mdx` / `Colors.mdx` / `Spacing.mdx` 等の対応ページを更新。
+
+---
+
+## 8. PR チェックリスト (まとめ)
+
+このまま PR descriptionにコピペできる形:
+
+```md
+## デザインシステム適合チェック
+
+- [ ] semantic クラス (bg-brand-orange / text-foreground 等) のみを使用
+- [ ] hex / 任意 spacing / shadow の直書きなし
+- [ ] Story 完備 (Default + 全 variant + 状態違い + エッジケース)
+- [ ] Storybook a11y タブ violation 0
+- [ ] キーボードのみで操作可能
+- [ ] dark テーマで視認性 OK
+- [ ] `pnpm tsc --noEmit` クリア
+- [ ] `pnpm build-storybook` クリア
+- [ ] (該当時) docs/design-system.md / Components.mdx 更新
+```

@@ -1,0 +1,72 @@
+import { Meta, Title, Subtitle } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Theme Builder" />
+
+<Title>Theme Builder プレイグラウンド</Title>
+<Subtitle>CSS 変数の差し替えで、ブランド色 / 角丸 / フォントサイズをリアルタイムプレビュー</Subtitle>
+
+`/theme-builder` (本プロジェクト内のショーケースルート) はデザインシステム検証のためのインタラクティブ プレイグラウンドです。
+
+ユーザーがブランド色 (color picker)、角丸 (slider)、フォントサイズ (slider) を調整するたびに、右側のサンプルカード / ボタン / バッジ / 入力フォームに即時反映されます。
+
+---
+
+## 1. アクセス
+
+```
+http://localhost:3000/theme-builder
+```
+
+本ページは `robots: noindex` なので本番でも検索インデックスされません。
+ナビゲーション上の導線は意図的に持たせていません (= デザイナー / 開発者向けの隠しページ)。
+
+---
+
+## 2. 仕組み
+
+```
+ユーザー操作 (color picker / slider)
+      ↓
+React state (draft) 更新
+      ↓
+style={{ "--brand-orange": …, "--radius-md": … }} を [data-theme-builder-scope] に注入
+      ↓
+配下の primitive (Button / Badge / Card / Input) が新値で再レンダ
+```
+
+ポイント:
+
+- グローバル (`:root`) の CSS 変数は **書き換えない**。ヘッダー等への副作用を防ぐため、必ず `[data-theme-builder-scope]` 配下に限定する
+- `<style data-theme-builder>` で Tailwind の `rounded-{md,lg,full}` が `var(--radius-*)` を参照するよう、本ページ内だけで上書きする
+- 「適用」ボタンを押すと `localStorage[tech-event:theme-builder]` に保存。次回開いた際に復元される
+- 「リセット」ボタンで `localStorage` を削除しデフォルト値に戻す
+
+---
+
+## 3. 操作項目
+
+| 項目              | 範囲     | 反映先 CSS 変数                                          |
+| ----------------- | -------- | -------------------------------------------------------- |
+| ブランド色        | HEX      | `--brand-orange`, `--brand-orange-strong`                |
+| ブランド hover    | HEX      | `--brand-orange-hover`                                   |
+| 角丸              | 0〜24px  | `--radius-md`, `--radius-lg`, `--radius-control`         |
+| フォントサイズ    | 80〜140% | `font-size` (% で base を変える)                         |
+
+---
+
+## 4. デザインシステム改善への活用
+
+- **新しいブランド色候補をテストする** → デザイナーが Figma で見つけた候補 HEX をその場で確認
+- **角丸ルールを 4px → 8px に変える影響を見る** → primitive 全体のトーンが「シャープ → 柔らかい」へどう動くか
+- **フォントサイズ +20%** → アクセシビリティ(視覚) ユーザー向けの拡大表示テスト
+
+> **注意**: Theme Builder のオーバーライドは本プレイグラウンド内に閉じています。
+> 実際のテーマ変更を本番に反映するには、`src/styles/themes/light.css` / `dark.css` を編集してください。
+
+---
+
+## 5. 関連
+
+- 実装: `src/app/(showcase)/theme-builder/page.tsx`
+- 既存のショーケース: `/components` (`Design System/Components` MDX)
+- トークン構造: `Design System/Tokens`

@@ -1,0 +1,9 @@
+{
+  "clone": {
+    "ok": true
+  },
+  "connpass": {
+    "ok": false,
+    "reason": "Error: no matching selector on connpass"
+  }
+}

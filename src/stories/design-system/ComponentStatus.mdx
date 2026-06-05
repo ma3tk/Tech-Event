@@ -1,0 +1,227 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Component Status" />
+
+<Title>Component API Status</Title>
+<Subtitle>tech-event DS 39 component の Stability / Coverage 一覧</Subtitle>
+
+本ページは [`docs/component-api-status.md`](https://github.com/) の MDX 版です。
+各コンポーネントの API 安定性 (stable / beta / alpha / deprecated) と
+テストカバレッジ (Storybook + axe + VRT) を可視化します。
+
+> 詳細仕様: `docs/component-api-status.md` / 関連: `docs/design-system-changelog.md` / Component Checklist
+
+---
+
+## 1. Stability 凡例
+
+<Unstyled>
+  <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "system-ui, sans-serif", fontSize: "14px" }}>
+    <thead>
+      <tr style={{ background: "#f3f4f6", borderBottom: "2px solid #d1d5db" }}>
+        <th style={{ padding: "8px 12px", textAlign: "left" }}>Stability</th>
+        <th style={{ padding: "8px 12px", textAlign: "left" }}>意味</th>
+        <th style={{ padding: "8px 12px", textAlign: "left" }}>利用許可</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+        <td style={{ padding: "8px 12px" }}><span style={{ background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600 }}>stable</span></td>
+        <td style={{ padding: "8px 12px" }}>公開 API 凍結。Story / a11y / ダーク / VRT すべて検証済</td>
+        <td style={{ padding: "8px 12px" }}>◎ どこでも</td>
+      </tr>
+      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+        <td style={{ padding: "8px 12px" }}><span style={{ background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600 }}>beta</span></td>
+        <td style={{ padding: "8px 12px" }}>仕様凍結に近いが、内部実装の調整が残る</td>
+        <td style={{ padding: "8px 12px" }}>○ アプリ全域</td>
+      </tr>
+      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+        <td style={{ padding: "8px 12px" }}><span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600 }}>alpha</span></td>
+        <td style={{ padding: "8px 12px" }}>実験的。命名 / props 変更の可能性あり</td>
+        <td style={{ padding: "8px 12px" }}>△ 単一 page 限定</td>
+      </tr>
+      <tr>
+        <td style={{ padding: "8px 12px" }}><span style={{ background: "#e5e7eb", color: "#374151", padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600 }}>deprecated</span></td>
+        <td style={{ padding: "8px 12px" }}>廃止予定。新規利用禁止</td>
+        <td style={{ padding: "8px 12px" }}>× 既存のみ</td>
+      </tr>
+    </tbody>
+  </table>
+</Unstyled>
+
+---
+
+## 2. Primitive (Atom) — 21 個
+
+<Unstyled>
+  <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "system-ui, sans-serif", fontSize: "13px" }}>
+    <thead>
+      <tr style={{ background: "#f3f4f6", borderBottom: "2px solid #d1d5db" }}>
+        <th style={{ padding: "6px 10px", textAlign: "left" }}>Component</th>
+        <th style={{ padding: "6px 10px", textAlign: "left" }}>Stability</th>
+        <th style={{ padding: "6px 10px", textAlign: "right" }}>Variants</th>
+        <th style={{ padding: "6px 10px", textAlign: "right" }}>Coverage</th>
+        <th style={{ padding: "6px 10px", textAlign: "left" }}>Known issues</th>
+      </tr>
+    </thead>
+    <tbody>
+      {[
+        ["Avatar", "stable", "3", "100%", "—"],
+        ["Badge", "stable", "4", "100%", "—"],
+        ["Button", "stable", "30", "100%", "—"],
+        ["Card", "stable", "5", "100%", "—"],
+        ["Checkbox", "stable", "3", "100%", "—"],
+        ["Dialog", "stable", "3", "100%", "上流 Radix のフォーカストラップに依存"],
+        ["DropdownMenu", "stable", "6", "100%", "—"],
+        ["Form", "beta", "RHF+Zod", "67%", "VRT 対象外 (props 駆動のみ)"],
+        ["Input", "stable", "3×error", "100%", "—"],
+        ["Label", "stable", "1", "100%", "—"],
+        ["Popover", "stable", "4", "100%", "—"],
+        ["RadioGroup", "stable", "2", "100%", "—"],
+        ["Select", "stable", "3", "100%", "—"],
+        ["Separator", "stable", "2", "100%", "—"],
+        ["Sheet", "stable", "4", "100%", "—"],
+        ["Skeleton", "stable", "3", "100%", "—"],
+        ["Switch", "stable", "2", "100%", "—"],
+        ["Tabs", "stable", "3", "100%", "—"],
+        ["Textarea", "stable", "3", "100%", "—"],
+        ["Toast", "stable", "4", "100%", "Sonner の reduced-motion 上流依存"],
+        ["Tooltip", "stable", "2", "100%", "—"],
+      ].map(([name, stab, variants, cov, issues]) => (
+        <tr key={name} style={{ borderBottom: "1px solid #e5e7eb" }}>
+          <td style={{ padding: "6px 10px", fontFamily: "monospace" }}>{name}</td>
+          <td style={{ padding: "6px 10px" }}>
+            <span
+              style={{
+                background: stab === "stable" ? "#dcfce7" : stab === "beta" ? "#fef3c7" : "#fee2e2",
+                color: stab === "stable" ? "#166534" : stab === "beta" ? "#92400e" : "#991b1b",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+                fontSize: "11px",
+                fontWeight: 600,
+              }}
+            >
+              {stab}
+            </span>
+          </td>
+          <td style={{ padding: "6px 10px", textAlign: "right", fontFamily: "monospace" }}>{variants}</td>
+          <td style={{ padding: "6px 10px", textAlign: "right", fontFamily: "monospace" }}>{cov}</td>
+          <td style={{ padding: "6px 10px", color: "#6b7280" }}>{issues}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</Unstyled>
+
+---
+
+## 3. Composite (Molecule + Organism) — 18 個
+
+<Unstyled>
+  <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "system-ui, sans-serif", fontSize: "13px" }}>
+    <thead>
+      <tr style={{ background: "#f3f4f6", borderBottom: "2px solid #d1d5db" }}>
+        <th style={{ padding: "6px 10px", textAlign: "left" }}>Component</th>
+        <th style={{ padding: "6px 10px", textAlign: "left" }}>Stability</th>
+        <th style={{ padding: "6px 10px", textAlign: "right" }}>Variants</th>
+        <th style={{ padding: "6px 10px", textAlign: "right" }}>Coverage</th>
+        <th style={{ padding: "6px 10px", textAlign: "left" }}>Known issues</th>
+      </tr>
+    </thead>
+    <tbody>
+      {[
+        ["Breadcrumb", "stable", "2", "100%", "—"],
+        ["TagPill", "stable", "4", "100%", "—"],
+        ["EventStatusBadge", "stable", "32 (8×4)", "100%", "—"],
+        ["ParticipantBadge", "stable", "3", "100%", "—"],
+        ["SearchBox", "stable", "2", "100%", "JS なし動作 (form GET)"],
+        ["Header", "stable", "2", "100%", "HeaderServer と二段構成"],
+        ["Footer", "stable", "1", "100%", "—"],
+        ["EventCard", "stable", "2", "100%", "—"],
+        ["EventCardCompact", "stable", "1", "67%", "story なし (EventCard で代替)"],
+        ["EventListRow", "stable", "2", "100%", "—"],
+        ["EventTimeline", "stable", "1", "100%", "—"],
+        ["EventStickyCTA", "beta", "10", "67%", "IntersectionObserver、story 静止状態"],
+        ["GroupCard", "stable", "3", "100%", "—"],
+        ["Pagination", "stable", "1", "100%", "—"],
+        ["MiniCalendar", "stable", "1", "100%", "—"],
+        ["HostAvatarStack", "stable", "3", "100%", "—"],
+        ["ShareModal", "beta", "5", "67%", "Native Share API は実機検証"],
+        ["MarkdownEditor", "beta", "2", "67%", "marked v18 dynamic import"],
+      ].map(([name, stab, variants, cov, issues]) => (
+        <tr key={name} style={{ borderBottom: "1px solid #e5e7eb" }}>
+          <td style={{ padding: "6px 10px", fontFamily: "monospace" }}>{name}</td>
+          <td style={{ padding: "6px 10px" }}>
+            <span
+              style={{
+                background: stab === "stable" ? "#dcfce7" : stab === "beta" ? "#fef3c7" : "#fee2e2",
+                color: stab === "stable" ? "#166534" : stab === "beta" ? "#92400e" : "#991b1b",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+                fontSize: "11px",
+                fontWeight: 600,
+              }}
+            >
+              {stab}
+            </span>
+          </td>
+          <td style={{ padding: "6px 10px", textAlign: "right", fontFamily: "monospace" }}>{variants}</td>
+          <td style={{ padding: "6px 10px", textAlign: "right", fontFamily: "monospace" }}>{cov}</td>
+          <td style={{ padding: "6px 10px", color: "#6b7280" }}>{issues}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</Unstyled>
+
+---
+
+## 4. 集計
+
+<Unstyled>
+  <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "system-ui, sans-serif", fontSize: "14px", marginTop: "8px" }}>
+    <thead>
+      <tr style={{ background: "#f3f4f6", borderBottom: "2px solid #d1d5db" }}>
+        <th style={{ padding: "8px 12px", textAlign: "left" }}>カテゴリ</th>
+        <th style={{ padding: "8px 12px", textAlign: "right" }}>総数</th>
+        <th style={{ padding: "8px 12px", textAlign: "right" }}>stable</th>
+        <th style={{ padding: "8px 12px", textAlign: "right" }}>beta</th>
+        <th style={{ padding: "8px 12px", textAlign: "right" }}>alpha</th>
+        <th style={{ padding: "8px 12px", textAlign: "right" }}>deprecated</th>
+        <th style={{ padding: "8px 12px", textAlign: "right" }}>平均 Coverage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+        <td style={{ padding: "8px 12px" }}>Primitive</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>21</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>20</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>1</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>0</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>0</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>98.4 %</td>
+      </tr>
+      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+        <td style={{ padding: "8px 12px" }}>Composite</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>18</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>15</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>3</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>0</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>0</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>94.4 %</td>
+      </tr>
+      <tr style={{ background: "#fafafa", fontWeight: 600 }}>
+        <td style={{ padding: "8px 12px" }}>合計</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>39</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>35</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>4</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>0</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>0</td>
+        <td style={{ padding: "8px 12px", textAlign: "right" }}>96.6 %</td>
+      </tr>
+    </tbody>
+  </table>
+</Unstyled>
+
+35 / 39 = **89.7 % が stable**。alpha / deprecated は 0 件。
+DS は新規利用に対して十分な API 安定性を保証しています。

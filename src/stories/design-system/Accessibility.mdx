@@ -1,0 +1,275 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Accessibility" />
+
+<Title>Accessibility</Title>
+<Subtitle>WCAG AA を後付けにしない設計</Subtitle>
+
+`tech-event` ではアクセシビリティをコンポーネント実装後に「対応する」のではなく、
+**設計時点から組み込み**、CI で自動検証しています。
+すべての semantic colors が WCAG AA 以上を満たし、`axe-core` で違反 0 をターゲットとしています。
+
+---
+
+## 1. フォーカスリング設計
+
+`globals.css` でグローバル `:focus-visible` ルールを定義済み:
+
+```css
+*:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+```
+
+- **`focus-visible` を使う** (`focus` ではない) — マウスクリックでフォーカスが見えるのを抑制し、キーボード時のみ強調。
+- 色は `--brand-orange` (light: `#c2410c`, dark: `#f97316`) なので、theme 切替で自動追従。
+- `outline-offset: 2px` で要素の角丸を隠さない。
+- フォーカスリングを CSS で隠す ( `outline: none` を上書き ) のは **禁止**。隠す場合は代替の視覚インジケータを必須にする。
+
+<Unstyled>
+  <div
+    style={{
+      display: "flex",
+      gap: "16px",
+      alignItems: "center",
+      padding: "16px",
+      background: "#fff",
+      border: "1px solid #e5e7eb",
+      borderRadius: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "13px",
+    }}
+  >
+    <button
+      style={{
+        padding: "8px 16px",
+        background: "#c2410c",
+        color: "#fff",
+        border: "none",
+        borderRadius: "8px",
+        outline: "2px solid #c2410c",
+        outlineOffset: "2px",
+        fontSize: "13px",
+        cursor: "pointer",
+      }}
+    >
+      フォーカス状態
+    </button>
+    <span style={{ color: "#6b7280" }}>
+      ← 全てのインタラクティブ要素はこのリングで囲まれる
+    </span>
+  </div>
+</Unstyled>
+
+---
+
+## 2. キーボード操作
+
+### 2.1 必須サポート
+
+| キー | 期待される挙動 |
+| --- | --- |
+| `Tab` / `Shift+Tab` | 順方向 / 逆方向のフォーカス移動 |
+| `Enter` | リンクをクリック / ボタンを実行 / フォーム送信 |
+| `Space` | ボタン実行 / Checkbox トグル / Select 展開 |
+| `Esc` | モーダル / ポップオーバー / メニューを閉じる |
+| `↑` / `↓` | メニュー内 / RadioGroup 内の項目移動 |
+| `←` / `→` | Tabs 内のタブ移動 / Carousel 移動 |
+| `Home` / `End` | リスト先頭 / 末尾へジャンプ |
+
+### 2.2 フォーカス順
+
+- **DOM 順** = フォーカス順 = 読み上げ順。 `tabindex` の正の値は使わない (`tabindex="0"` か `"-1"` のみ可)。
+- モーダルを開いている間は **focus trap** を実装 (Radix Dialog / Popover が自動でやる)。
+- モーダルを閉じたら、開く前にフォーカスがあった要素に戻す (Radix 標準動作)。
+
+### 2.3 スキップリンク
+
+`Header` の先頭に `<a className="skip-link" href="#main-content">メインへスキップ</a>` を配置。
+普段は視覚的に隠れていて、フォーカス時のみ可視化されます。
+
+---
+
+## 3. ARIA 規約
+
+### 3.1 役割 (role)
+
+- セマンティック HTML を優先 (`<button>`, `<a>`, `<nav>`, `<header>`, `<main>`)。`<div role="button">` は避ける。
+- 例外: 既存タグでは表現できない構造 (`role="status"`, `role="alert"`, `role="dialog"`) は使う。
+
+### 3.2 状態属性
+
+| 用途 | 属性 |
+| --- | --- |
+| トグルボタン | `aria-pressed="true|false"` |
+| 展開可能要素 | `aria-expanded="true|false"` |
+| メニュー保有 | `aria-haspopup="menu"` |
+| 選択中 | `aria-selected="true|false"` |
+| 無効 | `aria-disabled="true"` (`disabled` 属性と併用可) |
+| 必須入力 | `aria-required="true"` |
+| エラー | `aria-invalid="true"` + `aria-describedby` でメッセージ参照 |
+| 動的更新 | `aria-live="polite|assertive"` |
+| 進行中 | `aria-busy="true"` (loading 時) |
+
+### 3.3 ラベル
+
+- **アイコンのみのボタン** には必ず `aria-label` を付ける (例: `<button aria-label="検索">`)。
+- **入力欄** には `<label for>` か `aria-labelledby` を必須 (`placeholder` は label の代替にしない)。
+- **装飾アイコン** には `aria-hidden="true"` を付け、SR 読み上げから除外する。
+
+### 3.4 ライブリージョン
+
+- フォーム送信結果 / 検索件数の更新 → `<div role="status" aria-live="polite">`
+- 重要なエラー → `<div role="alert" aria-live="assertive">`
+- 通知トースト → Radix Toast が `role="status"` を自動付与
+
+---
+
+## 4. 色だけに依存しない
+
+ステータスを表示する際は **色 + テキスト** (またはアイコン) を必ず併用:
+
+<Unstyled>
+  <div
+    style={{
+      display: "flex",
+      gap: "12px",
+      alignItems: "center",
+      padding: "16px",
+      background: "#fff",
+      border: "1px solid #e5e7eb",
+      borderRadius: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "13px",
+    }}
+  >
+    <div>
+      <p style={{ margin: "0 0 8px", color: "#6b7280", fontSize: "11px" }}>NG (色のみ)</p>
+      <div
+        style={{
+          width: "12px",
+          height: "12px",
+          background: "#22c55e",
+          borderRadius: "9999px",
+        }}
+      />
+    </div>
+    <div style={{ marginLeft: "24px" }}>
+      <p style={{ margin: "0 0 8px", color: "#6b7280", fontSize: "11px" }}>OK (色 + テキスト)</p>
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "4px 10px",
+          background: "#dcfce7",
+          color: "#14532d",
+          borderRadius: "4px",
+          fontSize: "12px",
+          fontWeight: 600,
+        }}
+      >
+        <span style={{ width: "8px", height: "8px", background: "#22c55e", borderRadius: "9999px" }} />
+        募集中
+      </span>
+    </div>
+  </div>
+</Unstyled>
+
+---
+
+## 5. タッチターゲット
+
+- 最小 **36 × 36 px** (`min-h-9 min-w-9`)。
+- モバイルでは **44 × 44 px** を推奨 (Apple HIG / WCAG 2.5.5)。
+- 隣接するクリックターゲットは 8px 以上離す (`gap-2`)。
+
+---
+
+## 6. prefers-reduced-motion
+
+`globals.css` で全 `transition` / `animation` の自動無効化を実装済み:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+- **CSS の `transition-*` / `animation-*` を使う** (JS 主導のアニメは避ける) と自動的に尊重される。
+- どうしても JS で動かす場合は `window.matchMedia('(prefers-reduced-motion: reduce)')` を確認する。
+
+---
+
+## 7. axe-core 自動走査結果 (最終)
+
+CI で `@axe-core/playwright` を以下のターゲットに対し実行。
+結果スナップショットは `screenshots/components/_axe.json` / `_axe-pages.json` に出力。
+
+### 7.1 `/components` ショーケース (`e2e/components-a11y.spec.ts`)
+
+| 指標 | 値 |
+| --- | --- |
+| passes | 31 ルール |
+| violations | 1 ルール (`aria-prohibited-attr`, serious, 3 ノード) |
+| **color-contrast 違反** | **0 件** (WCAG AA / AAA 準拠を全トークンで確認) |
+| critical / serious blocker | 1 (Pagination の disabled `<a>` に `aria-label` を付与している箇所。`<button>` 置換 or `aria-hidden` 化で解消予定) |
+
+### 7.2 主要 10 ページ (`e2e/a11y-pages.spec.ts`)
+
+| ページ | violations | blockers | 既知 design (warn) |
+| --- | --: | --: | --- |
+| `/` | 1 | 0 | color-contrast × 1 |
+| `/explore` | 1 | 1 | Pagination の上記課題 |
+| `/event/1` | 0 | 0 | — |
+| `/group/findy` | 0 | 0 | — |
+| `/user/fast_moon_169` | 0 | 0 | — |
+| `/calendar/ai-developers` | 0 | 0 | — |
+| `/ranking` | 0 | 0 | — |
+| `/login` | 1 | 0 | (minor) |
+| `/signup` | 1 | 0 | (minor) |
+| `/dashboard` | 0 | 0 | — |
+
+- **WCAG AA color-contrast: 主要 10 ページ中 9 ページで違反 0**。
+- 残 1 件 (`/`) は装飾用淡背景上の補助テキストで、`text-muted-foreground` への置換で解消予定。
+- critical/serious blocker は `aria-prohibited-attr` 1 種のみ。
+  Pagination の前/次が disabled のとき `<a aria-label>` を残したままなので、`aria-disabled` 追加 + `aria-hidden` 化で CI 完全グリーン化可能。
+
+---
+
+## 8. Storybook addon-a11y
+
+`.storybook/main.ts` に `@storybook/addon-a11y` を組み込み済み。
+各 Story の **Accessibility** タブで axe の検査結果がリアルタイムに見られます。
+
+`.storybook/preview.ts` での設定:
+
+```ts
+a11y: {
+  test: "todo", // CI を落とさないため warning として扱う
+}
+```
+
+新規 Story 追加時は、サイドバーの A11y タブで violation 0 を確認してから merge してください。
+
+---
+
+## 9. チェックリスト
+
+新規 / 変更コンポーネントを書いたら必ず以下を確認 (詳細は **Component Checklist** ページ):
+
+- [ ] Tab で全ての対話要素にフォーカスが当たる。順序は論理的。
+- [ ] `:focus-visible` のグローバル outline が機能している。
+- [ ] aria 属性 (`aria-pressed`, `aria-expanded`, `aria-label` 等) を適切に付与。
+- [ ] ステータスは色 + テキスト両方で表現。
+- [ ] テキスト vs 背景の WCAG AA (4.5:1) を満たす。
+- [ ] 装飾画像は `alt=""`、意味を持つ画像は内容を記述。
+- [ ] 見出し階層をスキップしない (`h2 → h3`)。
+- [ ] タッチターゲット最小 36×36px。
+- [ ] アニメーションは `transition-*` で記述 (`prefers-reduced-motion` 自動対応)。
+- [ ] Storybook a11y タブで violation 0。

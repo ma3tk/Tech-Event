@@ -1,0 +1,102 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Data Viz" />
+
+<Title>Data Visualization カラーパレット</Title>
+<Subtitle>色覚多様性配慮 (Okabe-Ito) の 8 色シーケンス</Subtitle>
+
+チャート (bar / pie / line / heatmap) の色は **`--chart-1` 〜 `--chart-8`** の 8 色を順番にサイクルさせる規約です。
+ブランドオレンジ (`--brand-orange`) や status 色 (`--status-*-fg`) を chart にそのまま使うと、UI 上の意味と衝突しやすいため避けてください。
+
+---
+
+## 1. パレット (Light)
+
+<Unstyled>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", fontFamily: "system-ui, sans-serif", fontSize: "12px" }}>
+    {[
+      { name: "chart-1", value: "#0072b2", desc: "青 (Okabe-Ito)" },
+      { name: "chart-2", value: "#e69f00", desc: "オレンジ" },
+      { name: "chart-3", value: "#009e73", desc: "緑" },
+      { name: "chart-4", value: "#cc79a7", desc: "マゼンタ" },
+      { name: "chart-5", value: "#56b4e9", desc: "スカイブルー" },
+      { name: "chart-6", value: "#d55e00", desc: "ヴァーミリオン" },
+      { name: "chart-7", value: "#f0e442", desc: "黄" },
+      { name: "chart-8", value: "#4b4b4b", desc: "ニュートラル" },
+    ].map((s) => (
+      <div key={s.name} style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
+        <div style={{ height: "56px", background: s.value }} />
+        <div style={{ padding: "8px 10px" }}>
+          <strong>{s.name}</strong>
+          <div style={{ color: "#6b7280" }}>{s.value} — {s.desc}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+Dark mode では各色を 1〜2 段明るく差し替え、暗背景上で 4.5:1 のコントラストを確保します (`src/styles/themes/dark.css` 参照)。
+
+---
+
+## 2. 使い方
+
+### 2.1 SVG (Server Component で OK)
+
+```tsx
+<rect
+  fill="var(--chart-1)"
+  x={x}
+  y={y}
+  width={w}
+  height={h}
+/>
+```
+
+### 2.2 Tailwind utility (Client Component)
+
+`globals.css` の `@theme inline` で `--color-chart-1` を expose しているため、`bg-chart-1` / `text-chart-1` / `border-chart-1` などが Tailwind ユーティリティとして使えます。
+
+```tsx
+<div className="h-4 w-full bg-chart-1" />
+<span className="text-chart-2">凡例ラベル</span>
+```
+
+### 2.3 順序ルール
+
+| 用途                             | 推奨                                |
+| -------------------------------- | ----------------------------------- |
+| 主軸データ 1 系列                | `chart-1`                           |
+| 比較対象 2 系列                  | `chart-1` + `chart-2`               |
+| 3〜4 系列                        | `chart-1, 2, 3, 4` (この順序が最適) |
+| ネガティブ / 警告系のハイライト | `chart-6` (ヴァーミリオン)         |
+| グレースケール背景               | `chart-8` (ニュートラル)            |
+
+---
+
+## 3. 色覚多様性配慮
+
+本パレットは **Okabe-Ito の 8 色シーケンス** を基にしています。
+特徴:
+
+- **赤と緑が並ばない順序** で並べてあるため、Deuteranopia / Protanopia でも隣接バーが識別できる
+- 各色は色相だけでなく **明度も連続で変化** するため、グレースケール印刷でも見分けられる
+- 凡例には可能なら **色 + テクスチャパターン** (stripe / dot) を併用する規約 (今後対応予定)
+
+> 参考: M. Okabe and K. Ito (2008) "Color Universal Design (CUD): How to make figures and presentations that are friendly to Colorblind people."
+
+---
+
+## 4. アンチパターン
+
+- ❌ ブランドオレンジ (`--brand-orange`) をチャートの主要色に使う — CTA ボタンとぶつかる
+- ❌ Status 色 (`--status-open-fg` 等) をチャートに使う — 「open / cancelled」の意味が誤読される
+- ❌ HEX をハードコードする (`fill="#3b82f6"`) — テーマ切替で追従しない
+
+---
+
+## 5. 適用済みページ
+
+- `/event/[id]/admin/insights` 申込タイミング分布 (`--chart-1`) / キャンセル率推移 (`--chart-6`)
+
+今後 `/admin` / `/dashboard` の各種チャートにも段階的に適用していきます。

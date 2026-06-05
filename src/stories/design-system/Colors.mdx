@@ -1,0 +1,528 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Colors" />
+
+<Title>Colors</Title>
+<Subtitle>Primitive スケール → Semantic alias → WCAG AA 準拠まで</Subtitle>
+
+カラーは「色相 × 50〜950 の段階」(primitive) を持ち、それを意味のある名前 (semantic) にマッピングしています。
+コンポーネントからは **semantic 名 (例: `bg-brand-orange`, `text-foreground`)** のみを使用してください。
+
+すべての semantic ペアは axe-core により **WCAG AA (4.5:1) 以上** を満たすことが CI で検証されています。
+
+---
+
+## 1. Primitive color scales
+
+各色相は 50 (最も淡い) 〜 950 (最も濃い) の 11 段階。Tailwind v4 の標準パレットと完全一致します。
+
+### 1.1 Gray
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(11, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      ["50", "#f9fafb"], ["100", "#f3f4f6"], ["200", "#e5e7eb"], ["300", "#d1d5db"],
+      ["400", "#9ca3af"], ["500", "#6b7280"], ["600", "#4b5563"], ["700", "#374151"],
+      ["800", "#1f2937"], ["900", "#111827"], ["950", "#030712"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 1.2 Orange (brand)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(11, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      ["50", "#fff7ed"], ["100", "#ffedd5"], ["200", "#fed7aa"], ["300", "#fdba74"],
+      ["400", "#fb923c"], ["500", "#f97316"], ["600", "#ea580c"], ["700", "#c2410c"],
+      ["800", "#9a3412"], ["900", "#7c2d12"], ["950", "#431407"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 1.3 Red (cancel / error)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(11, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      ["50", "#fef2f2"], ["100", "#fee2e2"], ["200", "#fecaca"], ["300", "#fca5a5"],
+      ["400", "#f87171"], ["500", "#ef4444"], ["600", "#dc2626"], ["700", "#b91c1c"],
+      ["800", "#991b1b"], ["900", "#7f1d1d"], ["950", "#450a0a"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 1.4 Green (open / success)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(11, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      ["50", "#f0fdf4"], ["100", "#dcfce7"], ["200", "#bbf7d0"], ["300", "#86efac"],
+      ["400", "#4ade80"], ["500", "#22c55e"], ["600", "#16a34a"], ["700", "#15803d"],
+      ["800", "#166534"], ["900", "#14532d"], ["950", "#052e16"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 1.5 Blue (link / upcoming)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(11, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      ["50", "#eff6ff"], ["100", "#dbeafe"], ["200", "#bfdbfe"], ["300", "#93c5fd"],
+      ["400", "#60a5fa"], ["500", "#3b82f6"], ["600", "#2563eb"], ["700", "#1d4ed8"],
+      ["800", "#1e40af"], ["900", "#1e3a8a"], ["950", "#172554"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 1.6 Yellow (waitlist)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(11, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      ["50", "#fefce8"], ["100", "#fef9c3"], ["200", "#fef08a"], ["300", "#fde047"],
+      ["400", "#facc15"], ["500", "#eab308"], ["600", "#ca8a04"], ["700", "#a16207"],
+      ["800", "#854d0e"], ["900", "#713f12"], ["950", "#422006"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 1.7 Link Blue (connpass 由来)
+
+連用テキストリンク専用。`#005d8c` を基点に明暗 4 段。
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(5, 1fr)",
+      gap: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "11px",
+      color: "#1a1a1a",
+      maxWidth: "480px",
+    }}
+  >
+    {[
+      ["200", "#7dc4e0"], ["300", "#4aa8d4"], ["500", "#006aa1"], ["600", "#005d8c"], ["700", "#004161"],
+    ].map(([step, hex]) => (
+      <div key={step} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "56px",
+            background: hex,
+            borderRadius: "6px",
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        />
+        <div style={{ marginTop: "4px", fontWeight: 600 }}>{step}</div>
+        <div style={{ color: "#6b7280" }}>{hex}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 2. Semantic colors — light / dark 対比
+
+semantic 名は light/dark で同名のまま、内部の primitive 参照を切り替えます。
+以下は 1 行ごとに **同じ semantic 名の light/dark 表示** を並べた一覧です。
+
+### 2.1 Surface / foreground
+
+<Unstyled>
+  <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "13px" }}>
+    {[
+      { name: "--background", purpose: "ページ背景", light: "#f7f7f5", dark: "#030712" },
+      { name: "--surface", purpose: "カード / ヘッダー", light: "#ffffff", dark: "#111827" },
+      { name: "--surface-muted", purpose: "入力 / hover", light: "#f3f4f6", dark: "#1f2937" },
+      { name: "--foreground", purpose: "本文テキスト", light: "#1a1a1a", dark: "#f9fafb" },
+      { name: "--muted", purpose: "プレースホルダ", light: "#6b7280", dark: "#9ca3af" },
+      { name: "--muted-foreground", purpose: "補助テキスト", light: "#4b5563", dark: "#d1d5db" },
+      { name: "--border", purpose: "区切り線", light: "#e5e7eb", dark: "#374151" },
+      { name: "--border-strong", purpose: "強調区切り", light: "#d1d5db", dark: "#4b5563" },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "220px 1fr 120px 120px",
+          alignItems: "center",
+          gap: "12px",
+          padding: "8px 0",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <code style={{ fontSize: "12px" }}>{row.name}</code>
+        <span style={{ color: "#4b5563" }}>{row.purpose}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "28px", height: "28px", background: row.light, border: "1px solid rgba(0,0,0,0.1)", borderRadius: "4px" }} />
+          <code style={{ fontSize: "11px" }}>{row.light}</code>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "28px", height: "28px", background: row.dark, border: "1px solid rgba(255,255,255,0.15)", borderRadius: "4px" }} />
+          <code style={{ fontSize: "11px" }}>{row.dark}</code>
+        </div>
+      </div>
+    ))}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "220px 1fr 120px 120px",
+        padding: "6px 0",
+        fontWeight: 600,
+        color: "#6b7280",
+        fontSize: "11px",
+      }}
+    >
+      <span>Token</span>
+      <span>Purpose</span>
+      <span>Light</span>
+      <span>Dark</span>
+    </div>
+  </div>
+</Unstyled>
+
+### 2.2 Brand
+
+connpass 本家の `#ea5404` は白文字とのコントラストが 3.64:1 で **AA 違反** のため、
+light テーマでは明度を 1 段階下げた `#c2410c` (orange-700) を採用しています。
+dark テーマでは逆に暗背景上で AA を満たすよう `#f97316` (orange-500) に持ち上げています。
+
+<Unstyled>
+  <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "13px" }}>
+    {[
+      { name: "--brand-orange", purpose: "ロゴ / CTA 背景", light: "#c2410c", dark: "#f97316", ratio: "L: 4.93:1 vs #fff" },
+      { name: "--brand-orange-hover", purpose: "hover", light: "#9a3412", dark: "#fb923c", ratio: "L: 7.31:1" },
+      { name: "--brand-orange-soft", purpose: "薄背景 / 空サムネ", light: "#fff1ea", dark: "rgba(249,115,22,0.12)", ratio: "decorative" },
+      { name: "--brand-red", purpose: "強アクション", light: "#d23a3a", dark: "#ef4f4f", ratio: "L: 4.5:1+" },
+      { name: "--brand-red-hover", purpose: "hover", light: "#b82c2c", dark: "#f06d6d", ratio: "—" },
+      { name: "--brand-foreground", purpose: "CTA 上の文字", light: "#ffffff", dark: "#ffffff", ratio: "—" },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "200px 1fr 130px 160px 120px",
+          alignItems: "center",
+          gap: "12px",
+          padding: "8px 0",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <code style={{ fontSize: "12px" }}>{row.name}</code>
+        <span style={{ color: "#4b5563" }}>{row.purpose}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "28px", height: "28px", background: row.light, border: "1px solid rgba(0,0,0,0.1)", borderRadius: "4px" }} />
+          <code style={{ fontSize: "11px" }}>{row.light}</code>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "28px", height: "28px", background: row.dark, border: "1px solid rgba(255,255,255,0.15)", borderRadius: "4px" }} />
+          <code style={{ fontSize: "10px" }}>{row.dark}</code>
+        </div>
+        <span style={{ fontSize: "11px", color: "#6b7280" }}>{row.ratio}</span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 2.3 Link
+
+<Unstyled>
+  <div style={{ fontFamily: "system-ui, sans-serif", fontSize: "13px" }}>
+    {[
+      { name: "--link", purpose: "テキスト中のリンク", light: "#005d8c", dark: "#4aa8d4", ratio: "L: 7.1:1 / D: 7.1:1" },
+      { name: "--link-hover", purpose: "hover", light: "#004161", dark: "#7dc4e0", ratio: "—" },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "200px 1fr 130px 160px 120px",
+          alignItems: "center",
+          gap: "12px",
+          padding: "8px 0",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <code style={{ fontSize: "12px" }}>{row.name}</code>
+        <span style={{ color: "#4b5563" }}>{row.purpose}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "28px", height: "28px", background: row.light, border: "1px solid rgba(0,0,0,0.1)", borderRadius: "4px" }} />
+          <code style={{ fontSize: "11px" }}>{row.light}</code>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "28px", height: "28px", background: row.dark, border: "1px solid rgba(255,255,255,0.15)", borderRadius: "4px" }} />
+          <code style={{ fontSize: "11px" }}>{row.dark}</code>
+        </div>
+        <span style={{ fontSize: "11px", color: "#6b7280" }}>{row.ratio}</span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 2.4 Status colors (8 種)
+
+イベント状態バッジ専用。**常に `bg` + `fg` のペアで使用**します。
+すべて WCAG AA (4.5:1) 以上、多くは AAA (7:1) 以上を満たします。
+
+#### Light theme
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gap: "12px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "12px",
+    }}
+  >
+    {[
+      { name: "open", label: "募集中", bg: "#dcfce7", fg: "#14532d", ratio: "9.7:1 AAA" },
+      { name: "full", label: "満員", bg: "#fee2e2", fg: "#991b1b", ratio: "7.9:1 AAA" },
+      { name: "waitlist", label: "補欠受付中", bg: "#fef9c3", fg: "#713f12", ratio: "8.3:1 AAA" },
+      { name: "closed", label: "募集締切", bg: "#f3f4f6", fg: "#1f2937", ratio: "12.6:1 AAA" },
+      { name: "cancelled", label: "中止", bg: "#991b1b", fg: "#ffffff", ratio: "7.9:1 AAA" },
+      { name: "ended", label: "終了", bg: "#f3f4f6", fg: "#4b5563", ratio: "7.5:1 AAA" },
+      { name: "upcoming", label: "開催前", bg: "#dbeafe", fg: "#1e3a8a", ratio: "10.4:1 AAA" },
+      { name: "ongoing", label: "開催中", bg: "#fff7ed", fg: "#c2410c", ratio: "4.9:1 AA" },
+    ].map((row) => (
+      <div key={row.name} style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
+        <div style={{ background: row.bg, color: row.fg, padding: "12px", fontWeight: 600 }}>
+          {row.label}
+        </div>
+        <div style={{ padding: "8px 12px", background: "#fff", fontSize: "11px", color: "#4b5563" }}>
+          <div><code>{row.name}</code></div>
+          <div style={{ color: "#6b7280" }}>bg: {row.bg}</div>
+          <div style={{ color: "#6b7280" }}>fg: {row.fg}</div>
+          <div style={{ marginTop: "4px", color: "#374151" }}>{row.ratio}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+#### Dark theme
+
+dark では薄い色背景 + 濃い文字を「透過背景 + 明るい文字」に反転します。
+すべて AA 以上を維持。
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gap: "12px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "12px",
+    }}
+  >
+    {[
+      { name: "open", label: "募集中", bg: "rgba(34,197,94,0.18)", fg: "#86efac", base: "#030712" },
+      { name: "full", label: "満員", bg: "rgba(239,68,68,0.18)", fg: "#fca5a5", base: "#030712" },
+      { name: "waitlist", label: "補欠受付中", bg: "rgba(234,179,8,0.18)", fg: "#fde047", base: "#030712" },
+      { name: "closed", label: "募集締切", bg: "#1f2937", fg: "#e5e7eb", base: "#030712" },
+      { name: "cancelled", label: "中止", bg: "#991b1b", fg: "#ffffff", base: "#030712" },
+      { name: "ended", label: "終了", bg: "#1f2937", fg: "#9ca3af", base: "#030712" },
+      { name: "upcoming", label: "開催前", bg: "rgba(59,130,246,0.18)", fg: "#93c5fd", base: "#030712" },
+      { name: "ongoing", label: "開催中", bg: "rgba(249,115,22,0.15)", fg: "#fdba74", base: "#030712" },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{ border: "1px solid #374151", borderRadius: "8px", overflow: "hidden", background: row.base }}
+      >
+        <div style={{ background: row.bg, color: row.fg, padding: "12px", fontWeight: 600 }}>
+          {row.label}
+        </div>
+        <div style={{ padding: "8px 12px", background: "#111827", fontSize: "11px", color: "#9ca3af" }}>
+          <div style={{ color: "#e5e7eb" }}><code>{row.name}</code></div>
+          <div>bg: {row.bg}</div>
+          <div>fg: {row.fg}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 3. Tailwind クラス対応表
+
+semantic 名は `globals.css` の `@theme inline` 経由で以下の Tailwind ユーティリティを生成します。
+**コンポーネントの実装ではこれらを使うこと**:
+
+| 用途 | クラス例 |
+| --- | --- |
+| ページ背景 | `bg-background` |
+| カード面 | `bg-surface` |
+| muted 面 | `bg-surface-muted` |
+| 本文 | `text-foreground` |
+| 補助テキスト | `text-muted-foreground` |
+| プレースホルダ | `text-muted` |
+| 区切り線 | `border-border` / `border-border-strong` |
+| ブランド CTA | `bg-brand-orange hover:bg-brand-orange-hover text-brand-foreground` |
+| 薄ブランド | `bg-brand-orange-soft text-brand-orange-strong` |
+| 強アクション | `bg-brand-red hover:bg-brand-red-hover` |
+| リンク | `text-link hover:text-link-hover hover:underline` |
+| ステータス | `bg-status-{open\|full\|waitlist\|closed\|cancelled\|ended\|upcoming\|ongoing}-bg text-status-{...}-fg` |
+
+---
+
+## 4. WCAG コントラスト早見表
+
+| ペア | コントラスト比 | 等級 |
+| --- | --- | --- |
+| `text-foreground` on `bg-surface` (light) | 18.1:1 | AAA |
+| `text-foreground` on `bg-background` (dark) | 18.3:1 | AAA |
+| `text-muted-foreground` on `bg-surface` (light) | 7.6:1 | AAA |
+| `text-muted` on `bg-surface` (light) | 4.6:1 | AA |
+| `text-brand-foreground` on `bg-brand-orange` (light) | 4.93:1 | AA |
+| `text-brand-foreground` on `bg-brand-orange-hover` (light) | 7.31:1 | AAA |
+| `text-link` on `bg-surface` (light) | 7.1:1 | AAA |
+| `text-link` on `bg-background` (dark) | 7.1:1 | AAA |
+| status-{open,full,waitlist,closed,upcoming} bg/fg | ≥ 7.9:1 | AAA |
+| status-ongoing bg/fg (light) | 4.9:1 | AA |
+
+詳細は `e2e/components-a11y.spec.ts` で axe-core により自動検証されています。

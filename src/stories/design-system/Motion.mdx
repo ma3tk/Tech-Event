@@ -1,0 +1,313 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Motion" />
+
+<Title>Motion</Title>
+<Subtitle>duration / easing / reduced-motion 規約</Subtitle>
+
+`tech-event` のアニメーション・トランジションは `src/styles/tokens.css` の motion
+セクションで定義されたトークン (`--duration-*` / `--ease-*`) を経由して統一されて
+います。実装ガイドは `docs/motion.md` を参照してください。
+
+---
+
+## 1. Duration スケール
+
+| トークン | 値 | Tailwind utility | 主な用途 |
+| --- | --: | --- | --- |
+| `--duration-instant` | `0ms` | `duration-instant` | アニメーション無効化 / reduced-motion フォールバック |
+| `--duration-fast` | `150ms` | `duration-fast` | button hover / focus / color 変化 |
+| `--duration-normal` | `200ms` | `duration-normal` | card hover / dropdown / tooltip |
+| `--duration-slow` | `300ms` | `duration-slow` | dialog / drawer open-close |
+| `--duration-slower` | `500ms` | `duration-slower` | page / route transition |
+
+### 実物デモ — 各 duration で同じ「色変化」を再生
+
+下のチップにマウスを当てると hover 時の色変化が再生されます。 duration の違いに
+よる体感差を確認してください。
+
+<Unstyled>
+  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontFamily: "system-ui, sans-serif" }}>
+    {[
+      { name: "instant", ms: 0 },
+      { name: "fast", ms: 150 },
+      { name: "normal", ms: 200 },
+      { name: "slow", ms: 300 },
+      { name: "slower", ms: 500 },
+    ].map((d) => (
+      <div
+        key={d.name}
+        style={{
+          padding: "16px 20px",
+          borderRadius: 8,
+          background: "#fff7ed",
+          color: "#9a3412",
+          fontWeight: 600,
+          cursor: "pointer",
+          border: "1px solid #fed7aa",
+          transitionProperty: "background-color, color, transform",
+          transitionDuration: `${d.ms}ms`,
+          transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget;
+          el.style.background = "#c2410c";
+          el.style.color = "#fff";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget;
+          el.style.background = "#fff7ed";
+          el.style.color = "#9a3412";
+        }}
+      >
+        duration-{d.name}<br />
+        <span style={{ fontSize: 12, opacity: 0.8 }}>{d.ms}ms</span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 2. Easing スケール
+
+| トークン | 値 | Tailwind utility | 主な用途 |
+| --- | --- | --- | --- |
+| `--ease-linear` | `linear` | `ease-linear` | progress bar、スピナー |
+| `--ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | `ease-in` | **退場** (画面外へ消える) |
+| `--ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | `ease-out` | **入場** (現れる)。デフォルト推奨 |
+| `--ease-in-out` | `cubic-bezier(0.4, 0, 0.2, 1)` | `ease-in-out` | **位置の変化** (画面内移動) |
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | `ease-spring` | **強調** (badge pop)。overshoot あり |
+
+### 実物デモ — translate を 400ms で再生 (easing 比較)
+
+ボックスにマウスを当てると右方向へ slide します。 easing が「立ち上がり」「終わり」
+の感触をどう変えるか観察してください。
+
+<Unstyled>
+  <div style={{ display: "flex", flexDirection: "column", gap: 12, fontFamily: "system-ui, sans-serif" }}>
+    {[
+      { name: "linear", curve: "linear" },
+      { name: "in", curve: "cubic-bezier(0.4, 0, 1, 1)" },
+      { name: "out", curve: "cubic-bezier(0, 0, 0.2, 1)" },
+      { name: "in-out", curve: "cubic-bezier(0.4, 0, 0.2, 1)" },
+      { name: "spring", curve: "cubic-bezier(0.34, 1.56, 0.64, 1)" },
+    ].map((e) => (
+      <div
+        key={e.name}
+        style={{
+          position: "relative",
+          background: "#f3f4f6",
+          borderRadius: 6,
+          height: 40,
+          overflow: "hidden",
+        }}
+        onMouseEnter={(ev) => {
+          const box = ev.currentTarget.querySelector("[data-box]");
+          if (box) (box).style.transform = "translateX(220px)";
+        }}
+        onMouseLeave={(ev) => {
+          const box = ev.currentTarget.querySelector("[data-box]");
+          if (box) (box).style.transform = "translateX(0)";
+        }}
+      >
+        <div
+          data-box
+          style={{
+            position: "absolute",
+            left: 4,
+            top: 4,
+            bottom: 4,
+            width: 32,
+            borderRadius: 4,
+            background: "#c2410c",
+            transitionProperty: "transform",
+            transitionDuration: "400ms",
+            transitionTimingFunction: e.curve,
+          }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            right: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            fontSize: 12,
+            color: "#4b5563",
+            fontWeight: 600,
+          }}
+        >
+          ease-{e.name}
+        </span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 3. パターン例
+
+### 3.1 button hover (`fast` + `ease-out`)
+
+`duration-fast (150ms)` は「即応性」を最優先する小さな色変化に最適。
+
+<Unstyled>
+  <button
+    style={{
+      padding: "8px 16px",
+      borderRadius: 6,
+      background: "#c2410c",
+      color: "#fff",
+      fontWeight: 600,
+      border: "none",
+      cursor: "pointer",
+      transitionProperty: "background-color",
+      transitionDuration: "150ms",
+      transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.background = "#9a3412")}
+    onMouseLeave={(e) => (e.currentTarget.style.background = "#c2410c")}
+  >
+    Hover me (duration-fast)
+  </button>
+</Unstyled>
+
+```tsx
+className="transition-colors duration-fast ease-out hover:bg-brand-orange-hover"
+```
+
+### 3.2 card hover (`normal` + `ease-out` で持ち上がる)
+
+`duration-normal (200ms)` で card を `-translate-y-0.5` + `shadow-md`。
+
+<Unstyled>
+  <div
+    style={{
+      width: 240,
+      padding: 16,
+      borderRadius: 8,
+      background: "#fff",
+      border: "1px solid #e5e7eb",
+      cursor: "pointer",
+      transitionProperty: "transform, box-shadow",
+      transitionDuration: "200ms",
+      transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+      color: "#1a1a1a",
+      fontFamily: "system-ui, sans-serif",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = "translateY(-2px)";
+      e.currentTarget.style.boxShadow = "0 4px 8px -2px rgba(0,0,0,0.1)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "translateY(0)";
+      e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.05)";
+    }}
+  >
+    <strong>EventCard 風</strong>
+    <p style={{ margin: "8px 0 0", fontSize: 13, color: "#4b5563" }}>
+      hover で -2px 浮き上がる
+    </p>
+  </div>
+</Unstyled>
+
+```tsx
+className={cn(
+  "transition-[transform,box-shadow] duration-normal ease-out",
+  "hover:-translate-y-0.5 hover:shadow-md"
+)}
+```
+
+### 3.3 spring (badge pop)
+
+`ease-spring` は overshoot するので、 `transform` / `scale` 専用にしてください
+(色や opacity に使うと違和感が出ます)。
+
+<Unstyled>
+  <div
+    style={{
+      display: "inline-flex",
+      padding: "6px 12px",
+      borderRadius: 9999,
+      background: "#fef3c7",
+      color: "#854d0e",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer",
+      transitionProperty: "transform",
+      transitionDuration: "200ms",
+      transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.15)")}
+    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+  >
+    NEW
+  </div>
+</Unstyled>
+
+```tsx
+className="transition-transform duration-normal ease-spring hover:scale-110"
+```
+
+### 3.4 dialog (`slow` + `ease-out` で開閉)
+
+`duration-slow (300ms)` で fade + scale すると、モーダルへの注意を促せます。
+
+```tsx
+className={cn(
+  "duration-slow ease-out",
+  "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+  "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+)}
+```
+
+---
+
+## 4. prefers-reduced-motion 対応 (**必須**)
+
+全てのアニメーションは `prefers-reduced-motion: reduce` 環境で無効化される必要が
+あります。 `tech-event` では 2 段構えで実装:
+
+1. **トークン側で 0ms に上書き** (`src/styles/tokens.css`):
+
+   ```css
+   @media (prefers-reduced-motion: reduce) {
+     :root {
+       --duration-fast: var(--duration-instant);
+       --duration-normal: var(--duration-instant);
+       --duration-slow: var(--duration-instant);
+       --duration-slower: var(--duration-instant);
+     }
+   }
+   ```
+
+2. **グローバルセーフネット** (`src/app/globals.css`):
+
+   ```css
+   @media (prefers-reduced-motion: reduce) {
+     *, *::before, *::after {
+       animation-duration: 0.001ms !important;
+       transition-duration: 0.001ms !important;
+     }
+   }
+   ```
+
+**コンポーネント側からは「トークンを参照するだけ」で自動的に reduced-motion 対応
+になります**。逆に `transition-duration: 300ms` のような直接値の指定は禁止です。
+
+### 確認方法 (Chrome DevTools)
+
+1. DevTools を開く (`F12`)
+2. `Cmd+Shift+P` (Mac) / `Ctrl+Shift+P` (Win/Linux) で Command Palette
+3. `Emulate CSS prefers-reduced-motion` を選択 → `reduce` を指定
+4. ページを操作してアニメーションが無効化されることを確認
+
+---
+
+## 5. 関連リソース
+
+- `docs/motion.md` — フル仕様 + アンチパターン集
+- `tokens/motion.json` — Figma Tokens Studio 連携用 JSON
+- `src/styles/tokens.css` — motion トークンの定義

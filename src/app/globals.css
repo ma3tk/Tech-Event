@@ -1,0 +1,279 @@
+/* ============================================================
+ * グローバルスタイル — 2 層トークン + light/dark theme
+ *
+ * トークン構造:
+ *   1. primitive   src/styles/tokens.css       (生の色 / size / shadow)
+ *   2. semantic    src/styles/semantic.css     (テーマ非依存の alias)
+ *   3. theme       src/styles/themes/light.css (light の semantic 色)
+ *   3. theme       src/styles/themes/dark.css  (dark の semantic 色)
+ *
+ * Tailwind v4 ブリッジ:
+ *   `@theme inline` で semantic 変数を `--color-*` 名に転送し、
+ *   `bg-brand-orange` / `text-status-open-fg` といった既存ユーティリティ
+ *   クラス名を維持する。`inline` キーワードにより `var(--xxx)` の解決を
+ *   ビルド時ではなく実行時に行うので、theme 切替で値が再評価される。
+ * ============================================================ */
+@import "tailwindcss";
+
+@import "../styles/tokens.css";
+@import "../styles/themes/light.css";
+@import "../styles/themes/dark.css";
+@import "../styles/themes/high-contrast.css";
+@import "../styles/semantic.css";
+@import "../styles/print.css";
+
+/* ============================================================
+ * Tailwind v4 へのブリッジ
+ *
+ * `@theme inline` ブロックは、Tailwind の自動生成ユーティリティ
+ * (bg-*, text-*, border-*, shadow-*, rounded-*, …) に渡す変数を宣言する。
+ * `inline` 修飾子が付いているため、ここでの右辺 `var(--xxx)` は CSS 変数
+ * 参照として展開され、theme 切替で実値が変わる。
+ *
+ * 既存クラス名 (`bg-brand-orange`, `text-status-open-fg`, `text-link` 等) は
+ * すべてここでマッピング済みなので、コンポーネント側の変更は不要。
+ * ============================================================ */
+@theme inline {
+  /* ---------- Surface / text ---------- */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* ---------- Brand (既存クラス名 brand-orange / brand-red を維持) ---------- */
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-hover: var(--brand-orange-hover);
+  --color-brand-orange-soft: var(--brand-orange-soft);
+  --color-brand-orange-strong: var(--brand-orange-strong);
+
+  --color-brand-red: var(--brand-red);
+  --color-brand-red-hover: var(--brand-red-hover);
+  --color-brand-red-soft: var(--brand-red-soft);
+
+  --color-brand-foreground: var(--brand-foreground);
+
+  /* ---------- Link ---------- */
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+
+  /* ---------- Status ---------- */
+  --color-status-open-bg: var(--status-open-bg);
+  --color-status-open-fg: var(--status-open-fg);
+  --color-status-full-bg: var(--status-full-bg);
+  --color-status-full-fg: var(--status-full-fg);
+  --color-status-waitlist-bg: var(--status-waitlist-bg);
+  --color-status-waitlist-fg: var(--status-waitlist-fg);
+  --color-status-closed-bg: var(--status-closed-bg);
+  --color-status-closed-fg: var(--status-closed-fg);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-cancelled-fg: var(--status-cancelled-fg);
+  --color-status-ended-bg: var(--status-ended-bg);
+  --color-status-ended-fg: var(--status-ended-fg);
+  --color-status-upcoming-bg: var(--status-upcoming-bg);
+  --color-status-upcoming-fg: var(--status-upcoming-fg);
+  --color-status-ongoing-bg: var(--status-ongoing-bg);
+  --color-status-ongoing-fg: var(--status-ongoing-fg);
+
+  /* ---------- Radius (semantic) ---------- */
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-modal: var(--radius-modal);
+  --radius-badge: var(--radius-badge);
+
+  /* ---------- Shadow (semantic elevation) ---------- */
+  --shadow-elevation-card: var(--elevation-card);
+  --shadow-elevation-popover: var(--elevation-popover);
+  --shadow-elevation-modal: var(--elevation-modal);
+  --shadow-elevation-overlay: var(--elevation-overlay);
+
+  /* ---------- Z-index ---------- */
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-modal: var(--z-modal);
+  --z-index-popover: var(--z-popover);
+  --z-index-toast: var(--z-toast);
+
+  /* ---------- Data viz palette (Tailwind 経由で `bg-chart-1` 等を使う) ---------- */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+
+  /* ---------- Font ---------- */
+  --font-sans:
+    var(--font-noto-sans-jp), -apple-system, BlinkMacSystemFont,
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo,
+    sans-serif;
+
+  /* ---------- Motion: duration ----------
+   * Tailwind v4 の `duration-fast` / `duration-normal` 等のユーティリティを
+   * 生成する。コンポーネント側からは `duration-150` のような raw 値ではなく
+   * `duration-fast` のように semantic 名で参照する規約とする。 */
+  --transition-duration-instant: var(--duration-instant);
+  --transition-duration-fast: var(--duration-fast);
+  --transition-duration-normal: var(--duration-normal);
+  --transition-duration-slow: var(--duration-slow);
+  --transition-duration-slower: var(--duration-slower);
+
+  /* ---------- Motion: easing ----------
+   * Tailwind v4 の `ease-out` 等のユーティリティを生成する。 */
+  --ease-linear: var(--ease-linear);
+  --ease-in: var(--ease-in);
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
+  --ease-spring: var(--ease-spring);
+}
+
+/* ============================================================
+ * ベーススタイル
+ * ============================================================ */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-relaxed);
+}
+
+/* ============================================================
+ * タイポグラフィスケール
+ *   - semantic.css の --typography-* 変数を参照
+ *   - @layer base に置くことで、Tailwind ユーティリティ (text-xl 等) が
+ *     常に勝つ
+ * ============================================================ */
+@layer base {
+  h1 {
+    font-size: var(--typography-h1-size);
+    line-height: var(--typography-h1-line);
+    font-weight: var(--typography-h1-weight);
+  }
+  h2 {
+    font-size: var(--typography-h2-size);
+    line-height: var(--typography-h2-line);
+    font-weight: var(--typography-h2-weight);
+  }
+  h3 {
+    font-size: var(--typography-h3-size);
+    line-height: var(--typography-h3-line);
+    font-weight: var(--typography-h3-weight);
+  }
+  h4 {
+    font-size: var(--typography-h4-size);
+    line-height: var(--typography-h4-line);
+    font-weight: var(--typography-h4-weight);
+  }
+  h5 {
+    font-size: var(--typography-h5-size);
+    line-height: var(--typography-h5-line);
+    font-weight: var(--typography-h5-weight);
+  }
+  h6 {
+    font-size: var(--typography-h6-size);
+    line-height: var(--typography-h6-line);
+    font-weight: var(--typography-h6-weight);
+  }
+
+  /* リンクのデフォルト色。
+   *  - `@layer base` の中に置くことで、Tailwind の `text-*` ユーティリティが
+   *    確実にこのルールを上書きできるようにする (アンレイヤード CSS は
+   *    レイヤード CSS より優先されるため、外に出すと `text-white` 等が効かない)。
+   *  - WCAG: `text-white` 指定の `<a>` (例: `/signup` の CTA) は
+   *    `a { color: inherit }` が unlayered だと `text-foreground` を継承し、
+   *    bg-brand-orange (#c2410c) との contrast が 3.36:1 にしかならず違反になる。 */
+  a {
+    color: inherit;
+  }
+}
+
+/* フォーカスリングを必ず可視化 (A11y) */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--brand-orange);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}
+
+/* スキップリンク (キーボード操作時のみ可視) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 8px;
+  z-index: var(--z-sticky);
+  padding: var(--spacing-2) var(--spacing-4);
+  background: var(--brand-orange);
+  color: var(--brand-foreground);
+  text-decoration: none;
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-md);
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* line-clamp ユーティリティ (Tailwind に同等のものもあるが明示) */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* prefers-reduced-motion 対応 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================
+ * RTL (Right-To-Left) サポート
+ *
+ * 規約 (詳細は `Design System / RTL`):
+ *   - 左右に依存する余白・パディング・整列は CSS Logical Properties で書く
+ *       margin-left  → margin-inline-start (= Tailwind の `ms-*`)
+ *       margin-right → margin-inline-end   (= Tailwind の `me-*`)
+ *       padding-left → padding-inline-start (= Tailwind の `ps-*`)
+ *       padding-right→ padding-inline-end   (= Tailwind の `pe-*`)
+ *       text-align: left → text-align: start (= Tailwind の `text-start`)
+ *       text-align: right→ text-align: end   (= Tailwind の `text-end`)
+ *
+ *   - 方向に依存しない (`flex`, `grid`, `gap-*`) は変更不要 — Logical Properties
+ *     ではないが書字方向に影響されないため。
+ *
+ *   - ChevronLeft / ChevronRight 等の方向アイコンは `[dir="rtl"]` で
+ *     `transform: scaleX(-1)` を当てる。ここでは `.rtl-flip` を定義し、
+ *     コンポーネント側でクラス名を付けて opt-in する (全アイコンに当てると
+ *     ロゴや絵文字も反転してしまうため)。
+ *
+ *   - サポート状況: Header / Breadcrumb / Pagination の最小対応のみ。
+ *     全 UI の RTL 完全化は本デザインシステムのスコープ外。
+ * ============================================================ */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}

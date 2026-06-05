@@ -1,0 +1,180 @@
+{
+  "common": {
+    "siteName": "tech-event",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "search": "Search",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "header": {
+    "explore": "Explore",
+    "discover": "Discover",
+    "groups": "Groups",
+    "calendars": "Calendars",
+    "ranking": "Ranking",
+    "login": "Log in",
+    "signup": "Sign up",
+    "createEvent": "Create event",
+    "notifications": "Notifications",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Log out",
+    "language": "Language",
+    "pricing": "Pricing"
+  },
+  "footer": {
+    "help": "Help",
+    "guide": "User Guide",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "siteInfo": "Site Info",
+    "company": "About",
+    "api": "API",
+    "ads": "Advertising",
+    "legal": "Legal",
+    "terms": "Terms",
+    "privacy": "Privacy Policy",
+    "tokushoho": "Commercial Disclosure",
+    "pricing": "Pricing",
+    "tagline": "Study group & event platform for engineers",
+    "copyright": "© {year} tech-event. All rights reserved."
+  },
+  "buttons": {
+    "join": "Join",
+    "cancel": "Cancel",
+    "bookmark": "Bookmark",
+    "share": "Share"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published",
+    "closed": "Closed",
+    "cancelled": "Cancelled",
+    "accepted": "Accepted",
+    "waiting": "Waitlist",
+    "pending": "Pending",
+    "attended": "Attended",
+    "noShow": "No-show",
+    "full": "Full"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "forbidden": "Forbidden",
+    "unauthorized": "Please log in",
+    "internal": "Internal server error"
+  },
+  "top": {
+    "heroTitle": "Tech events & meetups for engineers",
+    "heroSubtitle": "Discover study groups, hands-on workshops, and conferences. Connect with the developer community.",
+    "newEvents": "New Events",
+    "popularGroups": "Popular Groups",
+    "tags": "Browse by Tag",
+    "calendar": "Event Calendar",
+    "recentlyViewed": "Recently Viewed"
+  },
+  "event": {
+    "details": "Event Details",
+    "organizer": "Organizer",
+    "venue": "Venue",
+    "online": "Online",
+    "offline": "In-person",
+    "hybrid": "Hybrid",
+    "capacity": "Capacity",
+    "applied": "Applied",
+    "schedule": "Schedule",
+    "tags": "Tags",
+    "description": "Description",
+    "presentations": "Presentations",
+    "comments": "Comments",
+    "overview": "Overview",
+    "participants": "Participants",
+    "rolesHeading": "Tickets",
+    "applyHeading": "Register",
+    "cta": {
+      "open": "Register",
+      "full": "Join waitlist",
+      "lottery": "Enter the lottery",
+      "approval": "Request to join",
+      "loginToJoin": "Log in to register",
+      "going": "Registered",
+      "waiting": "On waitlist",
+      "pending": "Lottery pending",
+      "closed": "Registration closed",
+      "ended": "Ended",
+      "cancelled": "Cancelled",
+      "upcoming": "Opens soon",
+      "joinAgain": "Register again",
+      "stickyAriaLabel": "Quick register",
+      "acceptsFrom": "Opens: {time}"
+    },
+    "rejoinNotice": "You cancelled previously. Do you want to register again?"
+  },
+  "auth": {
+    "loginTitle": "Log in",
+    "signupTitle": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "nickname": "Nickname",
+    "displayName": "Display Name",
+    "submitLogin": "Log in",
+    "submitSignup": "Sign up",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "agreeTerms": "I agree to the Terms of Service"
+  },
+  "calendar": {
+    "title": "Calendars",
+    "subtitle": "Subscribe to themed tech calendars",
+    "subscribe": "Subscribe",
+    "subscribers": "Subscribers",
+    "events": "Events"
+  },
+  "discover": {
+    "title": "Discover",
+    "subtitle": "Find events by theme",
+    "popular": "Popular",
+    "new": "New",
+    "trending": "Trending",
+    "categories": "Categories",
+    "cities": "Cities"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "upcoming": "Upcoming",
+    "bookmarks": "Bookmarks",
+    "owned": "Hosting",
+    "history": "History"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications"
+  },
+  "group": {
+    "members": "Members",
+    "events": "Events",
+    "about": "About"
+  },
+  "user": {
+    "profile": "Profile",
+    "events": "Events",
+    "groups": "Groups"
+  },
+  "bookmarks": {
+    "title": "Bookmarks",
+    "empty": "No bookmarks yet"
+  }
+}

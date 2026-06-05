@@ -1,0 +1,272 @@
+/* ============================================================
+ * Primitive tokens
+ *
+ * このファイルは「生の」値だけを置く: 色スケール、フォントサイズ、
+ * spacing、radius、shadow、z-index。テーマには依存しない。
+ *
+ * 命名規約:
+ *   --color-{hue}-{step}    色相 + 50..950 (Tailwind v4 標準と一致)
+ *   --font-size-{scale}     xs..4xl
+ *   --font-weight-{name}    regular | medium | semibold | bold
+ *   --line-height-{name}    tight | snug | normal | relaxed
+ *   --spacing-{step}        0 | 1 | 2 | ... (4px ステップ)
+ *   --radius-{scale}        sm..2xl | full
+ *   --shadow-{scale}        sm..xl
+ *   --z-{role}              dropdown / sticky / modal / popover / toast
+ *
+ * これらの値は意味を持たない: semantic alias (semantic.css / themes/*) で
+ * 「background」「foreground」「brand」等にマッピングされる。
+ * ============================================================ */
+:root {
+  /* ------------------------------------------------------------
+   * Color scales (Tailwind v4 標準パレットに準拠)
+   * ------------------------------------------------------------ */
+
+  /* Gray */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* Orange (brand 用) */
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-800: #9a3412;
+  --color-orange-900: #7c2d12;
+  --color-orange-950: #431407;
+
+  /* Red (cancel / error 用) */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a;
+
+  /* Green (open / success 用) */
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-green-900: #14532d;
+  --color-green-950: #052e16;
+
+  /* Blue (link / upcoming 用) */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
+
+  /* Yellow (waitlist 用) */
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+  --color-yellow-700: #a16207;
+  --color-yellow-800: #854d0e;
+  --color-yellow-900: #713f12;
+  --color-yellow-950: #422006;
+
+  /* リンク用に connpass 本家の濃いブルー (#005d8c 系) を別系で保持 */
+  --color-link-blue-500: #006aa1;
+  --color-link-blue-600: #005d8c;
+  --color-link-blue-700: #004161;
+  --color-link-blue-300: #4aa8d4;
+  --color-link-blue-200: #7dc4e0;
+
+  /* Pure */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* ------------------------------------------------------------
+   * Typography scale (docs/design-system.md と整合)
+   * ------------------------------------------------------------ */
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.375rem;    /* 22px (連用 h2) */
+  --font-size-2xl: 1.75rem;    /* 28px (連用 h1) */
+  --font-size-3xl: 2.25rem;    /* 36px */
+  --font-size-4xl: 3rem;       /* 48px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.4;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.7;
+
+  /* ------------------------------------------------------------
+   * Spacing scale (4px = 0.25rem ステップ)
+   * ------------------------------------------------------------ */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;   /* 4px */
+  --spacing-2: 0.5rem;    /* 8px */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px */
+  --spacing-5: 1.25rem;   /* 20px */
+  --spacing-6: 1.5rem;    /* 24px */
+  --spacing-8: 2rem;      /* 32px */
+  --spacing-10: 2.5rem;   /* 40px */
+  --spacing-12: 3rem;     /* 48px */
+  --spacing-16: 4rem;     /* 64px */
+  --spacing-20: 5rem;     /* 80px */
+  --spacing-24: 6rem;     /* 96px */
+
+  /* ------------------------------------------------------------
+   * Radius
+   * ------------------------------------------------------------ */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* ------------------------------------------------------------
+   * Shadow
+   * ------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 8px -2px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg:
+    0 12px 24px -4px rgba(0, 0, 0, 0.12),
+    0 4px 8px -4px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ------------------------------------------------------------
+   * Z-index (UI レイヤー)
+   * ------------------------------------------------------------ */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 1000;
+  --z-popover: 1100;
+  --z-toast: 1200;
+
+  /* ------------------------------------------------------------
+   * Layout
+   * ------------------------------------------------------------ */
+  --layout-max-w-content: 1200px;
+  --layout-max-w-prose: 720px;
+
+  /* ------------------------------------------------------------
+   * Direction (writing direction)
+   *
+   * 既定は LTR (Left-To-Right)。アラビア語 / ヘブライ語等は
+   * `<html dir="rtl">` を切り替えることで RTL を選択する。
+   * 詳細は `Design System / RTL` (RTL.mdx) 参照。
+   * ------------------------------------------------------------ */
+  --direction: ltr;
+
+  /* ------------------------------------------------------------
+   * Border width
+   * ------------------------------------------------------------ */
+  --border-width-0: 0;
+  --border-width-1: 1px;
+  --border-width-2: 2px;
+  --border-width-4: 4px;
+  --border-width-8: 8px;
+
+  /* ------------------------------------------------------------
+   * Motion — duration
+   *
+   * 使い分け (docs/motion.md と整合):
+   *   instant : 0ms     — トランジション無し / reduced-motion フォールバック
+   *   fast    : 150ms   — button hover / focus / color
+   *   normal  : 200ms   — card hover / dropdown / tooltip
+   *   slow    : 300ms   — dialog / sheet / drawer open-close
+   *   slower  : 500ms   — page / route transition
+   * ------------------------------------------------------------ */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  /* ------------------------------------------------------------
+   * Motion — easing
+   *
+   * 使い分け:
+   *   linear    : progress bar 等の等速
+   *   in        : 退場 (要素が画面外へ消える)
+   *   out       : 入場 (要素が現れる)。デフォルト推奨。
+   *   in-out    : 場所を移動する (位置の変化)
+   *   spring    : 強調 (badge pop / 注意喚起)。overshoot あり
+   * ------------------------------------------------------------ */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+ * Motion — reduced motion 対応
+ *
+ * `prefers-reduced-motion: reduce` 環境では全 duration を instant に
+ * 上書きすることで、CSS 側で参照するだけでアニメーションが無効化される。
+ * globals.css にもグローバルセーフネットがあるが、こちらは「トークン経由で
+ * duration を参照しているコンポーネント」に対する一次的な抑制。
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: var(--duration-instant);
+    --duration-normal: var(--duration-instant);
+    --duration-slow: var(--duration-instant);
+    --duration-slower: var(--duration-instant);
+  }
+}
+
+/* ============================================================
+ * Direction (RTL) — `<html dir="rtl">` のとき --direction を rtl に
+ *
+ * コンポーネント側からは `--direction` を直接参照することは少なく、
+ * 実体は CSS Logical Properties (margin-inline-*, padding-inline-*,
+ * inset-inline-*, text-align: start/end) と Tailwind の me-/ms- /
+ * text-start/text-end ユーティリティで吸収する。
+ *
+ * 本トークンは「方向に依存する値の派生」(例: ChevronRight アイコンを
+ * 反転するか) を CSS で書きたいときの正規ソースとして利用する。
+ * ============================================================ */
+[dir="rtl"] {
+  --direction: rtl;
+}

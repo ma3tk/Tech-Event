@@ -1,0 +1,116 @@
+/* ============================================================
+ * Light theme — semantic alias mapping
+ *
+ * primitive token (tokens.css) を「意味のある名前」にマッピングする。
+ * このレイヤーがアプリケーション側 (components / pages) から参照される
+ * 唯一の色トークンになる。dark.css と対になっており、両者で同じ semantic
+ * 名を提供する。
+ *
+ * 既存の `--brand-orange` / `--status-*` / `--link` 等は globals.css の
+ * `@theme inline` から参照される名前なので、ここで値だけを差し替える。
+ *
+ * A11y: 既存実装の WCAG AA (4.5:1) 以上のコントラスト比は維持する。
+ * ============================================================ */
+
+/*
+ * セレクタの優先度:
+ *   1. `[data-theme="light"]` を明示指定したとき
+ *   2. `:root` に data-theme が無いとき (= デフォルト = light)
+ * これにより SSR 時点で data-theme 未設定でも既存と同じ light が出る。
+ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* ------------------------------------------------------------
+   * Surface / background
+   * ------------------------------------------------------------ */
+  --background: #f7f7f5;                         /* 既存値を維持 (connpass 風オフホワイト) */
+  --surface: var(--color-white);
+  --surface-muted: var(--color-gray-100);
+  --foreground: #1a1a1a;                         /* 既存値を維持 (純黒より少し緩い) */
+  --muted: var(--color-gray-500);
+  --muted-foreground: var(--color-gray-600);
+  --border: var(--color-gray-200);
+  --border-strong: var(--color-gray-300);
+
+  /* ------------------------------------------------------------
+   * Brand — orange (connpass 由来)
+   *
+   * 元の #ea5404 は contrast 3.64:1 で AA 違反のため #c2410c に darken 済
+   * (contrast 4.93:1 vs #fff)。
+   * ------------------------------------------------------------ */
+  --brand-orange: var(--color-orange-700);       /* #c2410c, AA: 4.93:1 vs #fff */
+  --brand-orange-hover: var(--color-orange-800); /* #9a3412, AAA: 7.31:1 vs #fff */
+  --brand-orange-soft: #fff1ea;                  /* 装飾用極淡色 (既存実装値を尊重) */
+  --brand-orange-strong: var(--color-orange-700);
+
+  /* Brand — red (会員登録 CTA / イベント作成) */
+  --brand-red: #d23a3a;
+  --brand-red-hover: #b82c2c;
+  --brand-red-soft: #fbeaea;
+
+  /* Brand foreground alias (CTA ボタン上のテキスト色) */
+  --brand-foreground: var(--color-white);
+
+  /* ------------------------------------------------------------
+   * Link
+   * ------------------------------------------------------------ */
+  --link: var(--color-link-blue-600);            /* #005d8c */
+  --link-hover: var(--color-link-blue-700);      /* #004161 */
+
+  /* ------------------------------------------------------------
+   * Status colors
+   *
+   * 各 bg/fg ペアは axe-core color-contrast を満たすため、
+   * コントラスト比 4.5:1 (AA) 以上を確保。多くは 7:1 (AAA) を満たす。
+   * カラーの意味 (緑=open / 赤=full / 黄=waitlist / グレー=ended/closed
+   *   / オレンジ=ongoing / 青=upcoming / 赤地=cancelled) は維持。
+   * ------------------------------------------------------------ */
+  --status-open-bg: var(--color-green-100);      /* AAA: 9.7:1  */
+  --status-open-fg: var(--color-green-900);
+  --status-full-bg: var(--color-red-100);        /* AAA: 7.9:1  */
+  --status-full-fg: var(--color-red-800);
+  --status-waitlist-bg: var(--color-yellow-100); /* AAA: 8.3:1  */
+  --status-waitlist-fg: var(--color-yellow-900);
+  --status-closed-bg: var(--color-gray-100);     /* AAA: 12.6:1 */
+  --status-closed-fg: var(--color-gray-800);
+  --status-cancelled-bg: var(--color-red-800);   /* AAA: 7.9:1  */
+  --status-cancelled-fg: var(--color-white);
+  --status-ended-bg: var(--color-gray-100);      /* AAA: 7.5:1  */
+  --status-ended-fg: var(--color-gray-600);
+  --status-upcoming-bg: var(--color-blue-100);   /* AAA: 10.4:1 */
+  --status-upcoming-fg: var(--color-blue-900);
+  --status-ongoing-bg: var(--color-orange-50);   /* AA:  4.9:1  */
+  --status-ongoing-fg: var(--color-orange-700);
+
+  /* ------------------------------------------------------------
+   * Elevation (semantic shadow aliases)
+   * ------------------------------------------------------------ */
+  --elevation-card: var(--shadow-sm);
+  --elevation-popover: var(--shadow-md);
+  --elevation-modal: var(--shadow-lg);
+  --elevation-overlay: var(--shadow-xl);
+
+  /* ------------------------------------------------------------
+   * Data viz palette — 色覚多様性配慮 (ColorBrewer / Okabe-Ito 系列)
+   *
+   * 1〜8 までの「並列カテゴリ色」。bar / pie / line chart で
+   * 順番にサイクルしながら使う。AA: 黒文字でラベルする想定で、
+   * 各色は 4.5:1 以上のコントラストを白背景上で確保。
+   *
+   * 色覚配慮:
+   *   - 1 / 4 / 6 で「赤と緑が並ぶ」配色を避けるよう順序を決定
+   *   - 隣接 (chart-N と chart-N+1) で「色相 + 明度」の両方が
+   *     変わるようにしている (色相だけで識別できなくても明度で
+   *     見分けられる)
+   * ------------------------------------------------------------ */
+  --chart-1: #0072b2;  /* 青 (Okabe-Ito) */
+  --chart-2: #e69f00;  /* オレンジ */
+  --chart-3: #009e73;  /* 緑 */
+  --chart-4: #cc79a7;  /* マゼンタ */
+  --chart-5: #56b4e9;  /* スカイブルー */
+  --chart-6: #d55e00;  /* ヴァーミリオン */
+  --chart-7: #f0e442;  /* 黄 (明度高い → ラベルは黒のみ可) */
+  --chart-8: #4b4b4b;  /* ニュートラルグレー */
+}

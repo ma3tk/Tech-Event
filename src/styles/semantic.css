@@ -1,0 +1,69 @@
+/* ============================================================
+ * Semantic tokens — テーマ非依存のエイリアス
+ *
+ * tokens.css の primitive (font-size-*, spacing-*, radius-* 等) を
+ * 「見出し」「本文」「コンテナ最大幅」など UI 上の役割名にマッピング
+ * する。色は light.css / dark.css で扱うため、ここでは扱わない。
+ *
+ * これらの値はテーマ切替で変わらないため `:root` に固定。
+ * ============================================================ */
+:root {
+  /* ------------------------------------------------------------
+   * Typography aliases — h1〜h6 / body / small
+   *
+   * @layer base の h1〜h6 から参照される (CSS 変数を見出しの
+   * font-size / line-height / weight に展開する)。
+   * ------------------------------------------------------------ */
+  --typography-h1-size: var(--font-size-2xl);    /* 28px */
+  --typography-h1-line: var(--line-height-tight);
+  --typography-h1-weight: var(--font-weight-bold);
+
+  --typography-h2-size: var(--font-size-xl);     /* 22px */
+  --typography-h2-line: var(--line-height-snug);
+  --typography-h2-weight: var(--font-weight-bold);
+
+  --typography-h3-size: var(--font-size-lg);     /* 18px */
+  --typography-h3-line: var(--line-height-snug);
+  --typography-h3-weight: var(--font-weight-bold);
+
+  --typography-h4-size: var(--font-size-base);   /* 16px */
+  --typography-h4-line: var(--line-height-normal);
+  --typography-h4-weight: var(--font-weight-semibold);
+
+  --typography-h5-size: var(--font-size-sm);     /* 14px */
+  --typography-h5-line: var(--line-height-normal);
+  --typography-h5-weight: var(--font-weight-semibold);
+
+  --typography-h6-size: var(--font-size-xs);     /* 12px */
+  --typography-h6-line: var(--line-height-normal);
+  --typography-h6-weight: var(--font-weight-semibold);
+
+  --typography-body-size: var(--font-size-base);
+  --typography-body-line: var(--line-height-relaxed);
+  --typography-body-weight: var(--font-weight-regular);
+
+  --typography-small-size: var(--font-size-sm);
+  --typography-small-line: var(--line-height-normal);
+  --typography-small-weight: var(--font-weight-regular);
+
+  /* ------------------------------------------------------------
+   * Layout aliases
+   *
+   * `--layout-max-w-content` は <main> 内のコンテンツ最大幅。
+   * 一覧ページ / 詳細ページ共通で 1200px に揃える。
+   * ------------------------------------------------------------ */
+  --container-max-w: var(--layout-max-w-content);
+  --container-padding-x: var(--spacing-4);
+  --container-padding-x-lg: var(--spacing-8);
+
+  /* ------------------------------------------------------------
+   * Radius / focus
+   * ------------------------------------------------------------ */
+  --radius-control: var(--radius-md);     /* button / input */
+  --radius-card: var(--radius-lg);
+  --radius-modal: var(--radius-xl);
+  --radius-badge: var(--radius-full);
+
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}

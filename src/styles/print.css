@@ -1,0 +1,118 @@
+/* ============================================================
+ * Print stylesheet — 紙にやさしい / インク節約 / リンク URL を残す
+ *
+ * 方針 (詳細は `Design System / Print`):
+ *   1. ヘッダー / フッター / サイドバー / モバイルメニュー / Toast / Dialog 等
+ *      ナビゲーションは非表示。本文 (main / article) のみ残す。
+ *   2. 背景色 / グラデーション / shadow は除去 (= 紙とインクの節約)。
+ *      テキストは黒 / 背景は白に固定し、ダークモードでも常に同じ印刷物が出る。
+ *   3. リンクの実 URL を文末 ` (https://…)` として補足表示 (内部リンク
+ *      `#anchor` や `/relative` は除外)。
+ *   4. QR コード (`[data-print-keep]`) / アバター画像 / 参加証用バッジは
+ *      明示的に維持する (= 印刷時に最も意味のある視覚要素)。
+ *
+ * `globals.css` から `@import` 経由で読み込まれる。
+ * ============================================================ */
+@media print {
+  /* ------------------------------------------------------------
+   * 全体のリセット — 背景透明 / 黒テキスト / shadow 解除
+   * ------------------------------------------------------------ */
+  :root {
+    color-scheme: light;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    /* CSS フィルターでグラデを潰す保険 */
+    filter: none !important;
+  }
+
+  /* ------------------------------------------------------------
+   * ナビゲーション類は非表示
+   *   - <header role="banner"> / <footer role="contentinfo">
+   *   - サイドバー (aria-label が「サイドバー」「ナビ」のもの)
+   *   - data-testid="header-*" / "footer-*"
+   *   - Toast (sonner) / Dialog / Sheet 等
+   * ------------------------------------------------------------ */
+  header[role="banner"],
+  footer[role="contentinfo"],
+  nav[aria-label="グローバルナビゲーション"],
+  nav[aria-label="モバイルナビゲーション"],
+  aside[aria-label*="サイドバー"],
+  [data-testid="header-mobile-menu"],
+  [data-sonner-toaster],
+  [data-radix-popper-content-wrapper],
+  .skip-link,
+  /* StickyCTA / 参加ボタンは紙では意味がないので非表示 */
+  [data-testid$="-sticky-cta"] {
+    display: none !important;
+  }
+
+  /* ------------------------------------------------------------
+   * リンクの実 URL を末尾に展開
+   *   - 内部 (#…, /…) や mailto:/tel: は除外
+   *   - 文字色は薄めにして本文の可読性を維持
+   * ------------------------------------------------------------ */
+  a[href^="http"]:after,
+  a[href^="https"]:after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+    color: #555 !important;
+    word-break: break-all;
+  }
+  a[href^="#"]:after,
+  a[href^="mailto:"]:after,
+  a[href^="tel:"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+
+  /* ------------------------------------------------------------
+   * 維持する要素 — QR / アバター / バッジ画像
+   *
+   * - `data-print-keep` を付けた要素は背景・色を維持する
+   * - <img> はそのまま印刷される (background-image でない限り)
+   * ------------------------------------------------------------ */
+  [data-print-keep],
+  [data-print-keep] * {
+    background: revert !important;
+    color: revert !important;
+    box-shadow: revert !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* ------------------------------------------------------------
+   * ページ分割の最適化
+   *   - 見出しは次ページに残らないようにする (orphan 防止)
+   *   - 表 / 図 / コードブロックは可能なら 1 枚に収める
+   * ------------------------------------------------------------ */
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+    break-after: avoid-page;
+  }
+  img,
+  table,
+  pre {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* ------------------------------------------------------------
+   * @page — 余白 / 用紙
+   * ------------------------------------------------------------ */
+  @page {
+    margin: 16mm;
+  }
+}

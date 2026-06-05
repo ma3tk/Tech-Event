@@ -1,0 +1,87 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Print" />
+
+<Title>印刷スタイル</Title>
+<Subtitle>紙とインクにやさしい / リンク URL を残す / QR は保持</Subtitle>
+
+`tech-event` は **`@media print`** 専用のスタイルシート (`src/styles/print.css`) を持ち、`Ctrl + P` で「読みやすい紙の出力」を 1 発で得られるよう設計されています。
+
+---
+
+## 1. 方針
+
+| #   | 項目                            | 動作                                                                  |
+| --- | ------------------------------- | --------------------------------------------------------------------- |
+| 1   | ヘッダー・フッター・サイドバー  | 非表示 (`display: none !important`)                                  |
+| 2   | Toast / Dialog / Sheet         | 非表示                                                                |
+| 3   | 背景色 / グラデ / shadow        | 全削除 — テキストは黒、背景は白                                       |
+| 4   | リンクの実 URL                  | `a[href]:after { content: " (" attr(href) ")" }` で末尾に展開      |
+| 5   | 内部リンク `#id` / `mailto:`    | URL 補足を出さない (紙では意味なし)                                   |
+| 6   | QR コード / アバター画像        | `data-print-keep` を付けると色を維持                                  |
+| 7   | 見出しの page-break              | h1/h2/h3 は次ページ先頭に "ぶら下がり" しない (`page-break-after: avoid`)|
+| 8   | 画像・テーブル                  | `page-break-inside: avoid` で 1 枚に収める                            |
+| 9   | 余白                            | `@page { margin: 16mm }`                                              |
+
+---
+
+## 2. 利用方法
+
+### 2.1 非表示にしたい要素
+
+すでに `header[role="banner"]` / `footer[role="contentinfo"]` / `nav[aria-label="グローバルナビゲーション"]` などのセマンティック要素は自動で隠れます。
+追加で隠したい場合は **`data-testid$="-sticky-cta"`** に倣って `data-testid$="-no-print"` 等のセレクタを `print.css` 側で追加するか、Tailwind の `print:hidden` を使います。
+
+```tsx
+{/* 印刷時は隠す */}
+<aside className="print:hidden">関連リンク</aside>
+
+{/* 印刷時のみ表示 (デフォルトは隠れている) */}
+<p className="hidden print:block">印刷日: {today}</p>
+```
+
+### 2.2 色を維持したい要素 (QR / バッジ)
+
+QR コードやステータスバッジは「色がついていてこそ意味がある」要素です。
+`data-print-keep` を付与することで、`background: transparent !important` のオーバーライドから除外されます。
+
+```tsx
+<div data-print-keep className="rounded bg-white p-2 shadow">
+  <img src="/qr.png" alt="QR code" />
+</div>
+```
+
+### 2.3 リンク URL の展開
+
+外部リンク (`http*://…`) は自動的に文末に URL が補足されます:
+
+```
+詳しくは公式サイト (https://example.com) を参照してください。
+```
+
+内部アンカー (`#section`) や `mailto:` / `tel:` は紙で意味がないので展開しません。
+
+---
+
+## 3. テスト方法
+
+1. 任意のページで `Ctrl + P` (macOS は `Cmd + P`)
+2. プレビューで以下を確認:
+   - ヘッダーバー (オレンジロゴ) が出ていないこと
+   - リンクテキストの末尾に `(https://…)` が付くこと
+   - 背景が真っ白、テキストが真っ黒であること
+   - QR / アバター画像はカラーで残っていること
+
+---
+
+## 4. 関連ファイル
+
+- `src/styles/print.css` — 印刷用 CSS
+- `src/app/globals.css` — `print.css` を `@import` 経由で読み込む
+
+---
+
+## 5. 既知の制約
+
+- **背景画像 (`background-image`)** は印刷に出るかどうかブラウザ依存。`data-print-keep` 配下でも保証されません。重要な画像は `<img>` で書いてください。
+- **`print-color-adjust: exact`** は Chrome / Edge / Safari でサポートされますが、Firefox では一部色が落ちることがあります (= 仕様)。

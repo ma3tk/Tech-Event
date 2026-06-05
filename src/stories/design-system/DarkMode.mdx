@@ -1,0 +1,286 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Dark Mode" />
+
+<Title>Dark Mode</Title>
+<Subtitle>data-theme 属性ベースの 3 モード切替 (light / dark / system)</Subtitle>
+
+`tech-event` は **`<html data-theme>` 属性** をスイッチに、light / dark / system の 3 モードに対応します。
+切替の状態は `localStorage` に保存され、リロード後も保持されます。
+`prefers-color-scheme` の変化にもリアクティブに追従します。
+
+---
+
+## 1. 仕組み
+
+```
+ユーザー操作
+      ↓
+ThemeProvider.setTheme("light" | "dark" | "system")
+      ↓
+localStorage[`tech-event:theme`] に保存
+      ↓
+<html data-theme="light"|"dark"> 属性を更新
+      ↓
+src/styles/themes/{light,dark}.css の :root[data-theme=…] ルールが適用
+      ↓
+@theme inline 経由で Tailwind ユーティリティの色が再評価
+```
+
+### 1.1 SSR / hydration mismatch を避ける設計
+
+- サーバー側では `<html>` に `data-theme` を **付けない**。
+- クライアント mount 後、`useEffect` で localStorage を読み、`data-theme` を初めて設定する。
+- これにより SSR と初回 hydration の出力が完全一致するため、mismatch 警告が出ない。
+- mount 前 (FOUC の隙間) のフォールバックは `dark.css` 末尾の
+  `@media (prefers-color-scheme: dark) :root:not([data-theme="light"]):not([data-theme="dark"])` ルールで担保。
+
+---
+
+## 2. ThemeProvider の使い方
+
+### 2.1 セットアップ (既に完了)
+
+`src/app/layout.tsx` でルートにマウント済み:
+
+```tsx
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="ja">
+      <body>
+        <ThemeProvider defaultTheme="system">{children}</ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### 2.2 任意のコンポーネントから切り替える
+
+```tsx
+"use client";
+
+import { useTheme } from "@/components/ThemeProvider";
+
+export function ThemeSwitch() {
+  const { theme, resolvedTheme, setTheme } = useTheme();
+
+  return (
+    <div>
+      <p>現在: {theme} (実際: {resolvedTheme})</p>
+      <button onClick={() => setTheme("light")}>Light</button>
+      <button onClick={() => setTheme("dark")}>Dark</button>
+      <button onClick={() => setTheme("system")}>System</button>
+    </div>
+  );
+}
+```
+
+### 2.3 API
+
+| 公開値 | 型 | 説明 |
+| --- | --- | --- |
+| `theme` | `"light" \| "dark" \| "system"` | ユーザーが選んだ値 (`"system"` を含む) |
+| `resolvedTheme` | `"light" \| "dark"` | 実際に適用されている値 (system は OS で解決済み) |
+| `setTheme` | `(t: Theme) => void` | 切り替え関数。localStorage 保存 + `<html data-theme>` 反映 |
+
+> Provider の外で `useTheme()` を呼ぶと安全側に倒して `light` を返します。
+> Server Component やテストでの誤用でクラッシュさせない設計。
+
+---
+
+## 3. Storybook での切替
+
+Storybook 側にもダークモード切替を導入する場合は、ツールバーから `data-theme` を切り替える decorator を追加します
+(現状はトークン値の対比表示で確認)。
+
+ライブで切り替えたい場合は **Components の各 Story を開き、Canvas 内で DevTools を使い**
+`document.documentElement.setAttribute("data-theme", "dark")` を実行することでテスト可能です。
+
+将来的に `@storybook/addon-themes` 等を追加すれば、ツールバーから常時切替えできるようになります。
+
+---
+
+## 4. Light / Dark トークン値対比表
+
+すべての semantic alias の light/dark 値を一覧。
+
+### 4.1 Surface / foreground
+
+| Semantic | Light | Dark |
+| --- | --- | --- |
+| `--background` | `#f7f7f5` | `#030712` |
+| `--surface` | `#ffffff` | `#111827` |
+| `--surface-muted` | `#f3f4f6` | `#1f2937` |
+| `--foreground` | `#1a1a1a` | `#f9fafb` |
+| `--muted` | `#6b7280` | `#9ca3af` |
+| `--muted-foreground` | `#4b5563` | `#d1d5db` |
+| `--border` | `#e5e7eb` | `#374151` |
+| `--border-strong` | `#d1d5db` | `#4b5563` |
+
+### 4.2 Brand
+
+| Semantic | Light | Dark |
+| --- | --- | --- |
+| `--brand-orange` | `#c2410c` (orange-700) | `#f97316` (orange-500) |
+| `--brand-orange-hover` | `#9a3412` (orange-800) | `#fb923c` (orange-400) |
+| `--brand-orange-soft` | `#fff1ea` | `rgba(249,115,22,0.12)` |
+| `--brand-orange-strong` | `#c2410c` | `#fdba74` (orange-300) |
+| `--brand-red` | `#d23a3a` | `#ef4f4f` |
+| `--brand-red-hover` | `#b82c2c` | `#f06d6d` |
+| `--brand-red-soft` | `#fbeaea` | `rgba(239,68,68,0.15)` |
+| `--brand-foreground` | `#ffffff` | `#ffffff` |
+
+### 4.3 Link
+
+| Semantic | Light | Dark |
+| --- | --- | --- |
+| `--link` | `#005d8c` (link-blue-600) | `#4aa8d4` (link-blue-300) |
+| `--link-hover` | `#004161` (link-blue-700) | `#7dc4e0` (link-blue-200) |
+
+### 4.4 Status
+
+| Semantic (bg / fg) | Light | Dark |
+| --- | --- | --- |
+| `--status-open-bg` / `-fg` | `#dcfce7` / `#14532d` | `rgba(34,197,94,0.18)` / `#86efac` |
+| `--status-full-bg` / `-fg` | `#fee2e2` / `#991b1b` | `rgba(239,68,68,0.18)` / `#fca5a5` |
+| `--status-waitlist-bg` / `-fg` | `#fef9c3` / `#713f12` | `rgba(234,179,8,0.18)` / `#fde047` |
+| `--status-closed-bg` / `-fg` | `#f3f4f6` / `#1f2937` | `#1f2937` / `#e5e7eb` |
+| `--status-cancelled-bg` / `-fg` | `#991b1b` / `#ffffff` | `#991b1b` / `#ffffff` |
+| `--status-ended-bg` / `-fg` | `#f3f4f6` / `#4b5563` | `#1f2937` / `#9ca3af` |
+| `--status-upcoming-bg` / `-fg` | `#dbeafe` / `#1e3a8a` | `rgba(59,130,246,0.18)` / `#93c5fd` |
+| `--status-ongoing-bg` / `-fg` | `#fff7ed` / `#c2410c` | `rgba(249,115,22,0.15)` / `#fdba74` |
+
+### 4.5 Elevation (shadow)
+
+dark では shadow を強くする (背景が暗いと淡いシャドウが見えないため)。
+
+| Semantic | Light | Dark |
+| --- | --- | --- |
+| `--elevation-card` | `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.4)` |
+| `--elevation-popover` | `--shadow-md` | `0 4px 8px -2px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.3)` |
+| `--elevation-modal` | `--shadow-lg` | `0 12px 24px -4px rgba(0,0,0,0.6), 0 4px 8px -4px rgba(0,0,0,0.4)` |
+| `--elevation-overlay` | `--shadow-xl` | `0 25px 50px -12px rgba(0,0,0,0.8)` |
+
+---
+
+## 5. ビジュアル対比 — 同じカードを light/dark で
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "16px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "13px",
+    }}
+  >
+    {/* Light */}
+    <div
+      style={{
+        background: "#f7f7f5",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <p style={{ margin: "0 0 12px", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>
+        Light
+      </p>
+      <div
+        style={{
+          background: "#ffffff",
+          padding: "16px",
+          borderRadius: "8px",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+          color: "#1a1a1a",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            background: "#dcfce7",
+            color: "#14532d",
+            borderRadius: "4px",
+            fontSize: "11px",
+            fontWeight: 600,
+            marginBottom: "8px",
+          }}
+        >
+          募集中
+        </div>
+        <h3 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 700 }}>
+          AI 時代のフロントエンドを語る夜
+        </h3>
+        <p style={{ margin: "0 0 8px", color: "#4b5563", fontSize: "12px" }}>
+          2026/06/20 (土) 19:00 / Findy Tech
+        </p>
+        <a href="#" style={{ color: "#005d8c", fontSize: "12px", textDecoration: "underline" }}>
+          詳細を見る →
+        </a>
+      </div>
+    </div>
+
+    {/* Dark */}
+    <div
+      style={{
+        background: "#030712",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "1px solid #374151",
+      }}
+    >
+      <p style={{ margin: "0 0 12px", fontSize: "11px", color: "#9ca3af", textTransform: "uppercase" }}>
+        Dark
+      </p>
+      <div
+        style={{
+          background: "#111827",
+          padding: "16px",
+          borderRadius: "8px",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
+          color: "#f9fafb",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            background: "rgba(34,197,94,0.18)",
+            color: "#86efac",
+            borderRadius: "4px",
+            fontSize: "11px",
+            fontWeight: 600,
+            marginBottom: "8px",
+          }}
+        >
+          募集中
+        </div>
+        <h3 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 700 }}>
+          AI 時代のフロントエンドを語る夜
+        </h3>
+        <p style={{ margin: "0 0 8px", color: "#d1d5db", fontSize: "12px" }}>
+          2026/06/20 (土) 19:00 / Findy Tech
+        </p>
+        <a href="#" style={{ color: "#4aa8d4", fontSize: "12px", textDecoration: "underline" }}>
+          詳細を見る →
+        </a>
+      </div>
+    </div>
+  </div>
+</Unstyled>
+
+---
+
+## 6. 注意点
+
+- **半透明色は禁止 (`bg-brand-orange/10` 等)** — 合成後のコントラストが落ち、axe-core 違反になりやすい。
+  必ず `--brand-orange-soft` のような **明示的なトークン** を使う。
+- 文字色は基本 `text-foreground` / `text-muted-foreground` を使い、`text-white` / `text-black` 直書きは避ける
+  (dark テーマで反転しないため)。
+- `border-gray-200` 等の Tailwind 標準色を直接使うのも禁止。`border-border` を使う。
+- 画像の上に文字を重ねる場合は、画像にダークオーバーレイを追加して両テーマで読めるようにする。

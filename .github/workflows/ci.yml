@@ -1,0 +1,199 @@
+# ============================================================
+# tech-event 本体 CI
+#
+# 実行内容 (すべて並列ジョブで実行):
+#   - typecheck : pnpm tsc --noEmit
+#   - lint      : pnpm lint (eslint v9)
+#   - build     : pnpm build (Next.js / Turbopack)
+#   - e2e       : Playwright 全テスト (chromium-desktop, chromium-mobile)
+#
+# 実行環境:
+#   - Node.js 22 LTS (現状開発は v26 だが、CI は安定性重視で LTS を採用)
+#   - Ubuntu latest
+#   - pnpm 9 (cache あり)
+#
+# トリガー:
+#   - pull_request: すべての PR
+#   - push: main ブランチ
+# ============================================================
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 同 PR で複数回 push されたら古い run はキャンセル
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # 本番ビルド用ダミー値 (実環境では secrets で上書き)
+  # PUBLIC_API_KEY を読む API ルートのビルドが落ちないようにするためのプレースホルダ。
+  PUBLIC_API_KEY: ci-placeholder-public-api-key
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+
+jobs:
+  # ------------------------------------------------------------
+  # typecheck — tsc --noEmit
+  # ------------------------------------------------------------
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Prisma client 生成 (typecheck で必要)
+      - run: pnpm exec prisma generate
+      - run: pnpm tsc --noEmit
+
+  # ------------------------------------------------------------
+  # lint — eslint
+  # ------------------------------------------------------------
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  # ------------------------------------------------------------
+  # build — Next.js production build
+  # ------------------------------------------------------------
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      # SQLite DB を seed しないと build 時の事前 fetch / SSG が落ちるパスがあるため
+      # 軽量に reset + seed する。`db:reset` は破壊的だが CI のクリーンな環境なので問題なし。
+      - run: pnpm db:reset
+      - run: pnpm build
+
+  # ------------------------------------------------------------
+  # e2e — Playwright (chromium-desktop + chromium-mobile)
+  # ------------------------------------------------------------
+  e2e:
+    name: e2e (playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - run: pnpm db:reset
+      - run: pnpm exec tsx prisma/seed-test-user.ts
+
+      # Playwright ブラウザ + system deps (chromium のみ)
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14
+
+  # ------------------------------------------------------------
+  # a11y — axe-core 自動検査 (critical / serious が出たら fail)
+  #
+  # 対象 spec:
+  #   - e2e/a11y-pages.spec.ts          : 主要 10 ページ
+  #   - e2e/components-a11y.spec.ts     : /components ショーケース
+  #   - e2e/a11y-pages-mobile.spec.ts   : モバイル viewport
+  #   - e2e/a11y-dark.spec.ts           : ダークモード
+  #   - e2e/high-contrast.spec.ts       : ハイコントラスト
+  #
+  # 出力:
+  #   - screenshots/**/_axe*.json を artifact 保存 (差分追跡用)
+  #   - critical/serious 違反があれば spec 側で fail (= job fail)
+  # ------------------------------------------------------------
+  a11y:
+    name: a11y (axe-core)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - run: pnpm db:reset
+      - run: pnpm exec tsx prisma/seed-test-user.ts
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # 明示的に a11y 系 spec のみを実行 (critical/serious → spec 側で fail)
+      - name: Run axe-core a11y suite
+        run: |
+          pnpm exec playwright test \
+            --project=chromium-desktop \
+            e2e/a11y-pages.spec.ts \
+            e2e/components-a11y.spec.ts \
+            e2e/a11y-dark.spec.ts \
+            e2e/high-contrast.spec.ts
+          pnpm exec playwright test \
+            --project=chromium-mobile \
+            e2e/a11y-pages-mobile.spec.ts
+
+      - name: Upload axe-core JSON reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: axe-reports
+          path: |
+            screenshots/**/_axe*.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright a11y report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-a11y-report
+          path: playwright-report
+          retention-days: 14

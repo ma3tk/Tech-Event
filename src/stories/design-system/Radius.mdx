@@ -1,0 +1,187 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Radius, Shadow, Z-index" />
+
+<Title>Radius, Shadow, Z-index</Title>
+<Subtitle>角丸 6 段 / シャドウ 4 段 / レイヤー 6 段</Subtitle>
+
+「触れる感」を出すための非色トークン群。深いシャドウや大きい角丸は使わず、控えめに統一します。
+
+---
+
+## 1. Radius (角丸)
+
+| トークン | px | Tailwind | 用途 |
+| --- | --: | --- | --- |
+| `--radius-sm` | 2 | `rounded-sm` | タグ矩形 / フォーカスリング |
+| `--radius-md` | 4 | `rounded-md` | バッジ / ステータスチップ |
+| `--radius-lg` | 8 | `rounded-lg` | ボタン / 入力 / カード |
+| `--radius-xl` | 12 | `rounded-xl` | モーダル / ポップオーバー |
+| `--radius-2xl` | 16 | `rounded-2xl` | ヒーローカード |
+| `--radius-full` | 9999 | `rounded-full` | アバター / TagPill |
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "12px",
+      color: "#1a1a1a",
+      marginTop: "12px",
+    }}
+  >
+    {[
+      { name: "sm", px: 2 },
+      { name: "md", px: 4 },
+      { name: "lg", px: 8 },
+      { name: "xl", px: 12 },
+      { name: "2xl", px: 16 },
+      { name: "full", px: 9999, label: "full" },
+    ].map((row) => (
+      <div key={row.name} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "72px",
+            background: "#c2410c",
+            borderRadius: `${row.px}px`,
+          }}
+        />
+        <div style={{ marginTop: "6px", fontWeight: 600 }}>{row.name}</div>
+        <div style={{ color: "#6b7280" }}>{row.label ?? `${row.px}px`}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### Semantic radius alias
+
+| Semantic | 値 | 用途 |
+| --- | --- | --- |
+| `--radius-control` | `--radius-lg` (8px) | ボタン / 入力 / select |
+| `--radius-card` | `--radius-lg` (8px) | カード |
+| `--radius-modal` | `--radius-xl` (12px) | モーダル / Sheet |
+| `--radius-badge` | `--radius-md` (4px) | バッジ / ステータスチップ |
+
+---
+
+## 2. Shadow
+
+控えめな 4 段階。深いシャドウは多用しません。
+
+| トークン | Tailwind | 用途 |
+| --- | --- | --- |
+| `--shadow-sm` | `shadow-sm` | カードの常時シャドウ |
+| `--shadow-md` | `shadow-md` | hover 時のカード強調 |
+| `--shadow-lg` | `shadow-lg` | モーダル / ポップオーバー |
+| `--shadow-xl` | `shadow-xl` | フルスクリーンオーバーレイ |
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gap: "20px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "12px",
+      color: "#1a1a1a",
+      padding: "20px 0 32px",
+    }}
+  >
+    {[
+      { name: "sm", shadow: "0 1px 2px rgba(0, 0, 0, 0.05)" },
+      { name: "md", shadow: "0 4px 8px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05)" },
+      { name: "lg", shadow: "0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.06)" },
+      { name: "xl", shadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" },
+    ].map((row) => (
+      <div key={row.name} style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "80px",
+            background: "#ffffff",
+            border: "1px solid #f3f4f6",
+            borderRadius: "8px",
+            boxShadow: row.shadow,
+          }}
+        />
+        <div style={{ marginTop: "10px", fontWeight: 600 }}>shadow-{row.name}</div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### Semantic elevation alias
+
+light/dark で値を切り替える `elevation-*` alias を経由するのが推奨。
+
+| Semantic | Tailwind | 用途 |
+| --- | --- | --- |
+| `--elevation-card` | `shadow-elevation-card` | EventCard / GroupCard の常時 |
+| `--elevation-popover` | `shadow-elevation-popover` | ドロップダウン / ツールチップ |
+| `--elevation-modal` | `shadow-elevation-modal` | Dialog / Sheet |
+| `--elevation-overlay` | `shadow-elevation-overlay` | フルスクリーン背景 |
+
+---
+
+## 3. Z-index (UI レイヤー)
+
+下から上へのレイヤー順。**直接の数値指定 (`z-50` 等) は禁止**、必ず semantic クラスを使用。
+
+| トークン | 値 | Tailwind | 用途 |
+| --- | --: | --- | --- |
+| `--z-base` | 0 | (default) | 通常のコンテンツ |
+| `--z-dropdown` | 100 | `z-dropdown` | ヘッダーメニュー / フィルタ |
+| `--z-sticky` | 200 | `z-sticky` | sticky な要素 (Sticky CTA / sub nav) |
+| `--z-modal` | 1000 | `z-modal` | Dialog / Sheet / ShareModal |
+| `--z-popover` | 1100 | `z-popover` | Popover / Tooltip / DropdownMenu |
+| `--z-toast` | 1200 | `z-toast` | Toast / 通知 (最上位) |
+
+### レイヤー早見図
+
+<Unstyled>
+  <div
+    style={{
+      position: "relative",
+      width: "100%",
+      maxWidth: "560px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "13px",
+      color: "#1a1a1a",
+    }}
+  >
+    {[
+      { name: "z-toast", z: 1200, color: "#fef9c3" },
+      { name: "z-popover", z: 1100, color: "#dbeafe" },
+      { name: "z-modal", z: 1000, color: "#dcfce7" },
+      { name: "z-sticky", z: 200, color: "#fed7aa" },
+      { name: "z-dropdown", z: 100, color: "#fbcfe8" },
+      { name: "z-base", z: 0, color: "#f3f4f6" },
+    ].map((row, i) => (
+      <div
+        key={row.name}
+        style={{
+          background: row.color,
+          padding: "10px 14px",
+          marginLeft: `${i * 14}px`,
+          borderRadius: "6px",
+          marginBottom: "6px",
+          border: "1px solid rgba(0,0,0,0.05)",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <code>{row.name}</code>
+        <span style={{ color: "#6b7280" }}>z-index: {row.z}</span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+### 規約
+
+- `z-50` のような Tailwind 標準数値 (default scale) は **使用禁止**。必ず semantic クラスを経由する。
+- 新しいレイヤーを増やしたくなったら、まず既存のいずれかに収まるかを検討する。
+- toast > popover > modal > sticky > dropdown の順序は変更しない。

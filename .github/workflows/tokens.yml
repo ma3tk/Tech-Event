@@ -1,0 +1,82 @@
+# ============================================================
+# Design Tokens の整合性チェック
+#
+# 目的:
+#   src/styles/*.css と tokens/*.json (Figma Tokens Studio 互換) が
+#   完全に同期していることを CI で強制する。
+#
+#   1. pnpm tokens:validate
+#        - tokens.css <-> primitive.json + motion.json
+#        - themes/light.css <-> semantic.light.json
+#        - themes/dark.css  <-> semantic.dark.json
+#      の名前空間規則・参照整合性をすべて検証 (失敗で job fail)
+#
+#   2. pnpm tokens
+#        - CSS から JSON を再生成
+#        - もし JSON 側に差分が出る場合 = 開発者が CSS を更新したのに
+#          tokens/*.json を再生成していないことを意味するため fail させる。
+#          (= 「人間が CSS を変えたら JSON を生成しろ」の強制)
+#
+# 実行タイミング: pull_request (デザイントークン関連ファイルに変更があった場合)
+# ============================================================
+name: tokens
+
+on:
+  pull_request:
+    paths:
+      - "src/styles/**"
+      - "tokens/**"
+      - "scripts/sync-tokens.ts"
+      - "scripts/validate-tokens.ts"
+      - ".github/workflows/tokens.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-sync:
+    name: validate & sync check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # --------------------------------------------------------
+      # 1. validate-tokens.ts
+      #    名前空間規則 + CSS<->JSON 整合性の検証。
+      # --------------------------------------------------------
+      - name: Validate tokens (namespace + reference)
+        run: pnpm tokens:validate
+
+      # --------------------------------------------------------
+      # 2. sync-tokens.ts → diff チェック
+      #    CSS から JSON を再生成し、git diff が空でなければ fail。
+      #    人間が CSS を更新したのに JSON を再生成していないと CI が落ちる。
+      # --------------------------------------------------------
+      - name: Regenerate JSON tokens from CSS
+        run: pnpm tokens
+
+      - name: Fail if tokens/*.json is out of sync with src/styles/*.css
+        run: |
+          if ! git diff --quiet -- tokens/; then
+            echo "::error::tokens/*.json が src/styles/*.css と同期していません。" \
+              "ローカルで 'pnpm tokens' を実行してから commit してください。"
+            git --no-pager diff -- tokens/
+            exit 1
+          fi
+          echo "::notice::tokens/*.json は CSS と完全同期しています。"

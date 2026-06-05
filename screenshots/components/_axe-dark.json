@@ -1,0 +1,86 @@
+{
+  "generatedAt": "2026-06-05T00:20:43.077Z",
+  "theme": "dark",
+  "pages": [
+    {
+      "name": "top",
+      "url": "/",
+      "finalUrl": "http://localhost:3000/",
+      "resolvedTheme": "dark",
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 5
+        }
+      ],
+      "minor": []
+    },
+    {
+      "name": "explore",
+      "url": "/explore",
+      "finalUrl": "http://localhost:3000/explore",
+      "resolvedTheme": "dark",
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 2
+        }
+      ],
+      "minor": []
+    },
+    {
+      "name": "event-1",
+      "url": "/event/1",
+      "finalUrl": "http://localhost:3000/event/1",
+      "resolvedTheme": "dark",
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ],
+      "minor": []
+    },
+    {
+      "name": "group-findy",
+      "url": "/group/findy",
+      "finalUrl": "http://localhost:3000/group/findy",
+      "resolvedTheme": "dark",
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 2
+        }
+      ],
+      "minor": []
+    },
+    {
+      "name": "user-fast_moon_169",
+      "url": "/user/fast_moon_169",
+      "finalUrl": "http://localhost:3000/user/fast_moon_169",
+      "resolvedTheme": "dark",
+      "violationCount": 1,
+      "blockerCount": 0,
+      "blockers": [],
+      "knownDesign": [
+        {
+          "id": "color-contrast",
+          "nodes": 2
+        }
+      ],
+      "minor": []
+    }
+  ]
+}
