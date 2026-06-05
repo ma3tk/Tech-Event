@@ -1,0 +1,93 @@
+# ============================================================
+# Storybook を GitHub Pages にデプロイ
+#
+# main ブランチへの push があるたびに、`pnpm build-storybook` で生成された
+# storybook-static/ を GitHub Pages に公開する。
+#
+# 公開 URL: https://<owner>.github.io/<repo>/
+#
+# 必要事項:
+#   - リポジトリ Settings > Pages で source を "GitHub Actions" に変更
+#   - `permissions: pages: write` (gh-pages ブランチ運用ではなく Actions 経由)
+#   - `peaceiris/actions-gh-pages` で gh-pages ブランチを使う方式を採用 (PR レビュー時に
+#     差分がわかりやすい)
+# ============================================================
+name: storybook
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tokens/**"
+      - ".storybook/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/storybook.yml"
+  workflow_dispatch:
+
+# Pages デプロイには `contents: write` (gh-pages ブランチ更新) と
+# `pages: write` (Pages API) が必要
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# 同 ref で先行 run があれば cancel
+concurrency:
+  group: storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+
+jobs:
+  build-and-deploy:
+    name: build & deploy storybook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
+      # GitHub Pages 用 gh-pages ブランチに storybook-static/ を push
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./storybook-static
+          publish_branch: gh-pages
+          # CNAME を使う場合は cname: storybook.example.com
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "chore(storybook): deploy ${{ github.sha }}"
+
+      # 公開 URL を job summary に出力 (PR のチェックから確認可能にする)
+      - name: Print public Storybook URL
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO="${GITHUB_REPOSITORY##*/}"
+          URL="https://${OWNER}.github.io/${REPO}/"
+          echo "[storybook] 公開 URL: ${URL}"
+          {
+            echo "## Storybook deployed"
+            echo ""
+            echo "- URL: [${URL}](${URL})"
+            echo "- commit: \`${GITHUB_SHA}\`"
+            echo "- entries: \`storybook-static/index.json\` 参照"
+          } >> "$GITHUB_STEP_SUMMARY"

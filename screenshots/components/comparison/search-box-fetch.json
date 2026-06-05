@@ -1,0 +1,12 @@
+{
+  "clone": {
+    "ok": true
+  },
+  "connpass": {
+    "ok": true
+  },
+  "luma": {
+    "ok": false,
+    "reason": "Error: no matching selector on luma"
+  }
+}

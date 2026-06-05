@@ -1,0 +1,16 @@
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  '@prisma/engines': true
+  '@swc/core': set this to true or false
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - sharp
+  - unrs-resolver
+  - "@prisma/engines"
+  - esbuild
+  - prisma
+  - better-sqlite3

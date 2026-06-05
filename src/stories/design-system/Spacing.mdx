@@ -1,0 +1,169 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Spacing" />
+
+<Title>Spacing</Title>
+<Subtitle>4px 基底のスケール / 0〜24 を視覚化</Subtitle>
+
+スペーシングは **4px ステップ** を基底とし、`spacing-0` 〜 `spacing-24` の 13 段階を用意しています。
+非標準値 (10px、14px 等) の使用は禁止。情報密度が必要な場面では `py-2.5` (10px) までに留めてください。
+
+---
+
+## 1. Scale
+
+| トークン | px | rem | Tailwind |
+| --- | --: | --: | --- |
+| `--spacing-0` | 0 | 0 | `p-0` / `gap-0` |
+| `--spacing-1` | 4 | 0.25 | `p-1` / `gap-1` |
+| `--spacing-2` | 8 | 0.5 | `p-2` / `gap-2` |
+| `--spacing-3` | 12 | 0.75 | `p-3` / `gap-3` |
+| `--spacing-4` | 16 | 1 | `p-4` / `gap-4` |
+| `--spacing-5` | 20 | 1.25 | `p-5` |
+| `--spacing-6` | 24 | 1.5 | `p-6` / `gap-6` |
+| `--spacing-8` | 32 | 2 | `p-8` / `gap-8` |
+| `--spacing-10` | 40 | 2.5 | `p-10` |
+| `--spacing-12` | 48 | 3 | `p-12` |
+| `--spacing-16` | 64 | 4 | `p-16` |
+| `--spacing-20` | 80 | 5 | `p-20` |
+| `--spacing-24` | 96 | 6 | `p-24` |
+
+---
+
+## 2. 視覚的サイズ比較
+
+各バーの幅 = 対応するスペーシング値。
+
+<Unstyled>
+  <div style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+    {[
+      { name: "0", px: 0 }, { name: "1", px: 4 }, { name: "2", px: 8 }, { name: "3", px: 12 },
+      { name: "4", px: 16 }, { name: "5", px: 20 }, { name: "6", px: 24 }, { name: "8", px: 32 },
+      { name: "10", px: 40 }, { name: "12", px: 48 }, { name: "16", px: 64 }, { name: "20", px: 80 },
+      { name: "24", px: 96 },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "80px 60px 1fr",
+          alignItems: "center",
+          gap: "16px",
+          padding: "8px 0",
+          borderBottom: "1px solid #f3f4f6",
+        }}
+      >
+        <code style={{ fontSize: "12px", color: "#6b7280" }}>spacing-{row.name}</code>
+        <code style={{ fontSize: "12px", color: "#6b7280" }}>{row.px}px</code>
+        <div
+          style={{
+            width: row.px ? `${row.px}px` : "1px",
+            minWidth: row.px ? `${row.px}px` : "1px",
+            height: "20px",
+            background: "#c2410c",
+            borderRadius: "2px",
+          }}
+        />
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 3. パディング比較 (実物)
+
+`spacing-2 / 4 / 6 / 8` を `p-*` として適用したカード:
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gap: "12px",
+      fontFamily: "system-ui, sans-serif",
+      color: "#1a1a1a",
+      fontSize: "13px",
+    }}
+  >
+    {[
+      { name: "p-2", px: 8 },
+      { name: "p-4", px: 16 },
+      { name: "p-6", px: 24 },
+      { name: "p-8", px: 32 },
+    ].map((row) => (
+      <div
+        key={row.name}
+        style={{
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+        }}
+      >
+        <div style={{ padding: `${row.px}px`, background: "#fff1ea", borderRadius: "8px" }}>
+          <code style={{ fontSize: "12px" }}>{row.name}</code>
+          <p style={{ margin: "4px 0 0", color: "#4b5563" }}>{row.px}px</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 4. ギャップ比較 (実物)
+
+flex / grid の `gap-*` を比較:
+
+<Unstyled>
+  <div style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a", fontSize: "13px" }}>
+    {[
+      { name: "gap-1", px: 4 },
+      { name: "gap-2", px: 8 },
+      { name: "gap-4", px: 16 },
+      { name: "gap-8", px: 32 },
+    ].map((row) => (
+      <div key={row.name} style={{ margin: "12px 0" }}>
+        <code style={{ fontSize: "11px", color: "#6b7280" }}>{row.name} ({row.px}px)</code>
+        <div style={{ display: "flex", gap: `${row.px}px`, marginTop: "4px" }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              style={{
+                width: "40px",
+                height: "24px",
+                background: "#c2410c",
+                borderRadius: "4px",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 5. 使い分けガイド
+
+| 用途 | 推奨 spacing | 例 |
+| --- | --- | --- |
+| アイコンと隣接テキスト | `gap-1` (4px) / `gap-2` (8px) | 検索アイコン + プレースホルダ |
+| インライン要素の間 | `gap-2` (8px) | バッジ + ラベル |
+| カード内パディング (small) | `p-3` (12px) / `p-4` (16px) | EventListRow |
+| カード内パディング (default) | `p-4` (16px) / `p-6` (24px) | EventCard |
+| カード間 / セクション内 | `gap-4` (16px) / `gap-6` (24px) | EventTimeline 内の行間 |
+| セクション間 (縦) | `space-y-8` (32px) 〜 `space-y-12` (48px) | ページ内セクション |
+| ページ上下余白 | `py-12` (48px) / `py-16` (64px) | Hero エリア |
+| フォーム要素間 | `space-y-4` (16px) / `space-y-6` (24px) | login / signup |
+| 大型ヒーロー余白 | `py-20` (80px) / `py-24` (96px) | LP の縦余白 |
+
+---
+
+## 6. 規約
+
+- パディング・マージン・ギャップで使う値は **必ずトークンスケールから選ぶ**。任意の `px` 直書きは禁止。
+- 情報密度を上げたいときの `py-2.5` (10px) はエスケープハッチとして例外的に許容。
+- `space-y-*` を使うときは、子要素が flex/inline-block でないことを確認 (空 div で順番崩れを防ぐ)。
+- モバイル / デスクトップで余白を変えるときは `md:p-6` のようにブレークポイントで切替える (中央値の `p-5` を作らない)。

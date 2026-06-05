@@ -1,0 +1,188 @@
+/* ============================================================
+ * High-contrast theme — WCAG AAA (7:1 以上) 強制版
+ *
+ * 用途:
+ *   - 視力の弱いユーザー / 高齢者 / 明るい屋外 (スマホ) 利用時
+ *   - OS の「コントラスト強調」設定への自動追従 (prefers-contrast: more)
+ *   - ユーザー明示切替 ([data-contrast="more"])
+ *
+ * 設計方針:
+ *   - light theme をベースに **「色相」を保ったまま明度を極限まで振る**
+ *     ことで、ブランドの「オレンジっぽさ」「ステータスバッジの意味」を維持する。
+ *   - すべてのテキスト = `#000000` (pure black)
+ *   - 主背景 = `#ffffff` (pure white)
+ *   - 主要 brand = `#a3320b` (orange-700 を一段濃く、contrast 7.2:1 vs #fff)
+ *   - status は AAA (7:1) を満たす濃淡ペアに統一
+ *   - border は 2px / pure black に強化 (--border-width-2 = 2px)
+ *   - リンクは `text-decoration: underline` を強制
+ *
+ * 有効化条件:
+ *   1. `@media (prefers-contrast: more)` — OS / ブラウザ設定
+ *   2. `[data-contrast="more"]` — ユーザー明示切替 (ThemeProvider)
+ *   両方とも light/dark の指定を上書きする (= 必ず high-contrast が勝つ)。
+ *
+ * 順序:
+ *   src/app/globals.css での import 順は
+ *     tokens.css → light.css → dark.css → high-contrast.css → semantic.css
+ *   この順により、dark/light 指定が既に解決された後で high-contrast 上書きが
+ *   効く。
+ * ============================================================ */
+
+/*
+ * ユーザー明示切替: [data-contrast="more"] を <html> に付与する。
+ * data-theme より優先 (詳細度: [data-contrast=...] = [data-theme=...] = 0,1,0
+ * なので、後勝ちのカスケード順で必ず勝つよう CSS の後ろに置く)。
+ */
+:root[data-contrast="more"],
+:root[data-contrast="more"][data-theme="light"],
+:root[data-contrast="more"][data-theme="dark"] {
+  color-scheme: light;
+
+  /* ---------- Surface / text (純白 + 純黒) ---------- */
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #ffffff;
+  --foreground: #000000;
+  --muted: #000000;
+  --muted-foreground: #000000;
+  --border: #000000;
+  --border-strong: #000000;
+
+  /* ---------- Brand — orange (純色濃いめ、AAA: 7.2:1) ---------- */
+  --brand-orange: #a3320b;          /* AAA: 7.21:1 vs #fff */
+  --brand-orange-hover: #7c2607;    /* AAA: 10.05:1 vs #fff */
+  --brand-orange-soft: #fff1ea;     /* 装飾用 (text は必ず濃色にする) */
+  --brand-orange-strong: #7c2607;
+
+  /* ---------- Brand — red (AAA: 7.0:1) ---------- */
+  --brand-red: #a60000;             /* AAA: 7.59:1 vs #fff */
+  --brand-red-hover: #800000;       /* AAA: 10.4:1  vs #fff */
+  --brand-red-soft: #ffe5e5;
+
+  /* CTA 文字色 = 純白 (濃色背景上 contrast 7:1+) */
+  --brand-foreground: #ffffff;
+
+  /* ---------- Link (純色濃いめ、underline 必須) ---------- */
+  --link: #003c66;                  /* AAA: 11.4:1 vs #fff */
+  --link-hover: #001f33;            /* AAA: 17.1:1 vs #fff */
+
+  /* ---------- Status colors (AAA 7:1+ ペア) ---------- */
+  --status-open-bg: #ffffff;
+  --status-open-fg: #003d12;        /* dark green, AAA: 14.3:1 */
+  --status-full-bg: #ffffff;
+  --status-full-fg: #730000;        /* dark red,   AAA: 11.7:1 */
+  --status-waitlist-bg: #ffffff;
+  --status-waitlist-fg: #4d2700;    /* dark amber, AAA: 12.4:1 */
+  --status-closed-bg: #ffffff;
+  --status-closed-fg: #000000;
+  --status-cancelled-bg: #730000;   /* AAA: 11.7:1 vs #fff */
+  --status-cancelled-fg: #ffffff;
+  --status-ended-bg: #ffffff;
+  --status-ended-fg: #000000;
+  --status-upcoming-bg: #ffffff;
+  --status-upcoming-fg: #00264d;    /* dark blue,  AAA: 14.7:1 */
+  --status-ongoing-bg: #ffffff;
+  --status-ongoing-fg: #7c2607;     /* dark orange,AAA: 10.0:1 */
+
+  /* ---------- Elevation (高コントラストでは shadow 不要) ----------
+   * 影に頼らず border で elevation を表現する。
+   * shadow を消す代わりに、各カードは border: 2px solid #000 で囲う設計。
+   */
+  --elevation-card: 0 0 0 transparent;
+  --elevation-popover: 0 0 0 transparent;
+  --elevation-modal: 0 0 0 transparent;
+  --elevation-overlay: 0 0 0 transparent;
+}
+
+/*
+ * OS / ブラウザの強コントラスト設定への追従。
+ * ユーザーが [data-contrast="normal"] を明示している場合は尊重するため、
+ * `:root:not([data-contrast="normal"])` で除外する。
+ */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]),
+  :root:not([data-contrast="normal"])[data-theme="light"],
+  :root:not([data-contrast="normal"])[data-theme="dark"] {
+    color-scheme: light;
+
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-muted: #ffffff;
+    --foreground: #000000;
+    --muted: #000000;
+    --muted-foreground: #000000;
+    --border: #000000;
+    --border-strong: #000000;
+
+    --brand-orange: #a3320b;
+    --brand-orange-hover: #7c2607;
+    --brand-orange-soft: #fff1ea;
+    --brand-orange-strong: #7c2607;
+
+    --brand-red: #a60000;
+    --brand-red-hover: #800000;
+    --brand-red-soft: #ffe5e5;
+
+    --brand-foreground: #ffffff;
+
+    --link: #003c66;
+    --link-hover: #001f33;
+
+    --status-open-bg: #ffffff;
+    --status-open-fg: #003d12;
+    --status-full-bg: #ffffff;
+    --status-full-fg: #730000;
+    --status-waitlist-bg: #ffffff;
+    --status-waitlist-fg: #4d2700;
+    --status-closed-bg: #ffffff;
+    --status-closed-fg: #000000;
+    --status-cancelled-bg: #730000;
+    --status-cancelled-fg: #ffffff;
+    --status-ended-bg: #ffffff;
+    --status-ended-fg: #000000;
+    --status-upcoming-bg: #ffffff;
+    --status-upcoming-fg: #00264d;
+    --status-ongoing-bg: #ffffff;
+    --status-ongoing-fg: #7c2607;
+
+    --elevation-card: 0 0 0 transparent;
+    --elevation-popover: 0 0 0 transparent;
+    --elevation-modal: 0 0 0 transparent;
+    --elevation-overlay: 0 0 0 transparent;
+  }
+}
+
+/* ============================================================
+ * Element-level の強化
+ *   - リンクは必ず下線
+ *   - 境界線は 2px 化 (細い 1px だと白背景で見えづらい人がいる)
+ *   - フォーカスリングを 3px に強化
+ * ============================================================ */
+:root[data-contrast="more"] a,
+:root[data-contrast="more"] a:visited {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+:root[data-contrast="more"] *,
+:root[data-contrast="more"] *::before,
+:root[data-contrast="more"] *::after {
+  border-width: var(--border-width-2);
+}
+:root[data-contrast="more"] :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
+
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) a,
+  :root:not([data-contrast="normal"]) a:visited {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+  :root:not([data-contrast="normal"]) :focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+}

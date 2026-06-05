@@ -1,0 +1,235 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/High Contrast" />
+
+<Title>High Contrast Mode</Title>
+<Subtitle>WCAG AAA (7:1) を強制する第三のテーマ</Subtitle>
+
+`tech-event` は light / dark の 2 モードに加えて、視力の弱いユーザーや高齢者、屋外で
+スマホを使うユーザーのために **High Contrast モード** を提供しています。
+これは light theme の semantic alias をさらにオーバーライドし、すべてのテキスト/背景の
+コントラスト比を **WCAG AAA (7:1)** 以上まで引き上げる第三のテーマレイヤーです。
+
+---
+
+## 1. 有効化方法
+
+### 1.1 ユーザー明示切替
+
+ヘッダー右上の **テーマ切替ドロップダウン** から「High Contrast」を選ぶと、
+`<html data-contrast="more">` が付与され、`tech-event:contrast` キーで
+`localStorage` に保存されます (リロード後も維持)。
+
+### 1.2 OS / ブラウザ設定追従
+
+`@media (prefers-contrast: more)` をユーザーが OS / ブラウザで有効化している
+場合 (Windows 「ハイコントラスト」、macOS 「コントラストを上げる」など) も
+自動的に High Contrast が適用されます。
+
+`[data-contrast="normal"]` を明示しているユーザーはこの自動追従から外れます
+(「自分で明示的に通常コントラストを選んだ」状態を尊重)。
+
+---
+
+## 2. 通常 vs High Contrast の対比
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "16px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "13px",
+    }}
+  >
+    {/* Normal */}
+    <div
+      style={{
+        background: "#f7f7f5",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <p style={{ margin: "0 0 12px", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>
+        Normal (light)
+      </p>
+      <div
+        style={{
+          background: "#ffffff",
+          padding: "16px",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+          color: "#1a1a1a",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            background: "#dcfce7",
+            color: "#14532d",
+            borderRadius: "4px",
+            fontSize: "11px",
+            fontWeight: 600,
+            marginBottom: "8px",
+          }}
+        >
+          募集中
+        </div>
+        <h3 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 700 }}>
+          AI 時代のフロントエンドを語る夜
+        </h3>
+        <p style={{ margin: "0 0 8px", color: "#4b5563", fontSize: "12px" }}>
+          2026/06/20 (土) 19:00 / Findy Tech
+        </p>
+        <a href="#" style={{ color: "#005d8c", fontSize: "12px" }}>
+          詳細を見る →
+        </a>
+      </div>
+    </div>
+
+    {/* High Contrast */}
+    <div
+      style={{
+        background: "#ffffff",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "2px solid #000000",
+      }}
+    >
+      <p style={{ margin: "0 0 12px", fontSize: "11px", color: "#000000", textTransform: "uppercase", fontWeight: 700 }}>
+        High Contrast
+      </p>
+      <div
+        style={{
+          background: "#ffffff",
+          padding: "16px",
+          borderRadius: "8px",
+          border: "2px solid #000000",
+          color: "#000000",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            background: "#ffffff",
+            color: "#003d12",
+            border: "2px solid #003d12",
+            borderRadius: "4px",
+            fontSize: "11px",
+            fontWeight: 700,
+            marginBottom: "8px",
+          }}
+        >
+          募集中
+        </div>
+        <h3 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 700, color: "#000000" }}>
+          AI 時代のフロントエンドを語る夜
+        </h3>
+        <p style={{ margin: "0 0 8px", color: "#000000", fontSize: "12px" }}>
+          2026/06/20 (土) 19:00 / Findy Tech
+        </p>
+        <a
+          href="#"
+          style={{
+            color: "#003c66",
+            fontSize: "12px",
+            textDecoration: "underline",
+            textDecorationThickness: "2px",
+            textUnderlineOffset: "2px",
+            fontWeight: 600,
+          }}
+        >
+          詳細を見る →
+        </a>
+      </div>
+    </div>
+  </div>
+</Unstyled>
+
+---
+
+## 3. トークン対比表 — Normal vs High Contrast
+
+| Semantic | Normal (light) | High Contrast | コントラスト比 |
+| --- | --- | --- | --- |
+| `--background` | `#f7f7f5` | `#ffffff` | — |
+| `--surface` | `#ffffff` | `#ffffff` | — |
+| `--foreground` | `#1a1a1a` | `#000000` | 21.0:1 vs #fff |
+| `--muted-foreground` | `#4b5563` | `#000000` | 21.0:1 vs #fff |
+| `--border` | `#e5e7eb` | `#000000` | — (2px) |
+| `--brand-orange` | `#c2410c` (4.93:1) | `#a3320b` (7.21:1) | AAA |
+| `--brand-orange-hover` | `#9a3412` (7.31:1) | `#7c2607` (10.05:1) | AAA |
+| `--brand-red` | `#d23a3a` | `#a60000` (7.59:1) | AAA |
+| `--link` | `#005d8c` | `#003c66` (11.4:1) | AAA |
+| `--status-open-fg` | `#14532d` | `#003d12` (14.3:1) | AAA |
+| `--status-full-fg` | `#991b1b` | `#730000` (11.7:1) | AAA |
+| `--status-waitlist-fg` | `#713f12` | `#4d2700` (12.4:1) | AAA |
+| `--status-cancelled-bg` | `#991b1b` | `#730000` (11.7:1) | AAA |
+
+---
+
+## 4. `prefers-contrast` メディアクエリ
+
+CSS Working Draft で標準化された `prefers-contrast` メディア特性は、
+ユーザーが OS / ブラウザレベルで「コントラスト強調」設定をしているかを検出します。
+Safari 14.5+ / Chrome 96+ / Firefox 101+ がサポート。
+
+```css
+/* OS で「コントラスト強調」が有効なら自動で発動 */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) {
+    --foreground: #000000;
+    --border: #000000;
+    /* ... */
+  }
+}
+```
+
+`[data-contrast="normal"]` を明示しているユーザーは除外することで、
+「自分で通常を選んだ」意図を尊重します。
+
+---
+
+## 5. 設計上の選択
+
+### 5.1 影 (shadow) を消し border で elevation を表現
+
+High Contrast 環境では shadow が見えにくい (背景が純白 / 純黒のいずれかになるため)。
+代わりに `border: 2px solid #000000` でカードや popover の境界を明示しています。
+
+### 5.2 リンク下線の強制
+
+`color` だけで区別すると色覚特性ユーザーがリンクを見落とすため、
+High Contrast モードでは **全 `<a>` 要素に `text-decoration: underline`** を強制します。
+
+### 5.3 フォーカスリングを 3px に拡大
+
+フォーカス可視性を担保するため、`focus-visible` の outline を 2px → 3px に強化、
+offset も 2px → 3px に拡大します。
+
+---
+
+## 6. 検証コマンド
+
+```bash
+# 全主要ページで High Contrast 適用 + axe critical/serious=0 を確認
+pnpm exec playwright test e2e/high-contrast.spec.ts
+```
+
+```bash
+# トークン定義の整合性 (CSS ⇄ JSON 同期)
+pnpm tokens:validate
+```
+
+---
+
+## 7. 関連ドキュメント
+
+- [Dark Mode](?path=/docs/design-system-dark-mode--docs) — 同じスイッチング機構
+- [Accessibility](?path=/docs/design-system-accessibility--docs) — WCAG 適合方針
+- [Colors](?path=/docs/design-system-colors--docs) — primitive color スケール

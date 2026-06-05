@@ -1,0 +1,123 @@
+import { Meta, Title, Subtitle } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Toast" />
+
+<Title>Toast / Notification</Title>
+<Subtitle>sonner + URL ベースの ToastListener パターン</Subtitle>
+
+`tech-event` は Toast の表示に [sonner](https://sonner.emilkowal.ski/) を採用し、Server Action と組み合わせるために **URL クエリ `?toast=<key>`** を経由する独自パターン (`ToastListener`) を使います。
+
+---
+
+## 1. アーキテクチャ
+
+```
+Server Action (例: applyToEvent)
+      ↓ redirect(`/event/${id}?toast=joined`)
+ブラウザ遷移
+      ↓
+ToastListener (Client Component, ルートレイアウトに常駐)
+      ↓ ?toast=joined を読み取る
+      ↓ toast.success("✓ 参加申込しました")
+      ↓ router.replace で ?toast を URL から削除
+sonner が画面右上に通知表示
+```
+
+### なぜ URL ベース?
+
+- **Server Action からトーストを出すための公式 API がない** ため
+- ページリロード時に **再発火しない** (URL から削除済み)
+- Server → Client への副作用伝達が **状態ではなく URL** で済む = SSR と相性が良い
+
+---
+
+## 2. 既知の toast key 一覧
+
+| key                 | type    | メッセージ                           |
+| ------------------- | ------- | ------------------------------------ |
+| `joined`            | success | ✓ 参加申込しました                  |
+| `cancelled`         | info    | ℹ︎ 参加をキャンセルしました          |
+| `bookmarked`        | success | ♡ ブックマークしました              |
+| `unbookmarked`      | info    | ℹ︎ ブックマークを解除しました        |
+| `comment-posted`    | success | ✓ コメント投稿しました              |
+| `group-created`     | success | ✓ グループを作成しました            |
+| `calendar-created`  | success | ✓ カレンダーを作成しました          |
+| `saved`             | success | ✓ 保存しました                      |
+
+新しい key を追加する場合は `src/components/ToastListener.tsx` の `MESSAGES` に登録 (= TS の `ToastKey` 型に追加することで握り潰し漏れを防ぐ)。
+
+---
+
+## 3. 使い方
+
+### 3.1 Server Action から
+
+```ts
+"use server";
+import { redirect } from "next/navigation";
+
+export async function applyToEvent(eventId: string) {
+  // ... DB 更新 ...
+  redirect(`/event/${eventId}?toast=joined`);
+}
+```
+
+### 3.2 Client Component から (直接)
+
+通常は URL 経由を推奨しますが、純粋にクライアント側で完結する操作 (例: クリップボードコピー) は直接呼べます:
+
+```tsx
+"use client";
+import { toast } from "@/components/ui/toast";
+
+function CopyButton() {
+  return (
+    <Button
+      onClick={async () => {
+        await navigator.clipboard.writeText(url);
+        toast.success("URL をコピーしました");
+      }}
+    >
+      コピー
+    </Button>
+  );
+}
+```
+
+### 3.3 エラー時
+
+```tsx
+toast.error("送信に失敗しました。時間をおいて再度お試しください。");
+```
+
+---
+
+## 4. Good / Bad
+
+### ✓ Good
+
+- 「成功 / 失敗」など **短く** て **追加情報がない** 通知に使う
+- Server Action のフィードバックには `?toast=...` 経由を使う
+- 重要なエラー (権限不足 / バリデーション失敗) は Toast ではなくページ内に `ErrorState` を出す
+
+### ✗ Bad
+
+- フォームのバリデーションエラーを Toast で出す (= 入力近くに出すべき)
+- リダイレクト無しの Server Action 直接呼出で Toast 出そうとする (= 状態管理が破綻)
+- 連続して 5 個以上の Toast を出す (= sonner が積み上げてしまう。1 操作 = 1 toast)
+
+---
+
+## 5. アクセシビリティ
+
+- sonner は内部で `aria-live="polite"` (success/info) / `aria-live="assertive"` (error) を出す
+- フォーカスは Toast に移動しない (= 操作中の入力を邪魔しない)
+- 自動消滅は 4 秒 (sonner デフォルト)。詳細は `<Toaster>` の設定で上書き可
+
+---
+
+## 6. 関連
+
+- 実装: `src/components/ui/toast.tsx` (Toaster wrapper), `src/components/ToastListener.tsx`
+- Stories: `UI/Toast`
+- アクションラッパ: `src/hooks/useActionToast.ts` (Server Action 結果を URL 経由で Toast 化)

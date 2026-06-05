@@ -1,0 +1,85 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/RTL" />
+
+<Title>RTL (Right-To-Left) サポート</Title>
+<Subtitle>logical properties で書字方向に依存しない UI を作る</Subtitle>
+
+`tech-event` の UI は **`<html dir="rtl">`** を切り替えるだけで右→左レイアウトに切り替わるよう、CSS Logical Properties をベースに記述されています。
+本ページは、対応コンポーネントの一覧 / 規約 / opt-in 方法をまとめます。
+
+---
+
+## 1. 切替方法
+
+ヘッダー右上のテーマアイコンを開き、「方向」セクションから **LTR (左→右)** / **RTL (右→左)** を選択します。
+選択は `localStorage[tech-event:dir]` に保存され、リロード後も保持されます。
+
+```ts
+// 内部的にはこの 1 行
+document.documentElement.setAttribute("dir", "rtl");
+```
+
+---
+
+## 2. 命名規約 — 物理 → 論理
+
+| 物理 (避ける)            | 論理 (推奨)                  | Tailwind         |
+| ------------------------ | ---------------------------- | ---------------- |
+| `margin-left`            | `margin-inline-start`        | `ms-{n}`         |
+| `margin-right`           | `margin-inline-end`          | `me-{n}`         |
+| `padding-left`           | `padding-inline-start`       | `ps-{n}`         |
+| `padding-right`          | `padding-inline-end`         | `pe-{n}`         |
+| `text-align: left`       | `text-align: start`          | `text-start`     |
+| `text-align: right`      | `text-align: end`            | `text-end`       |
+| `border-left`            | `border-inline-start`        | `border-s-{n}`   |
+| `border-right`           | `border-inline-end`          | `border-e-{n}`   |
+| `left: 0` / `right: 0`   | `inset-inline-start: 0` 等   | `start-0`/`end-0`|
+
+> **注**: `gap-*` / `flex` / `grid` などは書字方向に追従するので何もしなくて OK。
+> 影響を受けるのは **「左右」を直接書いている箇所** だけです。
+
+---
+
+## 3. 方向アイコンの反転
+
+ChevronLeft / ChevronRight などの方向アイコンは、RTL では物理的に逆向きにしたい場合と、そのままが良い場合があります。
+
+| ケース                              | 推奨                              |
+| ----------------------------------- | --------------------------------- |
+| Pagination の「前へ / 次へ」        | 反転する (`.rtl-flip` を付与)     |
+| Breadcrumb の `›`                   | 反転する (`.rtl-flip` を付与)     |
+| ロゴ・絵文字・実コンテンツの矢印画像 | 反転しない (情報量が変わるため)  |
+
+```tsx
+<ChevronRight className="h-4 w-4 rtl-flip" />
+```
+
+`.rtl-flip` は `globals.css` で定義された **`[dir="rtl"] .rtl-flip { transform: scaleX(-1) }`** ユーティリティです。
+opt-in 方式なので、付け忘れによる「アイコンが逆向き」を意図せず引き起こさない設計になっています。
+
+---
+
+## 4. サポート状況
+
+| コンポーネント                | RTL 対応 | 備考                                       |
+| ----------------------------- | :------: | ------------------------------------------ |
+| Header                        | ✓        | `ms-auto` / 方向トグル内蔵                 |
+| Breadcrumb                    | ✓        | セパレータ ChevronRight を `.rtl-flip`     |
+| Pagination                    | ✓        | 前へ/次へボタンに `me-*/ms-*` + `.rtl-flip`|
+| ui/* (primitives)             | ○        | Tailwind logical utility が効くので基本 OK |
+| EventCard / GroupCard         | △        | 部分対応 (`gap-*` ベースなので大きな崩れ無) |
+| その他の Compositions         | △        | 都度確認 (P3 タスク)                       |
+
+`✓` = 完全対応 / `○` = 自然対応 / `△` = 一部要確認
+
+---
+
+## 5. テスト方法
+
+1. ヘッダー右上の「方向」セクションから **RTL** を選択
+2. もしくは DevTools コンソールで `document.documentElement.setAttribute("dir", "rtl")`
+3. 主要ページ (`/`, `/explore`, `/event/[id]`) を巡回し、Header / Footer / Breadcrumb / Pagination が右寄せで崩れないことを確認
+
+> **既知の制約**: 多くのページ本文 (event detail / dashboard 等) は LTR を前提に `flex-row` 等で書かれているため、RTL では細部の見た目が変わります。
+> 本デザインシステムでは **「主要グローバル要素のみ RTL 完全対応」** を保証範囲としています。

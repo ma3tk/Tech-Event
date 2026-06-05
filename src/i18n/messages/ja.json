@@ -1,0 +1,180 @@
+{
+  "common": {
+    "siteName": "tech-event",
+    "loading": "読み込み中…",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "search": "検索",
+    "back": "戻る",
+    "next": "次へ",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "delete": "削除",
+    "edit": "編集"
+  },
+  "header": {
+    "explore": "イベントを探す",
+    "discover": "Discover",
+    "groups": "グループ",
+    "calendars": "カレンダー",
+    "ranking": "ランキング",
+    "login": "ログイン",
+    "signup": "新規登録",
+    "createEvent": "イベントを作る",
+    "notifications": "通知",
+    "dashboard": "ダッシュボード",
+    "profile": "プロフィール",
+    "settings": "設定",
+    "logout": "ログアウト",
+    "language": "言語",
+    "pricing": "料金プラン"
+  },
+  "footer": {
+    "help": "ヘルプ",
+    "guide": "ご利用ガイド",
+    "faq": "よくある質問",
+    "contact": "お問い合わせ",
+    "siteInfo": "サイト情報",
+    "company": "会社情報",
+    "api": "API",
+    "ads": "広告掲載",
+    "legal": "法務・規約",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー",
+    "tokushoho": "特定商取引法表示",
+    "pricing": "料金プラン",
+    "tagline": "エンジニアのための勉強会・イベント支援プラットフォーム",
+    "copyright": "© {year} tech-event. All rights reserved."
+  },
+  "buttons": {
+    "join": "参加する",
+    "cancel": "キャンセルする",
+    "bookmark": "ブックマーク",
+    "share": "共有"
+  },
+  "status": {
+    "draft": "下書き",
+    "published": "公開中",
+    "closed": "終了",
+    "cancelled": "中止",
+    "accepted": "参加確定",
+    "waiting": "補欠",
+    "pending": "抽選待ち",
+    "attended": "出席",
+    "noShow": "欠席",
+    "full": "満員"
+  },
+  "errors": {
+    "notFound": "ページが見つかりません",
+    "forbidden": "アクセス権限がありません",
+    "unauthorized": "ログインしてください",
+    "internal": "サーバーエラーが発生しました"
+  },
+  "top": {
+    "heroTitle": "エンジニアのためのIT勉強会・イベント",
+    "heroSubtitle": "勉強会、ハンズオン、カンファレンスを検索して、技術コミュニティと繋がろう",
+    "newEvents": "新着イベント",
+    "popularGroups": "おすすめのグループ",
+    "tags": "タグから探す",
+    "calendar": "イベントカレンダー",
+    "recentlyViewed": "最近見たイベント"
+  },
+  "event": {
+    "details": "イベント詳細",
+    "organizer": "主催者",
+    "venue": "会場",
+    "online": "オンライン",
+    "offline": "オフライン",
+    "hybrid": "ハイブリッド",
+    "capacity": "定員",
+    "applied": "申込数",
+    "schedule": "開催日時",
+    "tags": "タグ",
+    "description": "詳細",
+    "presentations": "発表資料",
+    "comments": "コメント",
+    "overview": "イベント概要",
+    "participants": "参加者",
+    "rolesHeading": "参加枠",
+    "applyHeading": "参加申込",
+    "cta": {
+      "open": "参加申込",
+      "full": "補欠登録",
+      "lottery": "抽選に申し込む",
+      "approval": "参加リクエストを送信",
+      "loginToJoin": "ログインして参加",
+      "going": "参加済み",
+      "waiting": "補欠登録中",
+      "pending": "抽選申込中",
+      "closed": "募集締切",
+      "ended": "終了しました",
+      "cancelled": "中止されました",
+      "upcoming": "受付開始前",
+      "joinAgain": "再度参加申込",
+      "stickyAriaLabel": "参加申込クイックアクセス",
+      "acceptsFrom": "受付開始: {time}"
+    },
+    "rejoinNotice": "過去にキャンセルしています。再度参加申込しますか？"
+  },
+  "auth": {
+    "loginTitle": "ログイン",
+    "signupTitle": "新規登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワード（確認）",
+    "nickname": "ニックネーム",
+    "displayName": "表示名",
+    "submitLogin": "ログイン",
+    "submitSignup": "登録する",
+    "forgotPassword": "パスワードを忘れた方",
+    "noAccount": "アカウントをお持ちでない方",
+    "haveAccount": "すでにアカウントをお持ちの方",
+    "agreeTerms": "利用規約に同意する"
+  },
+  "calendar": {
+    "title": "カレンダー一覧",
+    "subtitle": "テーマ別の技術カレンダーを購読",
+    "subscribe": "購読する",
+    "subscribers": "購読者",
+    "events": "イベント"
+  },
+  "discover": {
+    "title": "Discover",
+    "subtitle": "興味のあるテーマから発見",
+    "popular": "人気",
+    "new": "新着",
+    "trending": "トレンド",
+    "categories": "カテゴリ",
+    "cities": "都市"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "upcoming": "参加予定",
+    "bookmarks": "ブックマーク",
+    "owned": "主催",
+    "history": "参加履歴"
+  },
+  "notifications": {
+    "title": "通知",
+    "all": "すべて",
+    "unread": "未読",
+    "read": "既読",
+    "markAllRead": "すべて既読にする",
+    "empty": "通知はありません"
+  },
+  "group": {
+    "members": "メンバー",
+    "events": "イベント",
+    "about": "グループについて"
+  },
+  "user": {
+    "profile": "プロフィール",
+    "events": "参加イベント",
+    "groups": "所属グループ"
+  },
+  "bookmarks": {
+    "title": "ブックマーク",
+    "empty": "ブックマークはまだありません"
+  }
+}

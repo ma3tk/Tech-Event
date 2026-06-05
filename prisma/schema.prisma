@@ -1,0 +1,608 @@
+// connpassクローン (tech-event) のPrismaスキーマ
+// research/data-model/migration-strategy.md を SQLite 向けに移植したもの。
+// SQLite はenum/native types未対応のため、enumは文字列リテラルで運用しZodで検証する。
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============ User ============
+
+model User {
+  id                          BigInt   @id @default(autoincrement())
+  nickname                    String   @unique
+  displayName                 String
+  email                       String   @unique
+  emailVerifiedAt             DateTime?
+  passwordHash                String?
+  avatarUrl                   String?
+  bio                         String?
+  affiliation                 String?
+  location                    String?
+  websiteUrl                  String?
+  xAccount                    String?
+  facebookAccount             String?
+  githubAccount               String?
+  receiveNotificationEmail    Boolean  @default(true)
+  receiveReminderEmail        Boolean  @default(true)
+  receiveRecommendationEmail  Boolean  @default(true)
+  status                      String   @default("active") // active|suspended|withdrawn
+  withdrawnAt                 DateTime?
+  lastLoginAt                 DateTime?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  oauthIdentities  OAuthIdentity[]
+  groupAdmins      GroupAdmin[]
+  groupMembers     GroupMember[]
+  ownedEvents      Event[] @relation("EventOwner")
+  participants     Participant[]
+  comments         Comment[]
+  bookmarks        Bookmark[]
+  notifications    Notification[]
+  sentMessages     Message[]
+  presentations    PresentationMaterial[]
+  // ============ Calendar (Luma inspired) ============
+  ownedCalendars        Calendar[]             @relation("CalendarOwner")
+  calendarSubscriptions CalendarSubscription[]
+  // ============ 通知の詳細プリファレンス ============
+  notificationPreferences NotificationPreference[]
+
+  @@map("users")
+  @@index([status])
+}
+
+model OAuthIdentity {
+  id           BigInt   @id @default(autoincrement())
+  userId       BigInt
+  provider     String   // twitter|facebook|github
+  providerUid  String
+  accessToken  String?
+  refreshToken String?
+  connectedAt  DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUid])
+  @@map("oauth_identities")
+}
+
+// ============ Group ============
+
+model Group {
+  id                  BigInt   @id @default(autoincrement())
+  subdomain           String   @unique
+  name                String
+  subtitle            String?
+  organization        String?
+  description         String?
+  coverImageUrl       String?
+  thumbnailUrl        String?
+  backgroundColor     String?
+  websiteUrl          String?
+  xAccount            String?
+  facebookUrl         String?
+  slackWebhookUrl     String?
+  memberCount         Int      @default(0)
+  eventCount          Int      @default(0)
+  presentationCount   Int      @default(0)
+  status              String   @default("active") // active|archived
+  publishedAt         DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  events       Event[]
+  admins       GroupAdmin[]
+  members      GroupMember[]
+  blacklist    GroupBlacklist[]
+  messages     Message[]
+
+  @@map("groups")
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model GroupAdmin {
+  id              BigInt   @id @default(autoincrement())
+  groupId         BigInt
+  userId          BigInt
+  role            String   @default("admin") // owner|admin
+  addedByUserId   BigInt?
+  addedAt         DateTime @default(now())
+
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_admins")
+}
+
+model GroupMember {
+  id                    BigInt   @id @default(autoincrement())
+  groupId               BigInt
+  userId                BigInt
+  joinedVia             String   @default("manual") // manual|event_join|admin_add
+  joinedAt              DateTime @default(now())
+  receiveAnnouncement   Boolean  @default(true)
+  leftAt                DateTime?
+
+  group                 Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+  @@index([userId])
+}
+
+model GroupBlacklist {
+  id              BigInt   @id @default(autoincrement())
+  groupId         BigInt
+  userId          BigInt
+  reason          String?
+  addedByUserId   BigInt
+  addedAt         DateTime @default(now())
+
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_blacklist")
+}
+
+// ============ Event ============
+
+model Event {
+  id                          BigInt   @id @default(autoincrement())
+  groupId                     BigInt
+  title                       String
+  catchPhrase                 String?
+  description                 String?
+  coverImageUrl               String?
+  hashTag                     String?
+  eventType                   String   @default("participation")
+  eventFormat                 String   @default("offline") // offline|online|hybrid
+  startedAt                   DateTime
+  endedAt                     DateTime
+  acceptsFrom                 DateTime?
+  acceptsUntil                DateTime?
+  place                       String?
+  address                     String?
+  lat                         Float?
+  lon                         Float?
+  onlineUrl                   String?
+  capacity                    Int?
+  acceptedCount               Int      @default(0)
+  waitingCount                Int      @default(0)
+  attendanceCode              String?
+  allowAttendanceCodeCheckIn  Boolean  @default(true)
+  allowQrCheckIn              Boolean  @default(true)
+  allowDuplicateJoin          Boolean  @default(false)
+  visibility                  String   @default("public") // public|private_link|draft
+  status                      String   @default("draft")  // draft|published|closed|cancelled
+  recruitmentMethod           String   @default("fcfs")   // fcfs|lottery
+  approvalRequired            Boolean  @default(false)
+  lotteryAnnounceAt           DateTime?
+  ownerId                     BigInt
+  ownerDisplayName            String?
+  parentEventId               BigInt?
+  seriesEventPosition         Int?
+  // ============ Theme (Luma inspired) ============
+  // tintColor は CSS 変数 `--event-tint` に注入されアクセントカラー/ボタン背景に反映される。
+  themeTintColor              String?  // 例: #5b21b6
+  themeBackgroundStyle        String?  // solid|gradient|image
+  themeFontStyle              String?  // default|serif|mono
+  publishedAt                 DateTime?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  group         Group  @relation(fields: [groupId], references: [id])
+  owner         User   @relation("EventOwner", fields: [ownerId], references: [id])
+  parentEvent   Event? @relation("EventChildren", fields: [parentEventId], references: [id])
+  childEvents   Event[] @relation("EventChildren")
+  roles         EventRole[]
+  participants  Participant[]
+  comments      Comment[]
+  presentations PresentationMaterial[]
+  surveys       Survey[]
+  tags          EventTag[]
+  bookmarks     Bookmark[]
+  notifications Notification[]
+  messages      Message[]
+  voucherCodes  VoucherCode[]
+  stat          EventStat?
+  calendars     CalendarEvent[]
+
+  @@map("events")
+  @@index([groupId, startedAt])
+  @@index([status, publishedAt])
+  @@index([startedAt])
+  // events: ranking / popular 並び替えで頻出 (status+visibility+acceptedCount)
+  @@index([status, visibility, acceptedCount])
+}
+
+model EventRole {
+  id                        BigInt   @id @default(autoincrement())
+  eventId                   BigInt
+  displayOrder              Int      @default(1)
+  name                      String   @default("参加枠1")
+  description               String?
+  capacity                  Int?
+  recruitmentMethod         String   @default("fcfs") // fcfs|lottery|designated
+  pricingType               String   @default("free") // free|on_site|prepaid
+  price                     Int      @default(0)
+  currency                  String   @default("JPY")
+  autoPromoteFromWaiting    Boolean  @default(true)
+  visibleAfterFull          Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  event        Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  participants Participant[]
+
+  @@map("event_roles")
+  @@index([eventId])
+}
+
+model Participant {
+  id              BigInt   @id @default(autoincrement())
+  eventId         BigInt
+  eventRoleId     BigInt
+  userId          BigInt
+  status          String   @default("pending") // pending|accepted|waiting|cancelled|attended|no_show
+  // ============ Approval (Luma 風) ============
+  // approvalStatus は approvalRequired=true なイベント時のみ運用される。
+  // pending|approved|rejected の 3 状態。NULL は承認不要 (従来の挙動)。
+  approvalStatus  String?
+  approvalNote    String?
+  nominated       Boolean  @default(false)
+  waitingPosition Int?
+  appliedAt       DateTime @default(now())
+  acceptedAt      DateTime?
+  cancelledAt     DateTime?
+  checkInAt       DateTime?
+  checkInMethod   String?  // manual|code|qr
+  paymentId       BigInt?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventRole     EventRole @relation(fields: [eventRoleId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+  payment       Payment?
+  surveyAnswers SurveyAnswer[]
+
+  @@unique([eventId, userId, eventRoleId])
+  @@map("participants")
+  @@index([userId, appliedAt])
+  @@index([eventId, status])
+}
+
+// ============ Payment ============
+
+model Payment {
+  id              BigInt   @id @default(autoincrement())
+  participantId   BigInt   @unique
+  amount          Int
+  currency        String   @default("JPY")
+  provider        String   // paypal|voucher
+  providerTxnId   String?
+  voucherCodeId   BigInt?
+  status          String   // pending|succeeded|refunded|failed
+  paidAt          DateTime?
+  refundedAt      DateTime?
+  receiptIssuedAt DateTime?
+
+  participant     Participant   @relation(fields: [participantId], references: [id])
+  voucherCode     VoucherCode?  @relation(fields: [voucherCodeId], references: [id])
+
+  @@map("payments")
+}
+
+/// DEPRECATED: 削除候補。voucher (クーポン) 機能は spec 確定まで未実装。
+/// Payment.voucherCodeId からの relation は SetNull で残しているが、src/ からは
+/// 一切参照されない (検索: `grep -rn "voucherCode" src` で 0 件)。
+/// 機能実装時はこのコメントを外し、関連 Server Action を追加する。
+model VoucherCode {
+  id              BigInt   @id @default(autoincrement())
+  eventId         BigInt
+  code            String   @unique
+  discountAmount  Int
+  maxUses         Int?
+  usedCount       Int      @default(0)
+  expiresAt       DateTime?
+
+  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@map("voucher_codes")
+}
+
+// ============ Content ============
+
+model Comment {
+  id                BigInt   @id @default(autoincrement())
+  eventId           BigInt
+  userId            BigInt
+  parentCommentId   BigInt?
+  body              String
+  isPinned          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  deletedAt         DateTime?
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id])
+  parent  Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+  @@index([eventId, createdAt])
+}
+
+model Tag {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  usageCount  Int      @default(0)
+
+  events      EventTag[]
+
+  @@map("tags")
+  // 人気タグランキング (`orderBy: { usageCount: 'desc' }`) で利用
+  @@index([usageCount])
+}
+
+model EventTag {
+  eventId BigInt
+  tagId   BigInt
+
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tag     Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([eventId, tagId])
+  @@map("event_tags")
+}
+
+model PresentationMaterial {
+  id                      BigInt   @id @default(autoincrement())
+  eventId                 BigInt
+  presenterUserId         BigInt?
+  presenterDisplayName    String?
+  title                   String
+  url                     String
+  thumbnailUrl            String?
+  displayOrder            Int      @default(1)
+  postedAt                DateTime @default(now())
+
+  event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  presenter   User? @relation(fields: [presenterUserId], references: [id])
+
+  @@map("presentation_materials")
+  @@index([eventId])
+}
+
+// ============ Survey ============
+
+model Survey {
+  id        BigInt   @id @default(autoincrement())
+  eventId   BigInt
+  title     String
+  trigger   String   // on_apply|after_event
+  required  Boolean  @default(false)
+
+  event     Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  questions SurveyQuestion[]
+
+  @@map("surveys")
+}
+
+model SurveyQuestion {
+  id            BigInt   @id @default(autoincrement())
+  surveyId      BigInt
+  displayOrder  Int
+  body          String
+  inputType     String   // text|textarea|single|multi|scale
+  options       String?  // JSON-encoded
+  required      Boolean  @default(false)
+
+  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  answers  SurveyAnswer[]
+
+  @@map("survey_questions")
+}
+
+model SurveyAnswer {
+  id                  BigInt   @id @default(autoincrement())
+  surveyQuestionId    BigInt
+  participantId       BigInt
+  answerValue         String   // JSON-encoded
+  answeredAt          DateTime @default(now())
+
+  question      SurveyQuestion @relation(fields: [surveyQuestionId], references: [id], onDelete: Cascade)
+  participant   Participant    @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@map("survey_answers")
+}
+
+// ============ Engagement ============
+
+model Notification {
+  id                BigInt   @id @default(autoincrement())
+  recipientUserId   BigInt
+  kind              String
+  eventId           BigInt?
+  groupId           BigInt?
+  payload           String   // JSON-encoded
+  channel           String   // email|in_app|push
+  sentAt            DateTime?
+  readAt            DateTime?
+  createdAt         DateTime @default(now())
+
+  recipient   User    @relation(fields: [recipientUserId], references: [id])
+  event       Event?  @relation(fields: [eventId], references: [id])
+
+  @@map("notifications")
+  @@index([recipientUserId, createdAt])
+  // ダッシュボード未読フィルタ (readAt IS NULL)
+  @@index([recipientUserId, readAt])
+}
+
+model Bookmark {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  eventId   BigInt
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("bookmarks")
+  // /bookmarks 一覧の orderBy createdAt desc を覆う複合 index
+  @@index([userId, createdAt])
+}
+
+/// DEPRECATED: 削除候補。EventStat は seed でのみ書き込まれ、UI 側 (insights / admin) は
+/// `prisma.participant.count` 等で動的計算するため src/ から read 参照は無い。
+/// 集計ジョブを実装するまで保留 (機能再開時はこのコメントを外す)。
+model EventStat {
+  eventId         BigInt   @id
+  pageViews       Int      @default(0)
+  uniqueViewers   Int      @default(0)
+  applyCount      Int      @default(0)
+  cancelCount     Int      @default(0)
+  attendanceRate  Float?
+  updatedAt       DateTime @updatedAt
+
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_stats")
+}
+
+model Message {
+  id              BigInt   @id @default(autoincrement())
+  eventId         BigInt?
+  groupId         BigInt?
+  senderUserId    BigInt
+  audience        String   // accepted|waiting|cancelled|all|group_members
+  subject         String
+  body            String
+  sentAt          DateTime @default(now())
+  recipientCount  Int
+
+  event   Event?  @relation(fields: [eventId], references: [id])
+  group   Group?  @relation(fields: [groupId], references: [id])
+  sender  User    @relation(fields: [senderUserId], references: [id])
+
+  @@map("messages")
+}
+
+// ============ Magic Link (Luma inspired) ============
+
+model MagicLinkToken {
+  id        String   @id @default(uuid())
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  // 期限切れ token のクリーンアップ (`DELETE WHERE expiresAt < now()`) で使う index
+  @@index([expiresAt])
+  @@map("magic_link_tokens")
+}
+
+model AuditLog {
+  id              BigInt   @id @default(autoincrement())
+  actorUserId     BigInt?
+  action          String
+  targetType      String
+  targetId        BigInt
+  ipAddress       String?
+  userAgent       String?
+  metadata        String?  // JSON-encoded
+  createdAt       DateTime @default(now())
+
+  @@map("audit_logs")
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId])
+}
+
+// ============ Calendar (Luma inspired) ============
+// Group は「会員制」の重い関係性。Calendar は「Subscribe するだけ」の軽量な
+// キュレーション。任意の Event を寄せ集めてテーマ別 (AI / Frontend など)
+// にまとめ、購読者は新着通知や iCal 経由でフィードできる。
+// research/luma/pages/calendar.md / features/calendar-subscription.md 参照。
+
+model Calendar {
+  id              BigInt   @id @default(autoincrement())
+  slug            String   @unique // URL: /calendar/{slug}
+  name            String
+  description     String?
+  coverImageUrl   String?
+  tintColor       String?  // Luma 風テーマ色 (#hex)
+  ownerUserId     BigInt
+  subscriberCount Int      @default(0)
+  eventCount      Int      @default(0)
+  status          String   @default("active") // active|archived
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  owner       User                   @relation("CalendarOwner", fields: [ownerUserId], references: [id])
+  events      CalendarEvent[]
+  subscribers CalendarSubscription[]
+
+  @@map("calendars")
+  @@index([status])
+  @@index([ownerUserId])
+  // 人気のカレンダー一覧 (status + subscriberCount desc) で使う
+  @@index([status, subscriberCount])
+}
+
+model CalendarEvent {
+  calendarId BigInt
+  eventId    BigInt
+  addedAt    DateTime @default(now())
+
+  calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([calendarId, eventId])
+  @@map("calendar_events")
+  @@index([eventId])
+}
+
+model CalendarSubscription {
+  id           BigInt   @id @default(autoincrement())
+  calendarId   BigInt
+  userId       BigInt
+  subscribedAt DateTime @default(now())
+
+  calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([calendarId, userId])
+  @@map("calendar_subscriptions")
+  @@index([userId])
+}
+
+// ============ NotificationPreference ============
+// 通知の kind × channel 単位のオプトイン/オプトアウト。
+// レコードが無ければ既定 (= 有効) として扱う。詳細は src/lib/notification.ts。
+model NotificationPreference {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  kind      String   // event_published / lottery_result / reminder_24h ...
+  channel   String   // email|in_app|push
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, channel])
+  @@map("notification_preferences")
+  @@index([userId])
+}

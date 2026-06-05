@@ -1,0 +1,111 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Introduction" />
+
+<Title>tech-event デザインシステム</Title>
+<Subtitle>connpass と Luma の中間 — 機能密度と質感を両立する UI 基盤</Subtitle>
+
+`tech-event` (connpass クローン) で利用するデザイントークン、UI primitives、composite components の総合ドキュメントです。
+本ページ群は `docs/design-system.md` の Storybook 版で、実物の色見本やフォントサンプルを使ってデザイン仕様を確認できます。
+
+---
+
+## 1. ねらい
+
+- **本家 connpass と Luma の中間**: 機能密度を優先するが、フラットすぎる古い見栄えにはしない。
+- **情報優先**: 一覧画面は 1 行あたりの情報量を最大化 (タイトル / グループ / 日時 / 会場 / 参加者数 を 1 行で読ませる)。
+- **モダンな質感**: 角丸 4-8px、淡いシャドウ、`hover:-translate-y-0.5` などの微細なアニメーションで「触れる感」を出す。
+- **アクセシビリティを後付けにしない**: フォーカスリング・aria 属性・色だけに依存しないステータス表示を最初から組み込む。
+- **JS なしでも動作**: 検索フォーム・ページネーション・パンくず等は SSR とリンクで完結。Client Component は最小限。
+
+詳細は本 Introduction の各ページおよび `docs/design-system.md` を参照してください。
+
+---
+
+## 2. トークン構造 (4 階層)
+
+`tech-event` はトークンを 4 段に分けています。アプリケーション側からは **semantic layer 以上** のみを参照する規約です。
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "auto 1fr",
+      gap: "8px 16px",
+      padding: "16px",
+      border: "1px solid #e5e7eb",
+      borderRadius: "8px",
+      background: "#ffffff",
+      color: "#1a1a1a",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "14px",
+      lineHeight: 1.7,
+    }}
+  >
+    <strong>1. Primitive tokens</strong>
+    <span>
+      <code>src/styles/tokens.css</code> — 生の値 (gray-50 〜 950 等の色スケール、font-size、spacing、radius、shadow、z-index)。
+      意味を持たない。テーマに依存しない。
+    </span>
+    <strong>2. Semantic tokens</strong>
+    <span>
+      <code>src/styles/semantic.css</code> — テーマ非依存の alias (radius-control / radius-card 等)。
+    </span>
+    <strong>3. Themes (light/dark)</strong>
+    <span>
+      <code>src/styles/themes/light.css</code> / <code>dark.css</code> — primitive を「background」「foreground」「brand」等の意味名にマッピング。
+      light/dark で同じ semantic 名を提供。
+    </span>
+    <strong>4. UI primitives</strong>
+    <span>
+      <code>src/components/ui/</code> — Button / Input / Dialog 等の shadcn 系 primitives 21 個。semantic token のみを参照。
+    </span>
+    <strong>5. Composite components</strong>
+    <span>
+      <code>src/components/</code> — EventCard / GroupCard / Header 等のドメイン特化 17 components。
+      primitives を組み合わせて構成。
+    </span>
+  </div>
+</Unstyled>
+
+---
+
+## 3. 見取り図 — どこから読むか
+
+| ページ | 内容 |
+| --- | --- |
+| **Tokens** | トークン全体像、`tokens.css` の中身、light/dark テーマ概要 |
+| **Colors** | カラースケール (gray/orange/red/green/blue/yellow)、semantic colors、WCAG コントラスト |
+| **Typography** | フォントサイズ・ウェイト・行間の実サンプル |
+| **Spacing** | spacing-0 〜 24 のビジュアル比較 |
+| **Radius** | radius / shadow / z-index 一覧 |
+| **Components** | primitives 21 個 + composite 17 個の早見表 |
+| **Accessibility** | フォーカスリング設計、aria 規約、axe-core 結果 |
+| **Dark Mode** | ThemeProvider の使い方、light/dark トークン対比表 |
+| **Component Checklist** | 新規コンポーネント追加時のチェックリスト |
+
+---
+
+## 4. 関連リソース
+
+- `docs/design-system.md` — 本デザインシステムの一次ドキュメント (原本)。
+- `docs/completion-report.md` — フェーズ完了レポート。
+- `docs/perf-report.md` — パフォーマンスレポート。
+- `research/` — 実装前の調査資料 (connpass / Luma リファレンス、UX フロー、API/データモデル)。
+  - `research/luma/` — Luma のリファレンススクリーンショット。
+  - `research/ux-flows/` — UX フロー設計メモ。
+  - `research/visual-diff-report.md` — connpass 本家とのビジュアル差分レポート。
+- `src/styles/tokens.css` / `themes/light.css` / `themes/dark.css` — トークンの一次定義 (single source of truth)。
+- `src/app/globals.css` — Tailwind v4 `@theme inline` でトークンをユーティリティクラス化。
+
+---
+
+## 5. ライブラリ依存
+
+- **React 19 / Next.js 16** (App Router)
+- **Tailwind CSS v4** (`@theme inline` ベース)
+- **Radix UI primitives** — Dialog / Dropdown / Tooltip / Toast / Tabs / Popover / Switch / Select etc.
+- **class-variance-authority (cva)** — variants
+- **lucide-react** — アイコン
+- **Storybook 10** (`@storybook/nextjs-vite`) — UI カタログ + a11y addon
+- **@axe-core/playwright** — A11y 自動走査

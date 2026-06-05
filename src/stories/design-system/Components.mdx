@@ -1,0 +1,117 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Components" />
+
+<Title>Components — 早見表</Title>
+<Subtitle>UI primitives 21 個 / Composite components 17 個</Subtitle>
+
+`tech-event` は 2 階層のコンポーネント構成です:
+
+1. **UI primitives** (`src/components/ui/`) — shadcn 系の汎用部品。Radix UI ベース。Tailwind トークンに直接依存。
+2. **Composite components** (`src/components/`) — ドメイン特化部品。primitives を組み合わせて構成。
+
+各コンポーネントには Story が用意されており、Storybook サイドバーの **UI/** または **Components/** カテゴリから参照できます。
+
+---
+
+## 1. UI primitives (21)
+
+`src/components/ui/` 配下。すべて `UI/{Name}` の title で Storybook 登録されています。
+
+| Component | 役割 | Story |
+| --- | --- | --- |
+| `Avatar` | ユーザー / グループのアバター。Image + Fallback の構成。 | `UI/Avatar` |
+| `Badge` | テキストバッジ。variant: default / secondary / outline / destructive | `UI/Badge` |
+| `Button` | 標準ボタン。variant 6 種 × size 5 種、`asChild` 対応。 | `UI/Button` |
+| `Card` | カード容器。Header / Title / Description / Content / Footer 構成。 | `UI/Card` |
+| `Checkbox` | チェックボックス (Radix)。indeterminate 対応。 | `UI/Checkbox` |
+| `Dialog` | モーダルダイアログ (Radix)。Header / Footer / Close 含む。 | `UI/Dialog` |
+| `DropdownMenu` | ドロップダウンメニュー (Radix)。Item / Separator / Sub / Radio / Check。 | `UI/DropdownMenu` |
+| `Form` | react-hook-form + Zod ラッパー。FieldError / Description 統合。 | `UI/Form` |
+| `Input` | テキスト入力。`size` / `error` / 左右アイコン対応。 | `UI/Input` |
+| `Label` | フォームラベル (Radix)。`for` 自動連携。 | `UI/Label` |
+| `Popover` | ポップオーバー (Radix)。anchor positioning 対応。 | `UI/Popover` |
+| `RadioGroup` | ラジオグループ (Radix)。 | `UI/RadioGroup` |
+| `Select` | セレクトボックス (Radix)。検索 / グループ対応。 | `UI/Select` |
+| `Separator` | 区切り線 (Radix)。horizontal / vertical。 | `UI/Separator` |
+| `Sheet` | サイドシート (Radix Dialog ベース)。left / right / top / bottom。 | `UI/Sheet` |
+| `Skeleton` | ローディングスケルトン。Tailwind animate-pulse。 | `UI/Skeleton` |
+| `Switch` | トグルスイッチ (Radix)。 | `UI/Switch` |
+| `Tabs` | タブ (Radix)。List / Trigger / Content。 | `UI/Tabs` |
+| `Textarea` | 複数行入力。`error` / `resize` 対応。 | `UI/Textarea` |
+| `Toast` | 通知トースト (Radix + Sonner)。 | `UI/Toast` |
+| `Tooltip` | ツールチップ (Radix)。delay / arrow 対応。 | `UI/Tooltip` |
+
+---
+
+## 2. Composite components (17)
+
+`src/components/` 直下。ドメイン特化された再利用部品。すべて Story 完備。
+
+| Component | 役割 | Story |
+| --- | --- | --- |
+| `Header` | グローバルヘッダー (Client)。ロゴ / 検索 / ナビ / アカウント。 | `Components/Header` |
+| `Footer` | グローバルフッター。リンク群 + SNS。 | `Components/Footer` |
+| `EventCard` | イベントカード本体。`list` / `grid` variant。 | `Components/EventCard` |
+| `EventListRow` | リスト 1 行型のコンパクト表示。`showRank` 対応。 | `Components/EventListRow` |
+| `EventStatusBadge` | 8 状態バッジ × 4 variant (subtle / solid / outline / dot)。 | `Components/EventStatusBadge` |
+| `EventTimeline` | Luma 風タイムライン。月見出しで自動グルーピング。 | `Components/EventTimeline` |
+| `Pagination` | 数値ベースのページネーション。`computePages` 付き。 | `Components/Pagination` |
+| `Breadcrumb` | パンくず。JSON-LD 構造化データ出力可。 | `Components/Breadcrumb` |
+| `TagPill` | タグ。default / filter / selectable / outline の 4 variant。 | `Components/TagPill` |
+| `SearchBox` | 検索ボックス。`<form method="get">` で JS なし動作。 | `Components/SearchBox` |
+| `GroupCard` | グループカード。standard / sidebar / compact の 3 variant。 | `Components/GroupCard` |
+| `ParticipantBadge` | アバター + ニックネーム。 | `Components/ParticipantBadge` |
+| `MiniCalendar` | サイドバー用ミニカレンダー。開催日にドット。 | `Components/MiniCalendar` |
+| `HostAvatarStack` | 共催アバターの重ね表示。"+N" 集約 + SR 対応。 | `Components/HostAvatarStack` |
+| `EventCardCompact` | EventCard の `grid` variant ラッパー。 | (Composed in EventCard) |
+| `EventStickyCTA` | イベント詳細下部のフローティング申込バー。10 状態対応。 | (内部使用) |
+| `ShareModal` | OG プレビュー / リンクコピー / SNS / QR / 埋め込みを統合した Dialog。 | (内部使用) |
+| `MarkdownEditor` | 2 カラム WYSIWYG Markdown エディタ。 | (内部使用) |
+| `RecentlyViewedEvents` | sessionStorage を読む「最近見た」パネル。 | (内部使用) |
+| `HeaderServer` | Header の Server Component ラッパー。 | (内部使用) |
+
+> Story 未掲載のものは `internal` 扱い。本体実装の振る舞いはアプリ上で確認可能。
+
+---
+
+## 3. Storybook での探し方
+
+<Unstyled>
+  <div
+    style={{
+      padding: "16px",
+      background: "#fff7ed",
+      border: "1px solid #fed7aa",
+      borderRadius: "8px",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "13px",
+      color: "#1a1a1a",
+      lineHeight: 1.7,
+    }}
+  >
+    <strong>サイドバー構成</strong>
+    <ul style={{ margin: "8px 0 0", paddingLeft: "20px" }}>
+      <li><code>Design System/</code> — 本ドキュメント (MDX)</li>
+      <li><code>UI/</code> — primitives 21 個</li>
+      <li><code>Components/</code> — composite components の story</li>
+    </ul>
+  </div>
+</Unstyled>
+
+---
+
+## 4. 命名規約
+
+| 対象 | 規約 | 例 |
+| --- | --- | --- |
+| コンポーネントファイル | `PascalCase.tsx` | `EventCard.tsx` |
+| primitives ファイル | `kebab-case.tsx` | `dropdown-menu.tsx` |
+| コンポーネント関数 | `PascalCase` | `function EventCard(...)` |
+| Props 型 | `PascalCaseProps` | `EventCardProps` |
+| Props フィールド | `camelCase` | `isJoined`, `onJoinToggle` |
+| CSS 変数 | `--kebab-case` | `--brand-orange` |
+| ユーティリティ関数 | `camelCase` | `computePages` |
+| 列挙的な定数 | `UPPER_SNAKE_CASE` | `STATUS_CONFIG` |
+
+詳細な追加手順は **Component Checklist** ページを参照。

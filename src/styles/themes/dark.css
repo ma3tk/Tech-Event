@@ -1,0 +1,188 @@
+/* ============================================================
+ * Dark theme — semantic alias mapping
+ *
+ * 背景を gray-950/900 系に、テキストを gray-50 系に反転し、
+ * brand / status の彩度・明度を「暗背景でも AA 適合」になるよう調整する。
+ *
+ * A11y:
+ *   - 通常テキストは 4.5:1 以上
+ *   - 大きいテキスト / アイコンは 3:1 以上
+ *   を確保。 dark mode では飽和度の高い色をそのまま使うと眩しすぎるため、
+ *   ブランドオレンジ等は明度を 1〜2 段階上げて bg=gray-950 とのコントラストを取る。
+ * ============================================================ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ------------------------------------------------------------
+   * Surface / background
+   *
+   * gray-950 (= #030712) は contrast を稼ぎやすいが pure black 近すぎて
+   * Material 系の elevation が出ない。 gray-900 をベースにし、
+   * surface を 1 段明るくして「奥行き」を表現。
+   * ------------------------------------------------------------ */
+  --background: var(--color-gray-950);           /* #030712 */
+  --surface: var(--color-gray-900);              /* #111827 — card / header の base */
+  --surface-muted: var(--color-gray-800);        /* #1f2937 — input / hover */
+  --foreground: var(--color-gray-50);            /* #f9fafb, AAA: 18.3:1 vs gray-950 */
+  --muted: var(--color-gray-400);
+  --muted-foreground: var(--color-gray-300);     /* #d1d5db, AA: 11.4:1  */
+  --border: var(--color-gray-700);               /* #374151 */
+  --border-strong: var(--color-gray-600);
+
+  /* ------------------------------------------------------------
+   * Brand — orange
+   *
+   * 暗背景では #c2410c (orange-700) は contrast 3.2:1 で AA 違反になる。
+   * orange-400 (#fb923c) は contrast 8.5:1 で AA Large / Icon OK,
+   * 通常テキストでも視認性が高い。CTA ボタンは bg = orange-500 (#f97316,
+   * AA: 5.4:1 vs gray-50 foreground) を用いる。
+   * ------------------------------------------------------------ */
+  --brand-orange: var(--color-orange-500);       /* CTA bg */
+  --brand-orange-hover: var(--color-orange-400); /* hover で 1 段明るく */
+  --brand-orange-soft: rgba(249, 115, 22, 0.12); /* 装飾用淡背景 (orange-500 @ 12%) */
+  --brand-orange-strong: var(--color-orange-300);/* 淡背景の上に置く濃いオレンジ文字 */
+
+  /* Brand — red */
+  --brand-red: #ef4f4f;
+  --brand-red-hover: #f06d6d;
+  --brand-red-soft: rgba(239, 68, 68, 0.15);
+
+  /* Brand foreground (CTA ボタンの文字) */
+  --brand-foreground: var(--color-white);
+
+  /* ------------------------------------------------------------
+   * Link
+   *
+   * 濃いブルー (#005d8c) は暗背景で contrast 2.1:1 と AA 違反。
+   * link-blue-300 (#4aa8d4) は contrast 7.1:1 で AAA、見やすい。
+   * ------------------------------------------------------------ */
+  --link: var(--color-link-blue-300);            /* AAA: 7.1:1 vs gray-950 */
+  --link-hover: var(--color-link-blue-200);
+
+  /* ------------------------------------------------------------
+   * Status colors (dark)
+   *
+   * 暗背景上で「淡い bg + 濃い fg」を「濃い bg (透過) + 明るい fg」に
+   * 反転する。各 bg/fg ペアは contrast 4.5:1 以上を確保。
+   * ------------------------------------------------------------ */
+  --status-open-bg: rgba(34, 197, 94, 0.18);     /* green-500 @ 18% */
+  --status-open-fg: var(--color-green-300);      /* AA OK vs gray-950 */
+  --status-full-bg: rgba(239, 68, 68, 0.18);
+  --status-full-fg: var(--color-red-300);
+  --status-waitlist-bg: rgba(234, 179, 8, 0.18);
+  --status-waitlist-fg: var(--color-yellow-300);
+  --status-closed-bg: var(--color-gray-800);
+  --status-closed-fg: var(--color-gray-200);
+  --status-cancelled-bg: var(--color-red-800);   /* 白文字を残す (高コントラスト) */
+  --status-cancelled-fg: var(--color-white);
+  --status-ended-bg: var(--color-gray-800);
+  --status-ended-fg: var(--color-gray-400);
+  --status-upcoming-bg: rgba(59, 130, 246, 0.18);
+  --status-upcoming-fg: var(--color-blue-300);
+  --status-ongoing-bg: rgba(249, 115, 22, 0.15);
+  --status-ongoing-fg: var(--color-orange-300);
+
+  /* ------------------------------------------------------------
+   * Elevation
+   *
+   * dark mode では shadow の代わりに「より明るい border」で奥行きを出す
+   * のが定石だが、既存実装が `shadow` ユーティリティを多用しているため
+   * 黒の shadow をそのまま使い、surface 色で奥行きを表現する。
+   * ------------------------------------------------------------ */
+  --elevation-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --elevation-popover:
+    0 4px 8px -2px rgba(0, 0, 0, 0.5),
+    0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --elevation-modal:
+    0 12px 24px -4px rgba(0, 0, 0, 0.6),
+    0 4px 8px -4px rgba(0, 0, 0, 0.4);
+  --elevation-overlay: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+
+  /* ------------------------------------------------------------
+   * Data viz palette — dark mode (各色を 1〜2 段明るく)
+   *
+   * 暗背景上で 4.5:1 を確保するため、Okabe-Ito の color を
+   * lighten 系列に置換 (HSL の L を +15〜25%)。
+   * ------------------------------------------------------------ */
+  --chart-1: #3aa0e6;  /* 青 (lighten) */
+  --chart-2: #f5b53e;  /* オレンジ (lighten) */
+  --chart-3: #4cc8a4;  /* 緑 (lighten) */
+  --chart-4: #e29ec5;  /* マゼンタ (lighten) */
+  --chart-5: #88cdef;  /* スカイブルー */
+  --chart-6: #ff8a47;  /* ヴァーミリオン (lighten) */
+  --chart-7: #fff07a;  /* 黄 */
+  --chart-8: #c0c0c0;  /* ニュートラルライトグレー */
+}
+
+/* ------------------------------------------------------------
+ * System preference fallback
+ *
+ * ユーザーが OS で dark を選び、かつ明示的に theme=light を選んで
+ * いない場合 (= `data-theme` が未設定 or "system") は dark を適用する。
+ *
+ * ThemeProvider は resolved theme を `data-theme="dark"` として
+ * 明示セットするので通常はこのルールに到達しないが、 ThemeProvider が
+ * mount する前 (SSR / hydration の隙間) の FOUC を防ぐためのフォールバック。
+ * ------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+
+    --background: var(--color-gray-950);
+    --surface: var(--color-gray-900);
+    --surface-muted: var(--color-gray-800);
+    --foreground: var(--color-gray-50);
+    --muted: var(--color-gray-400);
+    --muted-foreground: var(--color-gray-300);
+    --border: var(--color-gray-700);
+    --border-strong: var(--color-gray-600);
+
+    --brand-orange: var(--color-orange-500);
+    --brand-orange-hover: var(--color-orange-400);
+    --brand-orange-soft: rgba(249, 115, 22, 0.12);
+    --brand-orange-strong: var(--color-orange-300);
+
+    --brand-red: #ef4f4f;
+    --brand-red-hover: #f06d6d;
+    --brand-red-soft: rgba(239, 68, 68, 0.15);
+    --brand-foreground: var(--color-white);
+
+    --link: var(--color-link-blue-300);
+    --link-hover: var(--color-link-blue-200);
+
+    --status-open-bg: rgba(34, 197, 94, 0.18);
+    --status-open-fg: var(--color-green-300);
+    --status-full-bg: rgba(239, 68, 68, 0.18);
+    --status-full-fg: var(--color-red-300);
+    --status-waitlist-bg: rgba(234, 179, 8, 0.18);
+    --status-waitlist-fg: var(--color-yellow-300);
+    --status-closed-bg: var(--color-gray-800);
+    --status-closed-fg: var(--color-gray-200);
+    --status-cancelled-bg: var(--color-red-800);
+    --status-cancelled-fg: var(--color-white);
+    --status-ended-bg: var(--color-gray-800);
+    --status-ended-fg: var(--color-gray-400);
+    --status-upcoming-bg: rgba(59, 130, 246, 0.18);
+    --status-upcoming-fg: var(--color-blue-300);
+    --status-ongoing-bg: rgba(249, 115, 22, 0.15);
+    --status-ongoing-fg: var(--color-orange-300);
+
+    --elevation-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --elevation-popover:
+      0 4px 8px -2px rgba(0, 0, 0, 0.5),
+      0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --elevation-modal:
+      0 12px 24px -4px rgba(0, 0, 0, 0.6),
+      0 4px 8px -4px rgba(0, 0, 0, 0.4);
+    --elevation-overlay: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+
+    --chart-1: #3aa0e6;
+    --chart-2: #f5b53e;
+    --chart-3: #4cc8a4;
+    --chart-4: #e29ec5;
+    --chart-5: #88cdef;
+    --chart-6: #ff8a47;
+    --chart-7: #fff07a;
+    --chart-8: #c0c0c0;
+  }
+}

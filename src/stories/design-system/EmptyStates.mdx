@@ -1,0 +1,117 @@
+import { Meta, Title, Subtitle } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Empty States" />
+
+<Title>Empty / Error / Loading パターン</Title>
+<Subtitle>「何もないとき」「失敗したとき」「読み込み中」の 3 つを primitives 化</Subtitle>
+
+データに依存する画面では必ず 3 つの状態を考慮する必要があります:
+
+| 状態        | コンポーネント   | 使うべき場面                                       |
+| ----------- | ---------------- | -------------------------------------------------- |
+| Empty (0件) | `EmptyState`     | 検索結果が空 / リストにデータがない                |
+| Error       | `ErrorState`     | 取得失敗 / 例外発生 / 権限不足                     |
+| Loading     | `LoadingState`   | データ取得待ち / 送信中 / Suspense フォールバック  |
+
+これら 3 つは `src/components/ui/{empty,error,loading}-state.tsx` として primitive 化されており、Storybook では `UI/EmptyState`, `UI/ErrorState`, `UI/LoadingState` で確認できます。
+
+---
+
+## 1. EmptyState
+
+```tsx
+import { EmptyState } from "@/components/ui/empty-state";
+import { SearchX } from "lucide-react";
+
+<EmptyState
+  icon={SearchX}
+  title="該当するイベントが見つかりませんでした"
+  description="検索条件を変えて再度お試しください。"
+  action={<Button variant="outline">検索条件をリセット</Button>}
+/>
+```
+
+ポイント:
+
+- `role="status"` で SR に状態通知
+- `border-dashed` 枠で「ここに将来コンテンツが入ります」を視覚的に示唆
+- アイコンは任意 (装飾)。title が一次情報、description は補足、action は次の操作 (CTA)
+
+適用済みページ:
+
+- `/explore` 検索結果 0 件時
+- `/notifications` 通知 0 件時
+
+---
+
+## 2. ErrorState
+
+```tsx
+import { ErrorState } from "@/components/ui/error-state";
+
+<ErrorState
+  error={new Error("ネットワーク接続に失敗しました")}
+  retry={() => location.reload()}
+/>
+```
+
+ポイント:
+
+- `role="alert"` + `aria-live="assertive"` で SR に即座に通知
+- `error` は `Error` インスタンス / 文字列 / unknown いずれも受け付け、`.message` を抽出
+- `retry` を渡したときだけ再試行ボタンが出る (= 復旧不能エラーでは action なし)
+
+---
+
+## 3. LoadingState
+
+```tsx
+import { LoadingState } from "@/components/ui/loading-state";
+
+{/* 短時間 (< 2s) のフォーム送信中 */}
+<LoadingState variant="spinner" />
+
+{/* ページレベル / リスト読み込み */}
+<LoadingState variant="skeleton" skeletonRows={5} />
+
+{/* 継続感のある「処理中」表示 */}
+<LoadingState variant="dots" />
+```
+
+ポイント:
+
+- `role="status"` + `aria-live="polite"` + `aria-busy="true"`
+- アニメーションは `prefers-reduced-motion` を尊重 (globals.css のグローバルセーフネット)
+
+variant 選定ガイド:
+
+| 待ち時間          | 推奨 variant |
+| ----------------- | ------------ |
+| < 1 秒            | 表示しない (フリッカ防止) |
+| 1〜2 秒           | `spinner`    |
+| 2〜10 秒 (リスト)| `skeleton`   |
+| 不確定 (処理中)   | `dots`       |
+
+---
+
+## 4. Good / Bad
+
+### ✓ Good
+
+- empty / error / loading で 3 つの状態を **明示的に**書く
+- error には可能なら retry を渡す
+- empty には次の操作 (action) を 1 つ提示する
+
+### ✗ Bad
+
+- empty を `null` 返却で済ます (ユーザーが「読み込み中なのか空なのか」分からない)
+- error を console.error で握り潰す (画面上は loading のまま固まる)
+- spinner を 0.5 秒未満の処理に出す (チラつきの原因)
+
+---
+
+## 5. 関連
+
+- 実装: `src/components/ui/empty-state.tsx`, `error-state.tsx`, `loading-state.tsx`
+- Stories: `UI/EmptyState`, `UI/ErrorState`, `UI/LoadingState`
+- 既存パターン: `EventCardSkeleton`, `EventListRowSkeleton`, `GroupCardSkeleton` (リスト用)

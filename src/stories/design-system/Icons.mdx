@@ -1,0 +1,489 @@
+import { Meta, Title, Subtitle, Unstyled } from "@storybook/addon-docs/blocks";
+import {
+  // Action
+  Plus,
+  Trash2,
+  Pencil,
+  Search,
+  Share2,
+  Copy,
+  ExternalLink,
+  Download,
+  Upload,
+  Funnel,
+  RefreshCw,
+  LogOut,
+  Settings,
+  // Status
+  Check,
+  X,
+  Info,
+  TriangleAlert,
+  CircleAlert,
+  CircleCheck,
+  Circle,
+  Minus,
+  Clock,
+  Bell,
+  // Nav
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  ArrowLeft,
+  ArrowRight,
+  Menu,
+  House,
+  Ellipsis,
+  // Domain
+  Calendar,
+  CalendarPlus,
+  MapPin,
+  Globe,
+  Users,
+  User,
+  Mail,
+  Heart,
+  Tag,
+  Building2,
+  // Decoration
+  Sparkles,
+  Flame,
+  Star,
+  Sun,
+  Moon,
+  Monitor,
+  Code,
+  Coffee,
+  // Extra — tech-event 固有 (calendar / event / group / 配信 / 主催)
+  CalendarCheck,
+  CalendarClock,
+  CalendarX,
+  Presentation,
+  Ticket,
+  QrCode,
+  Lock,
+  Unlock,
+  MessageCircle,
+  Hash,
+  Link2,
+  AtSign,
+  Camera,
+  Video,
+  Mic,
+  Send,
+  Eye,
+  TrendingUp,
+  Trophy,
+  Bookmark,
+} from "lucide-react";
+
+<Meta title="Design System/Icons" />
+
+<Title>Icons — lucide-react 70 種 (推奨 50 + Extra 20)</Title>
+<Subtitle>tech-event で公式採用するアイコン一覧 / strokeWidth 1.5 / 14·16·20·24 px</Subtitle>
+
+`tech-event` のアイコンはすべて [`lucide-react`](https://lucide.dev) から名前指定で import します。
+**追加のアイコンライブラリの混在は禁止**。色は `currentColor` 継承、サイズは 14 / 16 / 20 / 24 px の 4 段階のみ使用。
+
+ベース 50 種は § 1 〜 § 5 で網羅される共通カテゴリ。
+§ 6 の **Extra (tech-event 固有 20 種)** は calendar / event / group / 配信 / 主催 ドメインに特化した拡張セット。
+
+詳細な規約は `docs/icons.md` を参照。
+
+---
+
+## 1. Action (操作)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      margin: "16px 0 24px",
+    }}
+  >
+    {[
+      { name: "Plus", Icon: Plus },
+      { name: "Trash2", Icon: Trash2 },
+      { name: "Pencil", Icon: Pencil },
+      { name: "Search", Icon: Search },
+      { name: "Share2", Icon: Share2 },
+      { name: "Copy", Icon: Copy },
+      { name: "ExternalLink", Icon: ExternalLink },
+      { name: "Download", Icon: Download },
+      { name: "Upload", Icon: Upload },
+      { name: "Funnel", Icon: Funnel },
+      { name: "RefreshCw", Icon: RefreshCw },
+      { name: "LogOut", Icon: LogOut },
+      { name: "Settings", Icon: Settings },
+    ].map(({ name, Icon }) => (
+      <div
+        key={name}
+        style={{
+          padding: "16px 12px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          background: "#fff",
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "8px",
+            color: "#1a1a1a",
+            minHeight: "28px",
+          }}
+        >
+          <Icon size={14} strokeWidth={1.5} />
+          <Icon size={16} strokeWidth={1.5} />
+          <Icon size={20} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={1.5} />
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#4b5563", fontFamily: "monospace" }}>
+          {name}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 2. Status (状態)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      margin: "16px 0 24px",
+    }}
+  >
+    {[
+      { name: "Check", Icon: Check },
+      { name: "X", Icon: X },
+      { name: "Info", Icon: Info },
+      { name: "TriangleAlert", Icon: TriangleAlert },
+      { name: "CircleAlert", Icon: CircleAlert },
+      { name: "CircleCheck", Icon: CircleCheck },
+      { name: "Circle", Icon: Circle },
+      { name: "Minus", Icon: Minus },
+      { name: "Clock", Icon: Clock },
+      { name: "Bell", Icon: Bell },
+    ].map(({ name, Icon }) => (
+      <div
+        key={name}
+        style={{
+          padding: "16px 12px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          background: "#fff",
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "8px",
+            color: "#1a1a1a",
+            minHeight: "28px",
+          }}
+        >
+          <Icon size={14} strokeWidth={1.5} />
+          <Icon size={16} strokeWidth={1.5} />
+          <Icon size={20} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={1.5} />
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#4b5563", fontFamily: "monospace" }}>
+          {name}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 3. Nav (ナビゲーション)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      margin: "16px 0 24px",
+    }}
+  >
+    {[
+      { name: "ChevronLeft", Icon: ChevronLeft },
+      { name: "ChevronRight", Icon: ChevronRight },
+      { name: "ChevronDown", Icon: ChevronDown },
+      { name: "ChevronUp", Icon: ChevronUp },
+      { name: "ArrowLeft", Icon: ArrowLeft },
+      { name: "ArrowRight", Icon: ArrowRight },
+      { name: "Menu", Icon: Menu },
+      { name: "House", Icon: House },
+      { name: "Ellipsis", Icon: Ellipsis },
+    ].map(({ name, Icon }) => (
+      <div
+        key={name}
+        style={{
+          padding: "16px 12px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          background: "#fff",
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "8px",
+            color: "#1a1a1a",
+            minHeight: "28px",
+          }}
+        >
+          <Icon size={14} strokeWidth={1.5} />
+          <Icon size={16} strokeWidth={1.5} />
+          <Icon size={20} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={1.5} />
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#4b5563", fontFamily: "monospace" }}>
+          {name}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 4. Domain (イベント・グループドメイン)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      margin: "16px 0 24px",
+    }}
+  >
+    {[
+      { name: "Calendar", Icon: Calendar },
+      { name: "CalendarPlus", Icon: CalendarPlus },
+      { name: "MapPin", Icon: MapPin },
+      { name: "Globe", Icon: Globe },
+      { name: "Users", Icon: Users },
+      { name: "User", Icon: User },
+      { name: "Mail", Icon: Mail },
+      { name: "Heart", Icon: Heart },
+      { name: "Tag", Icon: Tag },
+      { name: "Building2", Icon: Building2 },
+    ].map(({ name, Icon }) => (
+      <div
+        key={name}
+        style={{
+          padding: "16px 12px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          background: "#fff",
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "8px",
+            color: "#1a1a1a",
+            minHeight: "28px",
+          }}
+        >
+          <Icon size={14} strokeWidth={1.5} />
+          <Icon size={16} strokeWidth={1.5} />
+          <Icon size={20} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={1.5} />
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#4b5563", fontFamily: "monospace" }}>
+          {name}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 5. Decoration (装飾)
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      margin: "16px 0 24px",
+    }}
+  >
+    {[
+      { name: "Sparkles", Icon: Sparkles },
+      { name: "Flame", Icon: Flame },
+      { name: "Star", Icon: Star },
+      { name: "Sun", Icon: Sun },
+      { name: "Moon", Icon: Moon },
+      { name: "Monitor", Icon: Monitor },
+      { name: "Code", Icon: Code },
+      { name: "Coffee", Icon: Coffee },
+    ].map(({ name, Icon }) => (
+      <div
+        key={name}
+        style={{
+          padding: "16px 12px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          background: "#fff",
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "8px",
+            color: "#c2410c",
+            minHeight: "28px",
+          }}
+        >
+          <Icon size={14} strokeWidth={1.5} />
+          <Icon size={16} strokeWidth={1.5} />
+          <Icon size={20} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={1.5} />
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#4b5563", fontFamily: "monospace" }}>
+          {name}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+---
+
+## 6. Extra — tech-event 固有 (20 種)
+
+`calendar` (Luma 由来) / `event` / `group` / 配信 / 主催ダッシュボードに特化した拡張アイコン。
+**ベース 50 種で表現できない場合のみ** 採用すること。
+
+<Unstyled>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
+      margin: "16px 0 24px",
+    }}
+  >
+    {[
+      // calendar / event ドメイン
+      { name: "CalendarCheck", Icon: CalendarCheck },
+      { name: "CalendarClock", Icon: CalendarClock },
+      { name: "CalendarX", Icon: CalendarX },
+      { name: "Presentation", Icon: Presentation },
+      { name: "Ticket", Icon: Ticket },
+      { name: "QrCode", Icon: QrCode },
+      { name: "Bookmark", Icon: Bookmark },
+      { name: "Eye", Icon: Eye },
+      { name: "TrendingUp", Icon: TrendingUp },
+      { name: "Trophy", Icon: Trophy },
+      // group / コミュニケーション
+      { name: "MessageCircle", Icon: MessageCircle },
+      { name: "Send", Icon: Send },
+      { name: "Hash", Icon: Hash },
+      { name: "Link2", Icon: Link2 },
+      { name: "AtSign", Icon: AtSign },
+      // 配信 / 主催
+      { name: "Camera", Icon: Camera },
+      { name: "Video", Icon: Video },
+      { name: "Mic", Icon: Mic },
+      { name: "Lock", Icon: Lock },
+      { name: "Unlock", Icon: Unlock },
+    ].map(({ name, Icon }) => (
+      <div
+        key={name}
+        style={{
+          padding: "16px 12px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          background: "#fff",
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "8px",
+            color: "#1a1a1a",
+            minHeight: "28px",
+          }}
+        >
+          <Icon size={14} strokeWidth={1.5} />
+          <Icon size={16} strokeWidth={1.5} />
+          <Icon size={20} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={1.5} />
+        </div>
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#4b5563", fontFamily: "monospace" }}>
+          {name}
+        </div>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+採用基準:
+
+- **calendar / event ドメイン (10)** — Luma 由来のカレンダーサブスクライブ / チケット / QR チェックイン / イベント統計に必要
+- **group / コミュニケーション (5)** — グループ詳細 / ディスカッション / Magic Link / @メンション
+- **配信 / 主催 (5)** — オンライン配信形式の明示 (camera / video / mic) と公開/限定の区別 (lock / unlock)
+
+合計 70 種 = 推奨 50 + Extra 20。これ以上の追加は `docs/icons.md` § 7 への PR を必須とする。
+
+---
+
+## 7. 使い方
+
+各セルの中の 4 つは左から **14px / 16px / 20px / 24px** のサイズサンプル。
+すべて `strokeWidth={1.5}` (デザインシステム規約) で描画されています。
+
+```tsx
+import { Calendar } from "lucide-react";
+
+// 16px がデフォルト、隣接するテキストの色を継承
+<Calendar className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+```
+
+- 文字サイズに対するサイズ対応、用途別の規約、`aria-hidden` / `aria-label` の使い分けは
+  `docs/icons.md` を参照してください。
+- 50 種以外のアイコンを使う場合は、PR 上で `docs/icons.md` § 7 に追記してから採用すること
+  (= 暗黙の追加禁止)。
