@@ -77,7 +77,7 @@ Tailwind は `bg-status-{name}-bg` / `text-status-{name}-fg` で生成。色だ�
 - 「グループ名」「タグ」のクリック可能なテキスト
 
 ### いつ status カラーか?
-- イベントステータス専用 ([EventStatusBadge](../02-molecules/event-status-badge.md))
+- イベントステータス専用 ([EventStatusBadge](../components/event-status-badge.md))
 - 一般的な情報の強調には使わない
 
 ## 5. WCAG AA 必須

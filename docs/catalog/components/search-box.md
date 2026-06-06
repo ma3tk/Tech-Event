@@ -43,8 +43,8 @@ import { SearchBox } from "@tech-event/shared-ui-composite";
 
 ## 7. 関連
 
-- [Input](../01-atoms/input.md)
-- [04-patterns/forms.md](../04-patterns/forms.md)
+- [Input](../ui/input.md)
+- [blocks/forms.md](../blocks/forms.md)
 
 ## 8. 変更履歴
 

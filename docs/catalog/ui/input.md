@@ -24,8 +24,8 @@ personas: [P1, P4, P6, P7]
 - **複数行** → [Textarea](./textarea.md)
 - **選択肢から選ぶ** → [Select](./select.md) / [RadioGroup](./radio-group.md) / [Checkbox](./checkbox.md)
 - **ON/OFF** → [Switch](./switch.md)
-- **Markdown 入力** → [MarkdownEditor](../02-molecules/markdown-editor.md)
-- **大きな検索 UI** → [SearchBox](../02-molecules/search-box.md) (Input をラップ)
+- **Markdown 入力** → [MarkdownEditor](../components/markdown-editor.md)
+- **大きな検索 UI** → [SearchBox](../components/search-box.md) (Input をラップ)
 
 ## 4. 構造 (Anatomy)
 
@@ -175,7 +175,7 @@ const [show, setShow] = useState(false);
 - [Form](./form.md) — RHF + Zod ラッパー (推奨統合)
 - [Textarea](./textarea.md) — 複数行
 - [Select](./select.md) — 選択肢
-- [SearchBox](../02-molecules/search-box.md) — 検索 UI のラッパー
+- [SearchBox](../components/search-box.md) — 検索 UI のラッパー
 
 ## 13. 変更履歴
 

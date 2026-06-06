@@ -34,8 +34,8 @@ personas: [P1, P2]
 
 ## 6. 関連
 
-- [Card](../01-atoms/card.md)
-- [EventCard](../03-organisms/event-card.md)
+- [Card](../ui/card.md)
+- [EventCard](../components/event-card.md)
 
 ## 7. 変更履歴
 

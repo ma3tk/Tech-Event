@@ -116,9 +116,9 @@ personas: [P1, P2, P6, P9]
 
 ## 6. 関連
 
-- [EventListRow](../03-organisms/event-list-row.md)
-- [EventCard](../03-organisms/event-card.md)
-- [EventTimeline](../03-organisms/event-timeline.md)
-- [Pagination](../02-molecules/pagination.md)
-- [Skeleton](../01-atoms/skeleton.md)
-- [EmptyState](../01-atoms/empty-state.md)
+- [EventListRow](../components/event-list-row.md)
+- [EventCard](../components/event-card.md)
+- [EventTimeline](../components/event-timeline.md)
+- [Pagination](../components/pagination.md)
+- [Skeleton](../ui/skeleton.md)
+- [EmptyState](../ui/empty-state.md)

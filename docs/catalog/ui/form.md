@@ -19,7 +19,7 @@ personas: [P1, P4, P6, P7]
 - Server Action と組み合わせる入力フォーム
 
 ## 3. いつ使わないか
-- 検索 (`<form method="get">` で十分) → [SearchBox](../02-molecules/search-box.md)
+- 検索 (`<form method="get">` で十分) → [SearchBox](../components/search-box.md)
 - 単純な single-input → 直接 Input + Server Action でも OK
 
 ## 4. 構造
@@ -105,7 +105,7 @@ const form = useForm({ resolver: zodResolver(schema) });
 ## 9. 関連
 
 - [Input](./input.md), [Textarea](./textarea.md), [Select](./select.md), [Checkbox](./checkbox.md), [RadioGroup](./radio-group.md)
-- [04-patterns/forms.md](../04-patterns/forms.md)
+- [blocks/forms.md](../blocks/forms.md)
 
 ## 10. 変更履歴
 

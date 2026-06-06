@@ -8,7 +8,7 @@ personas: [P1, P2, P3, P4, P6]
 
 # CTA マトリクス (CTA matrix)
 
-> Design.md §10.2 + Personas.md (P1 山田美咲 / P3 佐藤健太) | 一次資料: [`01-atoms/button.md`](../01-atoms/button.md), [`02-molecules/event-sticky-cta.md`](../02-molecules/event-sticky-cta.md)
+> Design.md §10.2 + Personas.md (P1 山田美咲 / P3 佐藤健太) | 一次資料: [`ui/button.md`](../ui/button.md), [`components/event-sticky-cta.md`](../components/event-sticky-cta.md)
 
 ## 対象ペルソナ
 
@@ -95,8 +95,8 @@ function EventCTA({ event, userState }: { event: Event; userState: UserState }) 
 
 ## 5. 関連
 
-- [01-atoms/button.md](../01-atoms/button.md) — variant 仕様
-- [02-molecules/event-sticky-cta.md](../02-molecules/event-sticky-cta.md) — Sticky CTA 実装
-- [04-patterns/event-status-orchestration.md](./event-status-orchestration.md) — 8 status との対応
-- [04-patterns/host-vs-participant-ui.md](./host-vs-participant-ui.md) — 主催者は別 CTA
+- [ui/button.md](../ui/button.md) — variant 仕様
+- [components/event-sticky-cta.md](../components/event-sticky-cta.md) — Sticky CTA 実装
+- [blocks/event-status-orchestration.md](./event-status-orchestration.md) — 8 status との対応
+- [blocks/host-vs-participant-ui.md](./host-vs-participant-ui.md) — 主催者は別 CTA
 - [`Personas.md`](../../../Personas.md) P3 (抽選), P4 (言葉の正確さ)

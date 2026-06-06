@@ -37,7 +37,7 @@ import { EventCardCompact } from "@tech-event/shared-ui-composite";
 ## 5. 関連
 
 - [EventCard](./event-card.md)
-- [04-patterns/cards.md](../04-patterns/cards.md)
+- [blocks/cards.md](../blocks/cards.md)
 
 ## 6. 変更履歴
 

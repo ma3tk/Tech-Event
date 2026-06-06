@@ -94,7 +94,7 @@ personas: [P1, P2, P6]
 
 ## 6. 関連
 
-- [Card](../01-atoms/card.md)
-- [EventCard](../03-organisms/event-card.md), [EventCardCompact](../03-organisms/event-card-compact.md)
-- [EventListRow](../03-organisms/event-list-row.md), [EventTimeline](../03-organisms/event-timeline.md)
-- [GroupCard](../03-organisms/group-card.md)
+- [Card](../ui/card.md)
+- [EventCard](../components/event-card.md), [EventCardCompact](../components/event-card-compact.md)
+- [EventListRow](../components/event-list-row.md), [EventTimeline](../components/event-timeline.md)
+- [GroupCard](../components/group-card.md)

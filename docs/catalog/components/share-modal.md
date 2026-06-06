@@ -134,10 +134,10 @@ import { Share2 } from "lucide-react";
 
 ## 12. 関連
 
-- [Dialog](../01-atoms/dialog.md)
-- [Tabs](../01-atoms/tabs.md)
-- [Toast](../01-atoms/toast.md)
-- [04-patterns/modals-and-sheets.md](../04-patterns/modals-and-sheets.md)
+- [Dialog](../ui/dialog.md)
+- [Tabs](../ui/tabs.md)
+- [Toast](../ui/toast.md)
+- [blocks/modals-and-sheets.md](../blocks/modals-and-sheets.md)
 
 ## 13. 変更履歴
 

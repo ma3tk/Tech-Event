@@ -60,7 +60,7 @@ import { Switch } from "@tech-event/shared-ui";
 ## 9. 関連
 
 - [Checkbox](./checkbox.md)
-- [ThemeSwitcher](../02-molecules/theme-switcher.md) — Switch + ロジック
+- [ThemeSwitcher](../components/theme-switcher.md) — Switch + ロジック
 
 ## 10. 変更履歴
 

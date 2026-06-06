@@ -29,12 +29,12 @@ personas: [P1, P2, P4, P6]
 
 | 用途 | コンポーネント |
 |---|---|
-| 全ページ共通 | [Header](../03-organisms/header.md) + [Footer](../03-organisms/footer.md) |
-| ページ内のビュー切替 | [Tabs](../01-atoms/tabs.md) |
-| 階層パス | [Breadcrumb](../02-molecules/breadcrumb.md) |
-| ページ番号 | [Pagination](../02-molecules/pagination.md) |
-| ユーザーメニュー | [UserMenuDropdown](../02-molecules/user-menu-dropdown.md) |
-| モバイルメニュー | [Sheet](../01-atoms/sheet.md) `side="left"` |
+| 全ページ共通 | [Header](../components/header.md) + [Footer](../components/footer.md) |
+| ページ内のビュー切替 | [Tabs](../ui/tabs.md) |
+| 階層パス | [Breadcrumb](../components/breadcrumb.md) |
+| ページ番号 | [Pagination](../components/pagination.md) |
+| ユーザーメニュー | [UserMenuDropdown](../components/user-menu-dropdown.md) |
+| モバイルメニュー | [Sheet](../ui/sheet.md) `side="left"` |
 
 ## 3. 標準パターン
 
@@ -100,6 +100,6 @@ skip link は `<a href="#main" className="sr-only focus:not-sr-only">` で最初
 
 ## 7. 関連
 
-- [Header](../03-organisms/header.md), [Footer](../03-organisms/footer.md)
-- [Tabs](../01-atoms/tabs.md), [Breadcrumb](../02-molecules/breadcrumb.md), [Pagination](../02-molecules/pagination.md)
-- [Sheet](../01-atoms/sheet.md), [DropdownMenu](../01-atoms/dropdown-menu.md)
+- [Header](../components/header.md), [Footer](../components/footer.md)
+- [Tabs](../ui/tabs.md), [Breadcrumb](../components/breadcrumb.md), [Pagination](../components/pagination.md)
+- [Sheet](../ui/sheet.md), [DropdownMenu](../ui/dropdown-menu.md)

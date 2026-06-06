@@ -55,7 +55,7 @@ CTA ラベル 4 種統一 (Design.md §10.2) + 状態切替:
 
 ## 9. 関連
 
-- [Button](../01-atoms/button.md)
+- [Button](../ui/button.md)
 - [Design.md §10.2](../../../Design.md)
 
 ## 10. 変更履歴

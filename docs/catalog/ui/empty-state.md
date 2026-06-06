@@ -82,7 +82,7 @@ import { Calendar } from "lucide-react";
 
 - [LoadingState](./loading-state.md)
 - [ErrorState](./error-state.md)
-- [04-patterns/feedback.md](../04-patterns/feedback.md)
+- [blocks/feedback.md](../blocks/feedback.md)
 
 ## 10. 変更履歴
 

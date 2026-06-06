@@ -11,6 +11,7 @@
 
 ## 検証
 
+- [ ] CI 全 job ✅ (`gh pr checks` で確認、`--admin` バイパス禁止 — [`CLAUDE.md §1.0`](../CLAUDE.md))
 - [ ] `pnpm nx run-many -t typecheck`
 - [ ] `pnpm nx run web:build`
 - [ ] `pnpm nx run web-e2e:e2e` (主要 spec)
@@ -30,6 +31,21 @@
 ## スクリーンショット
 
 <!-- UI 変更がある場合は light / dark / high-contrast + mobile / desktop で添付 -->
+
+## 更新したドキュメント (必須)
+
+> [`CLAUDE.md §5.0`](../CLAUDE.md) ルール: コード変更したら関連 docs/links を **同じ PR で同期**する。リンク切れは blocker。
+
+- [ ] `README.md` (機能/コマンド/環境変数に影響なし or 更新済)
+- [ ] `Design.md` (DS 規範に影響なし or 更新済)
+- [ ] `Personas.md` (ペルソナ/ジャーニーに影響なし or 更新済)
+- [ ] `docs/*.md` (該当領域に影響なし or 更新済)
+- [ ] `docs/catalog/{ui,components,blocks,foundations}/*.md` (該当 MD に影響なし or 更新済)
+- [ ] `CHANGELOG.md` (リリース粒度の変更なし or 追記済)
+- [ ] `.env.example` (環境変数追加・削除なし or 同期済)
+- [ ] Storybook story / MDX (該当なし or 追加・更新済)
+- [ ] i18n `src/i18n/messages/{ja,en}.json` 両方 (UI 文言追加なし or 同期済)
+- [ ] 相対リンク broken 0 (`grep -r '\](\./'` で検証)
 
 ## 関連 Issue
 

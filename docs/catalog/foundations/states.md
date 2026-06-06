@@ -20,8 +20,8 @@ personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
 | active | 押下中 | `active:bg-*-hover` |
 | disabled | 操作不可 | `opacity-50 pointer-events-none` + `aria-disabled` |
 | loading | 処理中 | spinner + `aria-busy="true"` |
-| empty | 0 件 | [EmptyState](../01-atoms/empty-state.md) |
-| error | エラー | [ErrorState](../01-atoms/error-state.md) or `aria-invalid` |
+| empty | 0 件 | [EmptyState](../ui/empty-state.md) |
+| error | エラー | [ErrorState](../ui/error-state.md) or `aria-invalid` |
 | selected (toggle) | 選択中 | `aria-pressed="true"` + 強調色 |
 
 ## 2. 詳細ルール

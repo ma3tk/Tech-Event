@@ -38,7 +38,7 @@ personas: [P1, P2, P6]
 
 ## 6. 関連
 
-- [Card](../01-atoms/card.md) (サイドバー枠)
+- [Card](../ui/card.md) (サイドバー枠)
 
 ## 7. 変更履歴
 

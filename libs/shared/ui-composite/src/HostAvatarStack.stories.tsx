@@ -4,7 +4,7 @@ import HostAvatarStack, {
 } from "./HostAvatarStack";
 
 const meta: Meta<typeof HostAvatarStack> = {
-  title: "Molecules/HostAvatarStack",
+  title: "Components/HostAvatarStack",
   component: HostAvatarStack,
   parameters: { layout: "padded" },
   argTypes: {

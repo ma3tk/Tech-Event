@@ -18,7 +18,7 @@ personas: [P1, P2, P6, P7]
 (根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 目的 (Purpose)
-イベントを **カード形式** で見せるドメイン特化の Organism。`list` (横長) / `grid` (縦積み) の 2 variant を持ち、トップページの注目イベント / 関連イベント / 検索結果 (compact 1 行表示は [EventListRow](./event-list-row.md)) で使う。
+イベントを **カード形式** で見せるドメイン特化の composite component。`list` (横長) / `grid` (縦積み) の 2 variant を持ち、トップページの注目イベント / 関連イベント / 検索結果 (compact 1 行表示は [EventListRow](./event-list-row.md)) で使う。
 
 ## 2. いつ使うか (When to use)
 - トップページの「注目イベント」「新着イベント」セクション
@@ -31,7 +31,7 @@ personas: [P1, P2, P6, P7]
 - **1 行で情報を高密度に** → [EventListRow](./event-list-row.md)
 - **タイムライン UI** → [EventTimeline](./event-timeline.md)
 - **CTA を強く出したい詳細上部** → ヘッダーセクションを直接組む (EventCard は本体ではない)
-- **3 件以下の小さなプレビュー** → [RecentlyViewedEvents](../02-molecules/recently-viewed-events.md)
+- **3 件以下の小さなプレビュー** → [RecentlyViewedEvents](../components/recently-viewed-events.md)
 
 ## 4. 構造 (Anatomy)
 
@@ -92,7 +92,7 @@ personas: [P1, P2, P6, P7]
 | default | `shadow-sm bg-surface` |
 | hover | `shadow-md -translate-y-0.5 duration-normal` |
 | loading | [EventCardSkeleton](./event-card.md) で置換 |
-| empty | 親レベルで [EmptyState](../01-atoms/empty-state.md) を出す |
+| empty | 親レベルで [EmptyState](../ui/empty-state.md) を出す |
 | selected | `ring-2 ring-brand-orange` (任意) |
 
 ## 8. アクセシビリティ (Accessibility)
@@ -169,13 +169,13 @@ import { EventCardSkeleton } from "@tech-event/shared-ui-composite";
 ## 12. 関連 (Related)
 
 - [EventCardCompact](./event-card-compact.md) — grid variant の薄いラッパー
-- [EventCardSkeleton](../01-atoms/skeleton.md) — loading
+- [EventCardSkeleton](../ui/skeleton.md) — loading
 - [EventListRow](./event-list-row.md) — 1 行型
 - [EventTimeline](./event-timeline.md) — 月見出し自動グルーピング
-- [EventStatusBadge](../02-molecules/event-status-badge.md)
-- [TagPill](../02-molecules/tag-pill.md)
-- [HostAvatarStack](../02-molecules/host-avatar-stack.md)
-- [04-patterns/cards.md](../04-patterns/cards.md)
+- [EventStatusBadge](../components/event-status-badge.md)
+- [TagPill](../components/tag-pill.md)
+- [HostAvatarStack](../components/host-avatar-stack.md)
+- [blocks/cards.md](../blocks/cards.md)
 
 ## 13. 変更履歴
 

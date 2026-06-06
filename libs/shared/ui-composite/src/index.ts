@@ -1,9 +1,11 @@
 /**
- * `@tech-event/shared-ui-composite` — Molecule / Organism レイヤの再利用可能なコンポーネント群。
+ * `@tech-event/shared-ui-composite` — shadcn/ui スタイルの components レイヤ (composite components 群)。
  *
- * shadcn primitives (`@tech-event/shared-ui`) を組み合わせた composite。
+ * ui primitives (`@tech-event/shared-ui`) を組み合わせた composite。23 個。
+ * shadcn/ui 公式 (https://ui.shadcn.com/) の "components" 分類に相当。
+ * 分類規約: `docs/component-classification.md` 参照。
+ *
  * Header / Footer / EventCard / EventListRow / Pagination / ShareModal 等を含む。
- *
  * `forms/ActionForm` のような apps/web 固有の hook に依存するものは含まれない
  * (apps/web 側に残してある)。
  */

@@ -29,8 +29,8 @@ light / dark / high-contrast の切替 UI。`ThemeProvider` 経由で `data-them
 
 ## 5. 関連
 
-- [Switch](../01-atoms/switch.md)
-- [05-foundations/theming.md](../05-foundations/theming.md)
+- [Switch](../ui/switch.md)
+- [foundations/theming.md](../foundations/theming.md)
 
 ## 6. 変更履歴
 

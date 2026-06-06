@@ -19,7 +19,7 @@ personas: [P1, P2, P3, P6, P7]
 
 ## 3. いつ使わないか
 - DB 互換の生 enum (`draft` / `published`) を直接表示 → 状態に変換してから渡す
-- 一般的な「NEW」「Beta」 → [Badge](../01-atoms/badge.md)
+- 一般的な「NEW」「Beta」 → [Badge](../ui/badge.md)
 
 ## 4. 8 状態の対応
 
@@ -74,7 +74,7 @@ import { EventStatusBadge } from "@tech-event/shared-ui-composite";
 
 ## 9. 関連
 
-- [Badge](../01-atoms/badge.md)
+- [Badge](../ui/badge.md)
 - [Design.md §10.1](../../../Design.md)
 - [docs/design-system.md §2.5](../../design-system.md)
 

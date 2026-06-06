@@ -211,8 +211,8 @@ import {
 - [Popover](./popover.md) — anchor 起点の小さい吊り下げ
 - [DropdownMenu](./dropdown-menu.md) — メニュー
 - [Toast](./toast.md) — 非同期完了通知
-- [ShareModal](../02-molecules/share-modal.md) — 統合ダイアログの実例
-- [04-patterns/modals-and-sheets.md](../04-patterns/modals-and-sheets.md) — 使い分け詳細
+- [ShareModal](../components/share-modal.md) — 統合ダイアログの実例
+- [blocks/modals-and-sheets.md](../blocks/modals-and-sheets.md) — 使い分け詳細
 
 ## 13. 変更履歴
 

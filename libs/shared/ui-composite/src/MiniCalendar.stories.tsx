@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import MiniCalendar from "./MiniCalendar";
 
 const meta: Meta<typeof MiniCalendar> = {
-  title: "Molecules/MiniCalendar",
+  title: "Components/MiniCalendar",
   component: MiniCalendar,
   parameters: { layout: "padded" },
 };

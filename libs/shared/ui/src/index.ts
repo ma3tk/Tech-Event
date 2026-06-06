@@ -1,9 +1,10 @@
 /**
- * `@tech-event/shared-ui` — shadcn ベースの primitive コンポーネント群。
+ * `@tech-event/shared-ui` — shadcn/ui スタイルの ui レイヤ (primitive コンポーネント群)。
  *
- * Atomic Design の Atom レイヤ (Radix UI + CVA primitives 21+ 個)。
- * Composite (Header / EventCard など) は `@tech-event/shared-ui-composite` 側に分離。
+ * Radix UI + CVA primitives 24 個。shadcn/ui 公式 (https://ui.shadcn.com/) の "ui" 分類に相当。
+ * Composite (Header / EventCard など) は `@tech-event/shared-ui-composite` 側 (= components 分類) に分離。
  *
+ * 分類規約: `docs/component-classification.md` 参照。
  * このファイルは barrel re-export のみ。各 module 内で副作用を持たないこと。
  */
 export * from "./avatar";

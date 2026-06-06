@@ -19,7 +19,7 @@ personas: [P1, P4, P6, P7]
 
 ## 1. 基本構成
 
-[Form](../01-atoms/form.md) + [Input](../01-atoms/input.md) / [Textarea](../01-atoms/textarea.md) / [Select](../01-atoms/select.md) / [Checkbox](../01-atoms/checkbox.md) / [RadioGroup](../01-atoms/radio-group.md) を組み合わせて構築する。
+[Form](../ui/form.md) + [Input](../ui/input.md) / [Textarea](../ui/textarea.md) / [Select](../ui/select.md) / [Checkbox](../ui/checkbox.md) / [RadioGroup](../ui/radio-group.md) を組み合わせて構築する。
 
 設計の核:
 - **React Hook Form + Zod** で型と実行時検証を統合
@@ -145,9 +145,9 @@ const schema = z.object({
 
 ## 7. 関連
 
-- [Form](../01-atoms/form.md)
-- [Input](../01-atoms/input.md), [Textarea](../01-atoms/textarea.md), [Select](../01-atoms/select.md)
-- [Checkbox](../01-atoms/checkbox.md), [RadioGroup](../01-atoms/radio-group.md), [Switch](../01-atoms/switch.md)
-- [MarkdownEditor](../02-molecules/markdown-editor.md)
-- [SearchBox](../02-molecules/search-box.md)
-- [04-patterns/data-input.md](./data-input.md)
+- [Form](../ui/form.md)
+- [Input](../ui/input.md), [Textarea](../ui/textarea.md), [Select](../ui/select.md)
+- [Checkbox](../ui/checkbox.md), [RadioGroup](../ui/radio-group.md), [Switch](../ui/switch.md)
+- [MarkdownEditor](../components/markdown-editor.md)
+- [SearchBox](../components/search-box.md)
+- [blocks/data-input.md](./data-input.md)

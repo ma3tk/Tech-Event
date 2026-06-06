@@ -66,7 +66,7 @@
 
 | name | このプロジェクトでの用途 |
 |------|------------------------|
-| `frontend-design` | デザインシステム (CLAUDE.md §4) と整合する UI / page 構築。Atom → Composite → Page 階層と Tailwind v4 + CVA primitives を尊重。 |
+| `frontend-design` | デザインシステム (CLAUDE.md §4) と整合する UI / page 構築。ui → components → blocks → Page 階層 (shadcn/ui スタイル) と Tailwind v4 + CVA primitives を尊重。 |
 | `webapp-testing` | Playwright pattern。`/test` コマンド・`e2e-stabilizer` agent と組み合わせて使う。 |
 | `theme-factory` | light / dark / high-contrast テーマの追加・微調整 (CLAUDE.md §4.1)。 |
 | `skill-creator` | 今後 tech-event 固有の skill を増やすときに使うメタ skill。 |

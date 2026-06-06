@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import Pagination from "./Pagination";
 
 const meta: Meta<typeof Pagination> = {
-  title: "Molecules/Pagination",
+  title: "Components/Pagination",
   component: Pagination,
   parameters: { layout: "padded" },
   argTypes: {

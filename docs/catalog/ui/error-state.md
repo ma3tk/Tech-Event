@@ -82,7 +82,7 @@ import { AlertTriangle } from "lucide-react";
 - [Toast](./toast.md)
 - [EmptyState](./empty-state.md)
 - [LoadingState](./loading-state.md)
-- [04-patterns/feedback.md](../04-patterns/feedback.md)
+- [blocks/feedback.md](../blocks/feedback.md)
 
 ## 10. 変更履歴
 

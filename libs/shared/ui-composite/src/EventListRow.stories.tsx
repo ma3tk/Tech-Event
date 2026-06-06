@@ -3,7 +3,7 @@ import EventListRow from "./EventListRow";
 import type { EventCardData } from "./EventCard";
 
 const meta: Meta<typeof EventListRow> = {
-  title: "Organisms/EventListRow",
+  title: "Components/EventListRow",
   component: EventListRow,
   parameters: {
     layout: "padded",

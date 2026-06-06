@@ -50,7 +50,7 @@ Luma 風の **月見出し自動グルーピング タイムライン**。内部
 ## 7. 関連
 
 - [EventListRow](./event-list-row.md)
-- [04-patterns/lists-and-tables.md](../04-patterns/lists-and-tables.md)
+- [blocks/lists-and-tables.md](../blocks/lists-and-tables.md)
 
 ## 8. 変更履歴
 

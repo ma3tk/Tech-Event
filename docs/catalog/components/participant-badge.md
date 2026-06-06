@@ -11,7 +11,7 @@ personas: [P1, P5, P6, P9]
 > Design.md 準拠 | Storybook: [ParticipantBadge stories](../../../libs/shared/ui-composite/src/ParticipantBadge.stories.tsx) | 実装: `libs/shared/ui-composite/src/ParticipantBadge.tsx`
 
 ## 1. 目的
-**参加者のアバター + ニックネーム** を表示する Molecule。`user` オブジェクト or 直接プロパティで指定可能。
+**参加者のアバター + ニックネーム** を表示する composite component。`user` オブジェクト or 直接プロパティで指定可能。
 
 ## 2. いつ使うか
 - 参加者一覧
@@ -21,7 +21,7 @@ personas: [P1, P5, P6, P9]
 
 ## 3. いつ使わないか
 - 多人数の重ね表示 → [HostAvatarStack](./host-avatar-stack.md)
-- アバターのみ → [Avatar](../01-atoms/avatar.md)
+- アバターのみ → [Avatar](../ui/avatar.md)
 
 ## 4. 使用例
 
@@ -40,7 +40,7 @@ import { ParticipantBadge } from "@tech-event/shared-ui-composite";
 
 ## 6. 関連
 
-- [Avatar](../01-atoms/avatar.md)
+- [Avatar](../ui/avatar.md)
 - [HostAvatarStack](./host-avatar-stack.md)
 
 ## 7. 変更履歴

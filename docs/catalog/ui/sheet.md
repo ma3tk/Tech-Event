@@ -97,7 +97,7 @@ import {
 ## 11. 関連
 
 - [Dialog](./dialog.md)
-- [04-patterns/modals-and-sheets.md](../04-patterns/modals-and-sheets.md)
+- [blocks/modals-and-sheets.md](../blocks/modals-and-sheets.md)
 
 ## 12. 変更履歴
 

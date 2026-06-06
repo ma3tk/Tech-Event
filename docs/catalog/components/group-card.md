@@ -51,9 +51,9 @@ import { GroupCard } from "@tech-event/shared-ui-composite";
 
 ## 7. 関連
 
-- [Card](../01-atoms/card.md)
+- [Card](../ui/card.md)
 - [EventCard](./event-card.md)
-- [04-patterns/cards.md](../04-patterns/cards.md)
+- [blocks/cards.md](../blocks/cards.md)
 
 ## 8. 変更履歴
 

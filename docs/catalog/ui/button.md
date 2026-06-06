@@ -213,7 +213,7 @@ import Link from "next/link";
 - [DropdownMenu](./dropdown-menu.md) — `MenuItem` は Button ではない
 - [Tabs](./tabs.md) — `TabsTrigger` は Button ではない
 - [LoadingState](./loading-state.md) — 大きい範囲のローディングはこちら
-- [EventStickyCTA](../02-molecules/event-sticky-cta.md) — 詳細ページの CTA 統合
+- [EventStickyCTA](../components/event-sticky-cta.md) — 詳細ページの CTA 統合
 
 ## 13. 変更履歴
 

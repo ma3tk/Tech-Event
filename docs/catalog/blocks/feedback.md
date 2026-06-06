@@ -21,10 +21,10 @@ personas: [P1, P4, P6]
 
 | 状態 | コンポーネント | 表示時間 |
 |---|---|---|
-| Loading | [LoadingState](../01-atoms/loading-state.md) / [Skeleton](../01-atoms/skeleton.md) | 待機中 |
-| Empty | [EmptyState](../01-atoms/empty-state.md) | 永続 |
-| Error | [ErrorState](../01-atoms/error-state.md) (永続) / [Toast](../01-atoms/toast.md) (一時) | 永続 / 3-5 秒 |
-| Success | [Toast](../01-atoms/toast.md) | 3-4 秒 |
+| Loading | [LoadingState](../ui/loading-state.md) / [Skeleton](../ui/skeleton.md) | 待機中 |
+| Empty | [EmptyState](../ui/empty-state.md) | 永続 |
+| Error | [ErrorState](../ui/error-state.md) (永続) / [Toast](../ui/toast.md) (一時) | 永続 / 3-5 秒 |
+| Success | [Toast](../ui/toast.md) | 3-4 秒 |
 
 ## 2. 使い分け判断フロー
 
@@ -102,6 +102,6 @@ if (result.ok) {
 
 ## 6. 関連
 
-- [LoadingState](../01-atoms/loading-state.md), [Skeleton](../01-atoms/skeleton.md)
-- [EmptyState](../01-atoms/empty-state.md), [ErrorState](../01-atoms/error-state.md)
-- [Toast](../01-atoms/toast.md)
+- [LoadingState](../ui/loading-state.md), [Skeleton](../ui/skeleton.md)
+- [EmptyState](../ui/empty-state.md), [ErrorState](../ui/error-state.md)
+- [Toast](../ui/toast.md)

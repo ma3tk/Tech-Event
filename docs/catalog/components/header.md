@@ -40,11 +40,11 @@ personas: [P1, P2, P6, P7]
 ```
 
 - ロゴ (左): テキストロゴ `tech-event` (Noto Sans JP Bold)。アイコン化禁止 (Design.md §2)
-- [SearchBox](../02-molecules/search-box.md) (中央): `<form method="get">` で JS なし動作
+- [SearchBox](../components/search-box.md) (中央): `<form method="get">` で JS なし動作
 - ナビ (右側): イベントを探す / グループを探す / 主催する 等
-- [ThemeSwitcher](../02-molecules/theme-switcher.md)
-- 通知 Badge ([Badge](../01-atoms/badge.md))
-- [UserMenuDropdown](../02-molecules/user-menu-dropdown.md)
+- [ThemeSwitcher](../components/theme-switcher.md)
+- 通知 Badge ([Badge](../ui/badge.md))
+- [UserMenuDropdown](../components/user-menu-dropdown.md)
 
 ## 5. バリアント
 
@@ -111,10 +111,10 @@ import { HeaderServer } from "@tech-event/shared-ui-composite";
 ## 12. 関連
 
 - [HeaderServer](./header-server.md)
-- [SearchBox](../02-molecules/search-box.md)
-- [UserMenuDropdown](../02-molecules/user-menu-dropdown.md)
-- [ThemeSwitcher](../02-molecules/theme-switcher.md)
-- [04-patterns/navigation.md](../04-patterns/navigation.md)
+- [SearchBox](../components/search-box.md)
+- [UserMenuDropdown](../components/user-menu-dropdown.md)
+- [ThemeSwitcher](../components/theme-switcher.md)
+- [blocks/navigation.md](../blocks/navigation.md)
 
 ## 13. 変更履歴
 

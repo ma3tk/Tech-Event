@@ -30,7 +30,7 @@ personas: [P5]
 
 ## 5. 関連
 
-- [DropdownMenu](../01-atoms/dropdown-menu.md)
+- [DropdownMenu](../ui/dropdown-menu.md)
 
 ## 6. 変更履歴
 

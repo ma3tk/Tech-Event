@@ -21,7 +21,7 @@ personas: [P6, P7]
 
 ## 3. いつ使わないか
 - 1 行 → [Input](./input.md)
-- Markdown 編集 → [MarkdownEditor](../02-molecules/markdown-editor.md)
+- Markdown 編集 → [MarkdownEditor](../components/markdown-editor.md)
 - 大量の構造化入力 → 別ページのフォームに
 
 ## 4. 構造
@@ -83,7 +83,7 @@ default / hover / focus-visible / disabled / error。`<Input>` と同じパタ�
 ## 11. 関連
 
 - [Input](./input.md)
-- [MarkdownEditor](../02-molecules/markdown-editor.md)
+- [MarkdownEditor](../components/markdown-editor.md)
 - [Form](./form.md)
 
 ## 12. 変更履歴

@@ -118,7 +118,7 @@ personas: [P1, P4, P6, P7]
 
 ## 6. 関連
 
-- [Input](../01-atoms/input.md), [Textarea](../01-atoms/textarea.md)
-- [Select](../01-atoms/select.md), [Checkbox](../01-atoms/checkbox.md), [RadioGroup](../01-atoms/radio-group.md), [Switch](../01-atoms/switch.md)
-- [Form](../01-atoms/form.md)
-- [04-patterns/forms.md](./forms.md)
+- [Input](../ui/input.md), [Textarea](../ui/textarea.md)
+- [Select](../ui/select.md), [Checkbox](../ui/checkbox.md), [RadioGroup](../ui/radio-group.md), [Switch](../ui/switch.md)
+- [Form](../ui/form.md)
+- [blocks/forms.md](./forms.md)

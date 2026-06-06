@@ -27,11 +27,12 @@ const preview: Preview = {
       // 'error' = fail CI on a11y violations
       test: "todo",
     },
-    // Sidebar order:
+    // Sidebar order (shadcn/ui スタイル分類):
     //   1. Welcome (top, landing page)
     //   2. Design System (Introduction → Tokens → Colors → ...)
-    //   3. UI (primitives, alphabetical)
-    //   4. Components (composite, alphabetical)
+    //   3. UI (primitives, alphabetical) — libs/shared/ui/
+    //   4. Components (composite, alphabetical) — libs/shared/ui-composite/
+    //   5. Blocks (構成パターン)
     //   *. それ以外 (= 末尾)
     options: {
       storySort: {
@@ -63,10 +64,8 @@ const preview: Preview = {
             ],
           ],
           "UI",
-          "Atoms",
-          "Molecules",
-          "Organisms",
           "Components",
+          "Blocks",
           "*",
         ],
       },

@@ -55,8 +55,8 @@ import { Pagination } from "@tech-event/shared-ui-composite";
 
 ## 8. 関連
 
-- [Button](../01-atoms/button.md)
-- [04-patterns/lists-and-tables.md](../04-patterns/lists-and-tables.md)
+- [Button](../ui/button.md)
+- [blocks/lists-and-tables.md](../blocks/lists-and-tables.md)
 
 ## 9. 変更履歴
 

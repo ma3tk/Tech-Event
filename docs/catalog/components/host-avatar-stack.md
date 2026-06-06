@@ -41,8 +41,8 @@ personas: [P1, P5, P6]
 
 ## 6. 関連
 
-- [Avatar](../01-atoms/avatar.md)
-- [Tooltip](../01-atoms/tooltip.md)
+- [Avatar](../ui/avatar.md)
+- [Tooltip](../ui/tooltip.md)
 - [ParticipantBadge](./participant-badge.md)
 
 ## 7. 変更履歴

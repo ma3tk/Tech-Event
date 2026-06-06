@@ -3,7 +3,7 @@ import EventTimeline from "./EventTimeline";
 import type { EventCardData } from "./EventCard";
 
 const meta: Meta<typeof EventTimeline> = {
-  title: "Organisms/EventTimeline",
+  title: "Components/EventTimeline",
   component: EventTimeline,
   parameters: { layout: "padded" },
   argTypes: {

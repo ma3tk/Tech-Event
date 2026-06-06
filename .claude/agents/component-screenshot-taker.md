@@ -24,7 +24,7 @@ CLAUDE.md §3.2 (VRT) + §4.1 (3 テーマ) を踏襲した、軽量 1-shot の�
 ## 入力
 
 - コンポーネント名 (例: `Button`, `EventListRow`) または slug (例: `button`)
-- 任意: scope (atom / composite / page、デフォルト atom)
+- 任意: scope (ui / components / page、デフォルト ui — shadcn/ui スタイル)
 - 任意: theme フィルタ (デフォルト 3 テーマ全部)
 - 任意: viewport フィルタ (デフォルト desktop + mobile)
 

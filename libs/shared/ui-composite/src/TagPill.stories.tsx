@@ -3,7 +3,7 @@ import { useState } from "react";
 import TagPill from "./TagPill";
 
 const meta: Meta<typeof TagPill> = {
-  title: "Atoms/TagPill",
+  title: "Components/TagPill",
   component: TagPill,
   parameters: { layout: "centered" },
   argTypes: {

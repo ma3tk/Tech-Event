@@ -97,11 +97,13 @@ src/styles/themes/high-contrast.css  ← AAA mapping (prefers-contrast 対応)
 src/app/globals.css         ← @theme inline で Tailwind v4 bridge
 ```
 
-### 4.2 コンポーネント階層 (Atomic Design)
-- **Atom** = `src/components/ui/` の Radix UI + CVA primitives (21 個)
-- **Molecule / Organism** = `src/components/` の composite (Header / EventListRow / ShareModal 等)
-- **Template** = `/components` showcase ページ
-- **Page** = `src/app/**/page.tsx`
+### 4.2 コンポーネント階層 (shadcn/ui スタイル)
+- **ui** = `libs/shared/ui/` の Radix UI + CVA primitives (24 個)
+- **components** = `libs/shared/ui-composite/` の composite (Header / EventListRow / ShareModal 等、23 個)
+- **blocks** = `docs/catalog/blocks/` の構成パターン (10 個、MD のみ)
+- **foundations** = `src/styles/tokens.css` + `docs/catalog/foundations/` (10 個)
+- **Page** = `apps/web/src/app/**/page.tsx`
+- 詳細・判定基準・旧 Atomic 対応表は [`docs/component-classification.md`](./docs/component-classification.md) を参照
 
 ### 4.3 ルール
 - 既存 Tailwind ユーティリティクラス名は **互換性維持** (refactor 負担最小化)
@@ -119,6 +121,26 @@ src/app/globals.css         ← @theme inline で Tailwind v4 bridge
 
 ## 5. ドキュメント文化
 
+### 5.0 変更したら必ず関連ドキュメント・リンクを同じ PR で更新する (必須)
+- **「コードだけ直して docs はあとで」を許さない**。同じ PR の中で同期させる
+- 同じPRで更新が必要な対象 (該当する場合のみ):
+  - `README.md` — 機能サマリ / クイックスタート / 環境変数 / コマンド一覧 / 完成度
+  - `CLAUDE.md` (本ファイル) — 作業方針が変わるなら
+  - `Design.md` / `Personas.md` — DS / ペルソナに影響があるなら
+  - `docs/*.md` — 該当領域 (design-system / architecture / completion-report / motion / icons / ci 等)
+  - `docs/catalog/{ui,components,blocks,foundations}/*.md` — コンポーネント/パターン追加・変更時
+  - `CHANGELOG.md` — リリース粒度の変更時
+  - `.claude/README.md` + 関連 agent / skill / command — DX に影響する変更時
+  - `.env.example` — 環境変数追加・削除時
+  - `docs/deployment.md` — 本番影響あるなら
+  - `research/` 配下 — 観測知見の追加なら
+- **リンク切れ禁止**: ドキュメント間相対リンクは PR 内で grep して broken 0 を保証
+- **Storybook stories**: 新規コンポーネントは story + MDX docs を同 PR で
+- **i18n キー**: 新規 UI 文言は `src/i18n/messages/{ja,en}.json` 両方に追加
+- **migration**: schema 変更時は `prisma/migrations/` 同梱 + `schema.postgres.prisma` 同期
+- 過去 PR の事故例: ドキュメントは古いコンポーネント名のまま残った → search で迷子。「触ったら更新」を徹底
+- レビュー時のチェック: PR 説明に「更新したドキュメント」セクションを必ず書く (`.github/pull_request_template.md` で強制)
+
 ### 5.1 ディレクトリ構成
 ```
 research/        — 本家調査資料 (60+ファイル、connpass 64 + Luma 32)
@@ -126,7 +148,7 @@ docs/            — プロジェクト固有 docs
   design-system.md          — 設計思想・トークン
   design-system-audit.md    — 完成度監査
   design-system-changelog.md — DS版数管理
-  component-taxonomy.md     — Atomic 分類
+  component-classification.md — コンポーネント分類 (shadcn/ui スタイル ui/components/blocks/foundations) + 旧 Atomic 対応表
   component-api-status.md   — API 成熟度
   motion.md                 — モーション規約
   icons.md                  — アイコン規約

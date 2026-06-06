@@ -84,9 +84,9 @@ personas: [P1, P6]
 
 ## 8. 関連
 
-- [Dialog](../01-atoms/dialog.md)
-- [Sheet](../01-atoms/sheet.md)
-- [Popover](../01-atoms/popover.md)
-- [Tooltip](../01-atoms/tooltip.md)
-- [DropdownMenu](../01-atoms/dropdown-menu.md)
-- [ShareModal](../02-molecules/share-modal.md)
+- [Dialog](../ui/dialog.md)
+- [Sheet](../ui/sheet.md)
+- [Popover](../ui/popover.md)
+- [Tooltip](../ui/tooltip.md)
+- [DropdownMenu](../ui/dropdown-menu.md)
+- [ShareModal](../components/share-modal.md)

@@ -42,7 +42,7 @@
 | 9 | 新規 component に `.stories.tsx` | 主要 variant 網羅 |
 | 10 | 新規 component の axe critical/serious | 0 |
 | 11 | 新規 component の VRT ベースライン | `pnpm vrt:update` 済 |
-| 12 | `docs/component-taxonomy.md` 更新 | Atom / Molecule / Organism のいずれかに分類記載 |
+| 12 | `docs/component-classification.md` 更新 | ui / components / blocks / foundations のいずれかに分類記載 (shadcn/ui スタイル) |
 | 13 | `docs/component-api-status.md` 行追加 | 初期 stability = `alpha` で記録 |
 | 14 | `docs/design-system-changelog.md` Added 節 | 追加内容を明記 |
 | 15 | Storybook MDX (Components / Tokens) 更新 | 該当があれば追記 |
