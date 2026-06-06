@@ -18,6 +18,13 @@ import AxeBuilder from "@axe-core/playwright";
 const CONTRAST_STORAGE_KEY = "tech-event:contrast";
 
 test.describe("Header High Contrast toggle", () => {
+  // mobile では ThemeSwitcher が hidden md:flex 配下のため未表示。
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name === "chromium-mobile",
+      "header の ThemeSwitcher は mobile では hidden md:flex 配下のため対象外",
+    );
+  });
   test("High Contrast 選択で html[data-contrast=more] になり localStorage に保存される", async ({
     page,
   }) => {

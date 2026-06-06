@@ -12,6 +12,17 @@ test.describe("i18n: 言語切替 (ja/en)", () => {
     await context.clearCookies();
   });
 
+  // i18n 検証は header の nav リンク / LanguageSwitcher が常時可視な
+  // desktop でのみ行う。mobile では同じ要素はハンバーガーメニュー内に
+  // 隠れているため、本スイートの対象外とする (mobile-specific i18n は
+  // 別途モバイルメニューの展開シナリオで担保すべき)。
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name === "chromium-mobile",
+      "本スイートは chromium-desktop 専用 (mobile では nav 要素が隠れる)",
+    );
+  });
+
   test("?lang=en で Header が英語化され、再ロードしても保持される", async ({
     page,
     context,

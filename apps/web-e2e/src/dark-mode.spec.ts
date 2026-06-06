@@ -15,6 +15,14 @@ import { test, expect } from "@playwright/test";
 const STORAGE_KEY = "tech-event:theme";
 
 test.describe("Header dark mode toggle", () => {
+  // mobile では ThemeSwitcher 等が hidden md:flex 配下にあるため未表示。
+  // dark mode の挙動自体は CSS variable 検証なので desktop で十分。
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name === "chromium-mobile",
+      "header の ThemeSwitcher は mobile では hidden md:flex 配下のため対象外",
+    );
+  });
   test("ダーク選択で html[data-theme=dark] になり localStorage に保存される", async ({
     page,
   }) => {
