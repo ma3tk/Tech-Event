@@ -67,3 +67,10 @@ apps/web-e2e/test-results/
 
 # E2E DB snapshot
 *.db.baseline
+
+# Claude Code
+# - .claude/settings.local.json はチーム共有設定として commit する
+# - ユーザー個別の overrides は ~/.claude/settings.json に置く
+.claude/cache/
+.claude/logs/
+.claude/tmp/
