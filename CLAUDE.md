@@ -25,6 +25,12 @@
 - 完了通知を polling せず待機 (notification 駆動)
 - 必要に応じて wave 構成 (wave 1 完了 → wave 2 dispatch)
 
+### 1.4 ペルソナ駆動
+- 設計判断は [Personas.md](./Personas.md) の 9 ペルソナのうち、どれを対象としているか明確にする
+- 「全員向け」は実質「誰のためでもない」となる → 必ず 1-2 ペルソナを優先
+- 参加者側 (P1-P5) / 主催者側 (P6-P8) / 運営側 (P9) のうち、対象ペルソナを PR / Design Review で明文化
+- 進歩的開示 (Progressive Disclosure) でペルソナ間の密度差を吸収する
+
 ---
 
 ## 2. リサーチファースト

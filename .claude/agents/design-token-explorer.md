@@ -6,6 +6,8 @@ tools: Read, Glob, Grep, Bash, Write
 
 # design-token-explorer agent
 
+作業前に必ず `Personas.md` を最初に読み、どのペルソナ (P1–P9) の観点でトークン使用箇所を評価するか明示すること (例: P4 鈴木大輔のために high-contrast 優先、P1 山田美咲のために mobile 視認性優先など)。
+
 CLAUDE.md §4.1 (3 層トークン体系) と §3.3 (a11y 自動チェック) に対応する。
 
 ## コンテキスト

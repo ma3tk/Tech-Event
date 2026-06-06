@@ -6,7 +6,8 @@ tools: Read, Glob, Grep, Write, Bash
 
 # visual-diff-reviewer agent
 
-作業前に必ず `Design.md` (プロジェクトルート) を読み、Top 10 ルール準拠を判定基準に含めること。
+作業前に必ず `Personas.md` を最初に読み、どのペルソナ (P1–P9) の観点で視覚差分を評価するか明示すること (主要 / 副次)。
+そのうえで `Design.md` (プロジェクトルート) を読み、Top 10 ルール準拠を判定基準に含めること。
 
 CLAUDE.md §2.2 「視覚比較の徹底」をプロセス化した agent。`research/visual-diff-final-report.md` / `research/visual-diff-report.md` で既に確立されている記法を継承する。
 

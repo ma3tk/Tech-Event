@@ -9,7 +9,7 @@ const meta: Meta<typeof Header> = {
     docs: {
       description: {
         component:
-          "グローバルヘッダー。ロゴ・検索・ナビ・アカウント領域を含む。Server Component で組むときは HeaderServer 経由で呼ぶ。",
+          "グローバルヘッダー。ロゴ・検索・ナビ・アカウント領域を含む。Server Component で組むときは HeaderServer 経由で呼ぶ。\n\n**カタログ**: [docs/catalog/03-organisms/header.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/03-organisms/header.md) — 使い分けガイド",
       },
     },
   },

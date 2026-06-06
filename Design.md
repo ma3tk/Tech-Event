@@ -9,6 +9,10 @@
 
 ## 1. 設計哲学
 
+実装の対象ユーザーは [Personas.md](./Personas.md) で定義された 9 ペルソナ。
+各画面・コンポーネント設計は「どのペルソナのどのジャーニーで使われるか」を明確にしたうえで意思決定する。
+「全員向け」は実質「誰のためでもない」となる — 必ず 1-2 ペルソナを優先する。
+
 ### 1.1 「connpass + Luma の中間」
 - **情報密度は connpass 寄り**: 1 行に必要十分な情報を載せる (タイトル / グループ / 日時 / 会場 / 参加者数)
 - **質感は Luma 寄り**: フラット過ぎず、ガラス感・グラデ・微細アニメーションで「触れる感」を残す
@@ -280,7 +284,9 @@ dark mode で `bg-white` `bg-zinc-100` などのハードコード禁止 → 必
 
 | ドキュメント | 内容 |
 |---|---|
+| [`Personas.md`](./Personas.md) | 対象ユーザー像 (9 ペルソナ) — 設計判断の起点 |
 | [`CLAUDE.md`](./CLAUDE.md) | コード品質・作業フロー規範 |
+| [`docs/catalog/README.md`](./docs/catalog/README.md) | デザインシステムカタログ — コンポーネント言語化 (使い分け / アンチパターン) |
 | [`docs/design-system.md`](./docs/design-system.md) | トークン詳細・全コンポーネント仕様 |
 | [`docs/design-system-audit.md`](./docs/design-system-audit.md) | DS 100% 監査 |
 | [`docs/design-system-changelog.md`](./docs/design-system-changelog.md) | DS バージョン管理 (v1.0.0+) |

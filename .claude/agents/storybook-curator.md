@@ -6,6 +6,8 @@ tools: Bash, Read, Glob, Grep, Write, Edit
 
 # storybook-curator agent
 
+作業前に必ず `Personas.md` を最初に読み、どのペルソナ (P1–P9) の観点で story カバレッジを評価するか明示すること (例: P1 山田美咲のために mobile viewport story 必須、P6 小林一郎のために host variant story 必須など)。
+
 CLAUDE.md §4.3 「全コンポーネントに Storybook story + variant 100% カバー」を維持する。`storybook-story-generator` agent と相補的で、こちらは「全体監査 → ギャップ可視化」を担当する。
 
 作業前に `Design.md` §6 (Atomic 階層: Atom / Molecule / Organism / Template / Page) と §10 (status バリアント / CTA 規約) を読み、カバレッジ判定に組み込む:

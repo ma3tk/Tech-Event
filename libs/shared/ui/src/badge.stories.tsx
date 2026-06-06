@@ -20,6 +20,8 @@ const meta: Meta<typeof Badge> = {
           "- ❌ Badge をクリック可能にする (= ClickableTag / Button を使う。a11y で `<span>` を `role=button` 化するのは avoid)",
           "- ❌ `variant=success` を「完了したタスク」に使う (= 緑は「進行中=募集中」の意味で予約済)",
           "- ❌ Badge 内に長文を入れる (= Badge は最大 12〜16 文字を想定。それ以上は `Tooltip` か `<p>` を使う)",
+          "",
+          "**カタログ**: [docs/catalog/01-atoms/badge.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/01-atoms/badge.md) — 使い分けガイド",
         ].join("\n"),
       },
     },

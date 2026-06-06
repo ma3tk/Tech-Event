@@ -34,6 +34,8 @@ const meta: Meta = {
           "- ❌ Dialog の中に Tooltip を入れる (= Portal が二重になり z-index 戦争が起きる。Popover や説明文に置換)",
           "- ❌ 開閉状態を URL クエリで管理 (= Server Action で onClose したいケース以外は不要。`open`/`onOpenChange` で十分)",
           "- ❌ Dialog 内に長いフォームを入れる (> 1 画面分) → Sheet 又は別ページにする",
+          "",
+          "**カタログ**: [docs/catalog/01-atoms/dialog.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/01-atoms/dialog.md) — 使い分けガイド",
         ].join("\n"),
       },
     },
