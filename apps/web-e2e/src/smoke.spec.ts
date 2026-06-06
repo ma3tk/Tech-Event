@@ -31,7 +31,13 @@ for (const route of PUBLIC_ROUTES) {
   });
 }
 
-test("検索ボックスで /explore へリダイレクト", async ({ page }) => {
+test("検索ボックスで /explore へリダイレクト", async ({ page }, testInfo) => {
+  // mobile では SearchBox が hidden md:flex 配下のため対象外
+  // (mobile はハンバーガーメニューを開いた後に検索する別フローが必要)
+  test.skip(
+    testInfo.project.name === "chromium-mobile",
+    "SearchBox は mobile では hidden md:flex 配下のため対象外",
+  );
   await page.goto("/");
   const searchInput = page.getByRole("searchbox").first();
   await searchInput.fill("AI");

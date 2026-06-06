@@ -45,7 +45,10 @@ export default function RecentlyViewedEvents({
   const [items, setItems] = useState<RecentlyViewedItem[]>(fallback);
   const [hydrated, setHydrated] = useState(false);
 
+  // mount 後に sessionStorage を読みに行く hydration パターン。
+  // SSR では sessionStorage が無いので CSR でのみ補正する。
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界の hydration
     setHydrated(true);
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);

@@ -14,6 +14,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
 import fs from "node:fs";
+import { loginByCookie } from "./_helpers/auth";
 
 /** デザインシステム調整中の既知違反 ID。failure には積まない (warn のみ)。 */
 const KNOWN_DESIGN_VIOLATIONS = new Set<string>(["color-contrast"]);
@@ -76,7 +77,7 @@ test.describe("主要ページの axe-core a11y チェック", () => {
   test.afterAll(() => {
     // 既存ファイルとマージしてから書き出す。serial 実行で同 worker 内なら
     // summary だけで足りるが、保険として既存内容も読み込む。
-    let merged = summary.pages.slice();
+    const merged = summary.pages.slice();
     if (fs.existsSync(OUT_FILE)) {
       try {
         const prev = JSON.parse(fs.readFileSync(OUT_FILE, "utf8")) as Summary;
@@ -101,12 +102,23 @@ test.describe("主要ページの axe-core a11y チェック", () => {
       await context.clearCookies();
 
       if (spec.loginAs) {
-        await page.goto(
-          `/api/auth/dev-login?nickname=${encodeURIComponent(
-            spec.loginAs,
-          )}&next=${encodeURIComponent(spec.url)}`,
-          { waitUntil: "domcontentloaded" },
-        );
+        // CI で Turbopack の app-route compile timing により /api/auth/dev-login が
+        // 一時的に 404 を返す事象があるため、session cookie を直接合成する。
+        // 失敗時は dev-login にフォールバック。
+        try {
+          await loginByCookie(context, spec.loginAs);
+          await page.goto(spec.url, { waitUntil: "domcontentloaded" });
+        } catch (e) {
+          console.warn(
+            `[a11y-pages] loginByCookie failed (${e}). dev-login にフォールバック。`,
+          );
+          await page.goto(
+            `/api/auth/dev-login?nickname=${encodeURIComponent(
+              spec.loginAs,
+            )}&next=${encodeURIComponent(spec.url)}`,
+            { waitUntil: "domcontentloaded" },
+          );
+        }
       } else {
         await page.goto(spec.url, { waitUntil: "domcontentloaded" });
       }

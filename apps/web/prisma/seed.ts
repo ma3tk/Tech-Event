@@ -897,7 +897,7 @@ async function seedEvents(
         : users;
       const applicants = pickN(eligibleUsers, applyCount);
       // 各 applicant を role に割り当て (role 1 が 7 割、role 2 が 3 割)
-      let acceptedSoFarPerRole: Record<string, number> = {};
+      const acceptedSoFarPerRole: Record<string, number> = {};
       for (const r of roles) acceptedSoFarPerRole[r.id.toString()] = 0;
 
       for (let pi = 0; pi < applicants.length; pi++) {

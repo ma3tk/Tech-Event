@@ -151,7 +151,9 @@ export default function Header({
    */
   const initialUnread = user?.unreadNotificationCount ?? 0;
   const [unread, setUnread] = useState<number>(initialUnread);
+  // 親から渡る initialUnread (server prop) を CSR 側にミラーする意図的同期。
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- server-derived state 追従
     setUnread(initialUnread);
   }, [initialUnread]);
 

@@ -55,6 +55,7 @@ function useDirection(): {
 } {
   const [dir, setDirState] = useState<Dir>("ltr");
 
+  // SSR では localStorage を読めない hydration パターン。CSR でのみ反映する。
   useEffect(() => {
     if (typeof window === "undefined") return;
     let stored: Dir | null = null;
@@ -65,6 +66,7 @@ function useDirection(): {
       /* localStorage 無効 — LTR フォールバック */
     }
     if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界の hydration
       setDirState(stored);
       document.documentElement.setAttribute("dir", stored);
     }

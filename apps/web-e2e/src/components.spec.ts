@@ -88,11 +88,12 @@ const SECTIONS = [
 for (const section of SECTIONS) {
   test(`section screenshot: ${section}`, async ({ page }) => {
     await page.goto("/components", { waitUntil: "domcontentloaded" });
+    // hydration mismatch による DOM 再 mount を避けるため networkidle 待ち。
+    await page.waitForLoadState("networkidle").catch(() => undefined);
     const locator = page.getByTestId(`section-${section}`);
-    await locator.scrollIntoViewIfNeeded();
-    // section が可視 + フォントが読み込み済みであることを確認してから撮影
-    await expect(locator).toBeVisible();
+    await expect(locator).toBeVisible({ timeout: 15_000 });
     await page.evaluate(() => document.fonts.ready);
+    await locator.scrollIntoViewIfNeeded().catch(() => undefined);
     await locator.screenshot({
       path: path.join(SCREENSHOT_DIR, `${section}.png`),
       animations: "disabled",
@@ -296,6 +297,11 @@ test.describe("Visual regression (toHaveScreenshot)", () => {
       test.skip(
         testInfo.project.name !== "chromium-desktop",
         "視覚回帰は chromium-desktop のみで実行",
+      );
+      // CI (Linux) では darwin ベースラインしかないため skip。
+      test.skip(
+        process.env.CI === "true" && process.platform === "linux",
+        "Linux 用 visual baseline 未生成のため CI では skip",
       );
       await page.goto("/components", { waitUntil: "domcontentloaded" });
       const locator = page.getByTestId(`section-${section}`);

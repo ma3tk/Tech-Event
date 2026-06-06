@@ -7,6 +7,14 @@
 
 ## 1. 不変の原則
 
+### 1.0 CI が緑になってからマージ (最優先)
+- **PR は CI 全 job が ✅ 緑になるまで merge しない**。`gh pr merge --admin` でバイパスしない
+- 検証手順: `gh pr checks {PR番号}` で全 pass を確認 → `gh pr merge --squash --delete-branch` (`--admin` 不要)
+- CI が落ちたら原因を特定して同じ branch に push し直す。「ローカルでは通る」で押し切らない
+- merge済 main の CI が落ちている状態を放置しない → 即 fix PR を切る
+- 局所的な flake は `flaky:` を本文に明示して再実行 (`gh run rerun {run id}`) → それでも落ちたら fix
+- CI 高速化: `pnpm nx affected` で PR 差分のみ test/lint/build
+
 ### 1.1 既存機能・既存テストを削減しない
 - **追加・拡張は良いが、削除・縮小は禁止** (ユーザーが明示的に要請した場合のみ削除可)
 - 既存の挙動を変える場合は、URL クエリパラメータや環境変数で旧挙動を保持できるように

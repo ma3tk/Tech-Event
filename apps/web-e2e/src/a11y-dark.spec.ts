@@ -64,7 +64,7 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("主要ページの axe-core a11y チェック (dark)", () => {
   test.afterAll(() => {
-    let merged = summary.pages.slice();
+    const merged = summary.pages.slice();
     if (fs.existsSync(OUT_FILE)) {
       try {
         const prev = JSON.parse(fs.readFileSync(OUT_FILE, "utf8")) as Summary;

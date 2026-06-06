@@ -57,8 +57,10 @@ export default function ThemeBuilderPage() {
   const [draft, setDraft] = useState<ThemeBuilderState>(DEFAULTS);
   const [applied, setApplied] = useState<ThemeBuilderState>(DEFAULTS);
 
+  // mount 時に localStorage から復元する hydration パターン。
   useEffect(() => {
     const stored = readStored();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界の hydration
     setDraft(stored);
     setApplied(stored);
   }, []);

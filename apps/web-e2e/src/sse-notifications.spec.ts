@@ -79,8 +79,12 @@ test.describe("SSE 通知ストリーム", () => {
     // SSE polling は 5 秒 + テスト固有の close 処理が重いため timeout を引き伸ばす
     test.setTimeout(150_000);
     // 2 つのコンテキストで「主催者がアイドル状態」+「投稿者がコメント」を再現
-    const ownerCtx = await browser.newContext();
-    const commenterCtx = await browser.newContext();
+    // baseURL は newContext には自動継承されないので明示する。
+    const ctxOpts = {
+      baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    };
+    const ownerCtx = await browser.newContext(ctxOpts);
+    const commenterCtx = await browser.newContext(ctxOpts);
     // SSE は Headless Chrome ではデフォルト disable しているので、テスト用に
     // force-on cookie を渡す。
     await ownerCtx.addCookies([

@@ -4,7 +4,10 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // Nx 移行後は libs/shared/data-access-prisma 配下に出力する。
+  // これにより `@tech-event/shared-data-access-prisma` を介して
+  // 他 app/lib が import でき、apps/web を跨ぐ循環依存を解消できる。
+  output   = "../../../libs/shared/data-access-prisma/src/generated/prisma"
 }
 
 datasource db {

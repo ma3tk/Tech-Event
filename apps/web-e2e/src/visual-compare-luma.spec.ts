@@ -94,8 +94,19 @@ test.beforeAll(async () => {
 
 for (const pair of PAIRS) {
   test(`luma screenshot pair: ${pair.name}`, async ({ browser }) => {
+    // 本テストは luma.com (外部) を撮影してクローンと並べる比較ツール。
+    // CI では外部ネットワークが不安定 + そもそも CI 緑判定に不要なので skip。
+    // ローカル `pnpm vrt:luma` 等で意図的に走らせる用途。
+    test.skip(
+      process.env.CI === "true",
+      "外部 (luma.com) アクセスを含むため CI では skip",
+    );
     test.setTimeout(120_000);
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 1600 } });
+    const ctx = await browser.newContext({
+      viewport: { width: 1280, height: 1600 },
+      // Playwright config の use.baseURL は newContext には自動継承されない。
+      baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    });
     const page = await ctx.newPage();
 
     // クローン側 (luma比較用なのでファイル名を別にして既存と共存させる)

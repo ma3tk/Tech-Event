@@ -34,14 +34,36 @@ permissions:
 
 env:
   # 本番ビルド用ダミー値 (実環境では secrets で上書き)
-  # PUBLIC_API_KEY を読む API ルートのビルドが落ちないようにするためのプレースホルダ。
-  PUBLIC_API_KEY: ci-placeholder-public-api-key
+  # PUBLIC_API_KEY: 公開 API の `X-API-Key` 検証で使う。
+  # apps/web/.env のローカル値と同じ値を使うことで、E2E (calendar.spec / public-api.spec)
+  # でハードコードされた dev key と一致させる。
+  PUBLIC_API_KEY: dev-public-api-key-please-change
   NEXT_TELEMETRY_DISABLED: "1"
   CI: "true"
+  # Prisma migrate reset 用 (SQLite を使うため file: で十分)。
+  # db:reset は cwd=apps/web で実行されるため、apps/web/dev.db に作成される。
+  DATABASE_URL: "file:./dev.db"
+  # @t3-oss/env-nextjs の Zod 検証は NODE_ENV=production だと必須項目を厳格化する。
+  # CI ビルドではこれらは本物ではなく placeholder で十分 (本番は secrets で上書き)。
+  AUTH_SECRET: "ci-placeholder-auth-secret-32chars-min-length-ok"
+  NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+  # E2E / a11y で `/api/auth/dev-login?nickname=...` 経由のログインを使うために必須。
+  # 未設定だと dev-login が 404 を返し、dashboard 等の認証必須ページが空の HTML
+  # (lang / title 無し) となり axe が serious 違反 (document-title / html-has-lang) で fail する。
+  ENABLE_DEV_LOGIN: "1"
+  ENABLE_TEST_ENDPOINTS: "1"
+  # 旧形式 te_session を許容 (loginByCookie が生成する署名付き形式と旧形式の両方を受ける)
+  LEGACY_SESSION_FALLBACK: "1"
+  # Magic Link: 確認ページ→POST の 2 段ではなく、GET で即セッション発行する旧挙動を維持 (E2E 互換)
+  MAGIC_LINK_LEGACY_GET: "1"
+  # Slack Webhook URL の SSRF 検査で localhost を許容 (slack-webhook E2E が test サーバを叩く)
+  SLACK_WEBHOOK_ALLOW_TEST_HOSTS: "1"
+  # 抽選自動実行 (GET /api/cron/run-lotteries) のシークレット。
+  CRON_SECRET: "ci-cron-secret"
 
 jobs:
   # ------------------------------------------------------------
-  # typecheck — tsc --noEmit
+  # typecheck — tsc --noEmit (Nx run-many)
   # ------------------------------------------------------------
   typecheck:
     name: typecheck
@@ -55,12 +77,12 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Prisma client 生成 (typecheck で必要)
-      - run: pnpm exec prisma generate
-      - run: pnpm tsc --noEmit
+      # Prisma client 生成 (typecheck で必要)。Nx 移行後 schema は apps/web/prisma 配下。
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+      - run: pnpm typecheck
 
   # ------------------------------------------------------------
-  # lint — eslint
+  # lint — eslint (Nx run-many)
   # ------------------------------------------------------------
   lint:
     name: lint
@@ -77,7 +99,7 @@ jobs:
       - run: pnpm lint
 
   # ------------------------------------------------------------
-  # build — Next.js production build
+  # build — Next.js production build (Nx)
   # ------------------------------------------------------------
   build:
     name: build
@@ -91,7 +113,7 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       # SQLite DB を seed しないと build 時の事前 fetch / SSG が落ちるパスがあるため
       # 軽量に reset + seed する。`db:reset` は破壊的だが CI のクリーンな環境なので問題なし。
       - run: pnpm db:reset
@@ -103,7 +125,8 @@ jobs:
   e2e:
     name: e2e (playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # workers=4 で 4 並列化したが 328 tests の余裕枠として 45 分を確保 (旧 30 分 → 45 分)。
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -113,24 +136,41 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - run: pnpm exec tsx prisma/seed-test-user.ts
+      # `prisma migrate reset --force` は prisma.config.ts の seed コマンドを起動するが、
+      # CI 環境では稀に seed が走らないケースがあるため、明示的に seed.ts を再実行する
+      # (冪等: seed.ts は既存ユーザーがあれば upsert する)。
+      - name: Seed fixture data (apps/web cwd)
+        working-directory: apps/web
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
+
+      # 個別 spec が process.cwd()/dev.db を参照するため、apps/web-e2e/dev.db に
+      # apps/web/dev.db のリンクを張る (シンボリックリンクで参照のみ)。
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
 
       # Playwright ブラウザ + system deps (chromium のみ)
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
       # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
+      # Nx 移行後 spec は apps/web-e2e/ 配下に存在する。
+      # pnpm exec は workspace root を cwd と見なすため、--config に絶対パスを渡す。
       - name: Run Playwright tests
-        run: pnpm exec playwright test
+        working-directory: apps/web-e2e
+        run: pnpm exec playwright test --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts"
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report
+          path: apps/web-e2e/playwright-report
           retention-days: 14
 
   # ------------------------------------------------------------
@@ -160,25 +200,42 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - run: pnpm exec tsx prisma/seed-test-user.ts
+      # `prisma migrate reset --force` は prisma.config.ts の seed コマンドを起動するが、
+      # CI 環境では稀に seed が走らないケースがあるため、明示的に seed.ts を再実行する
+      # (冪等: seed.ts は既存ユーザーがあれば upsert する)。
+      - name: Seed fixture data (apps/web cwd)
+        working-directory: apps/web
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
+
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
       # 明示的に a11y 系 spec のみを実行 (critical/serious → spec 側で fail)
+      # Nx 移行後 e2e spec は apps/web-e2e/src/ 配下。
+      # pnpm exec は workspace root を cwd と見なすため、--config に絶対パスを渡す。
       - name: Run axe-core a11y suite
+        working-directory: apps/web-e2e
         run: |
           pnpm exec playwright test \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
             --project=chromium-desktop \
-            e2e/a11y-pages.spec.ts \
-            e2e/components-a11y.spec.ts \
-            e2e/a11y-dark.spec.ts \
-            e2e/high-contrast.spec.ts
+            src/a11y-pages.spec.ts \
+            src/components-a11y.spec.ts \
+            src/a11y-dark.spec.ts \
+            src/high-contrast.spec.ts
           pnpm exec playwright test \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
             --project=chromium-mobile \
-            e2e/a11y-pages-mobile.spec.ts
+            src/a11y-pages-mobile.spec.ts
 
       - name: Upload axe-core JSON reports
         if: ${{ !cancelled() }}
@@ -186,6 +243,7 @@ jobs:
         with:
           name: axe-reports
           path: |
+            apps/web/screenshots/**/_axe*.json
             screenshots/**/_axe*.json
           retention-days: 14
           if-no-files-found: ignore
@@ -195,5 +253,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-a11y-report
-          path: playwright-report
+          path: apps/web-e2e/playwright-report
           retention-days: 14

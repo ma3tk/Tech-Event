@@ -207,6 +207,11 @@ async function resolveSelector(
 
 for (const target of TARGETS) {
   test(`pair: ${target.name}`, async ({ browser }) => {
+    // 外部サイト (connpass.com / lu.ma) と並べる比較テスト。CI では skip。
+    test.skip(
+      process.env.CI === "true",
+      "外部 (connpass.com / lu.ma) アクセスを含むため CI では skip",
+    );
     test.setTimeout(120_000);
     const ctx = await browser.newContext({
       viewport: { width: 1280, height: 1600 },

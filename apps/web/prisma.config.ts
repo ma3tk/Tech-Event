@@ -15,6 +15,8 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts && tsx prisma/seed-test-user.ts && tsx scripts/init-fts.ts && tsx scripts/recalc-counters.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // CI など DATABASE_URL 未設定の環境では SQLite (file:./dev.db) を fallback とする。
+    // `prisma migrate reset` 等は datasource.url を必須とするためここで保証する。
+    url: process.env["DATABASE_URL"] ?? "file:./dev.db",
   },
 });

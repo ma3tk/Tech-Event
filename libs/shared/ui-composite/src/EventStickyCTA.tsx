@@ -126,7 +126,10 @@ export default function EventStickyCTA({
   const [mounted, setMounted] = useState(false);
   const elRef = useRef<HTMLDivElement | null>(null);
 
+  // hydration mismatch 防止: mount 後に SSR-only state を反映する意図的パターン。
+  // IntersectionObserver は副作用なので useEffect が適切。
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界で必要
     setMounted(true);
     const target = document.getElementById(observeId);
     if (!target) {

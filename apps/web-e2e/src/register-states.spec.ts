@@ -143,7 +143,13 @@ test.describe("Register button: 全 7 状態の網羅", () => {
     await page.waitForLoadState("networkidle");
   });
 
-  test("7. lottery: ログイン済 + 抽選方式の枠", async ({ page }) => {
+  test("7. lottery: ログイン済 + 抽選方式の枠", async ({ page }, testInfo) => {
+    // 抽選方式の register button は desktop と mobile で実装/表示位置が異なる。
+    // 本テストは desktop UI 用に書かれているため mobile は対象外。
+    test.skip(
+      testInfo.project.name === "chromium-mobile",
+      "lottery register button の表示は desktop UI 想定 (mobile は別実装)",
+    );
     // event 41 は lottery / 未参加
     await devLogin(page, DEV_USER, "/event/41");
     // 既に抽選申込中ならキャンセル

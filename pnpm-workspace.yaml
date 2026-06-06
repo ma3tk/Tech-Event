@@ -1,3 +1,7 @@
+packages:
+  - "apps/*"
+  - "libs/web/*"
+  - "libs/shared/*"
 allowBuilds:
   '@parcel/watcher': true
   '@prisma/engines': true

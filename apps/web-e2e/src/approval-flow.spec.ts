@@ -25,6 +25,14 @@ test.describe("Approval Required 申込フロー", () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
   });
+  // approval-flow UI は mobile で button label の表示が分岐する。
+  // 本スイートは desktop UI 検証として書かれているため mobile は対象外。
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name === "chromium-mobile",
+      "本スイートは desktop UI 検証用 (mobile は別フロー)",
+    );
+  });
 
   test("主催者 → 承認制 ON → 別ユーザーで申請 → 承認 → 承認済表示", async ({
     page,

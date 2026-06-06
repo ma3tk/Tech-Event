@@ -25,6 +25,14 @@ test.describe("ブックマーク → カレンダー UX (P2)", () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
   });
+  // bookmark-to-calendar UX フローは desktop の sidebar / dialog 構造に
+  // 依存。mobile では別の bottom-sheet UI で実装されているため対象外。
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name === "chromium-mobile",
+      "本スイートは desktop UI 検証用 (mobile は別フロー)",
+    );
+  });
 
   test("選択 → 新規カレンダー作成 → 遷移完了", async ({ page }) => {
     // 事前: seed には fast_moon_169 用 Bookmark が無いので、まず 1 件ブックマークしておく。
