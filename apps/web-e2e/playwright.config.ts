@@ -50,10 +50,12 @@ export default defineConfig({
   ],
   // 既に起動済みのdev serverを再利用 (E2E_BASE_URLでオーバーライド可)
   // Nx 化で next dev は apps/web/ から起動する。
+  // ../../node_modules/.bin/next は POSIX shell script なので `node` で実行できない。
+  // 直接 `next/dist/bin/next` (JS) を node で実行する。
   webServer: process.env.E2E_SKIP_SERVER
     ? undefined
     : {
-        command: "node ../../node_modules/.bin/next dev",
+        command: "node ../../node_modules/next/dist/bin/next dev",
         cwd: "../web",
         url: "http://localhost:3000",
         reuseExistingServer: true,
