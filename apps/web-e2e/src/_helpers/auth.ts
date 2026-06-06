@@ -41,14 +41,26 @@ export async function devLogin(
   opts: DevLoginOptions = {},
 ): Promise<void> {
   const nextPath = opts.next ?? "/dashboard";
-  await page.goto(
-    `/api/auth/dev-login?nickname=${encodeURIComponent(
-      nickname,
-    )}&next=${encodeURIComponent(nextPath)}`,
-  );
-  if (!opts.skipWaitForUrl) {
-    // `[/]` を `\/` にエスケープして RegExp として渡す
-    await page.waitForURL(new RegExp(nextPath.replace(/[/]/g, "\\/")));
+  // CI で Turbopack の app-route compile timing もしくは env 伝搬の問題で
+  // /api/auth/dev-login が 404 を返す事象があるため、まず session cookie を
+  // 直接合成して context にセットし、page.goto で nextPath に直接アクセスする。
+  // cookie 合成失敗時 (dev.db に user がいない等) は従来通り HTTP route に fallback。
+  try {
+    await loginByCookie(page.context(), nickname);
+    await page.goto(nextPath);
+  } catch (e) {
+    console.warn(
+      `[devLogin] loginByCookie failed (${e}). dev-login HTTP route にフォールバック。`,
+    );
+    await page.goto(
+      `/api/auth/dev-login?nickname=${encodeURIComponent(
+        nickname,
+      )}&next=${encodeURIComponent(nextPath)}`,
+    );
+    if (!opts.skipWaitForUrl) {
+      // `[/]` を `\/` にエスケープして RegExp として渡す
+      await page.waitForURL(new RegExp(nextPath.replace(/[/]/g, "\\/")));
+    }
   }
 }
 
@@ -66,13 +78,21 @@ export async function devLoginLegacy(
   nickname: string,
   nextPath: string,
 ): Promise<void> {
-  const url = `/api/auth/dev-login?nickname=${encodeURIComponent(
-    nickname,
-  )}&next=${encodeURIComponent(nextPath)}`;
-  await page.goto(url);
-  // クエリを含む nextPath にも対応するため pathname プレフィックス一致で待つ
-  const expectedPathname = nextPath.split("?")[0]!;
-  await page.waitForURL((u) => u.pathname.startsWith(expectedPathname));
+  // cookie 合成優先、失敗時 HTTP route fallback (devLogin と同じパターン)
+  try {
+    await loginByCookie(page.context(), nickname);
+    await page.goto(nextPath);
+  } catch (e) {
+    console.warn(
+      `[devLoginLegacy] loginByCookie failed (${e}). dev-login HTTP route にフォールバック。`,
+    );
+    const url = `/api/auth/dev-login?nickname=${encodeURIComponent(
+      nickname,
+    )}&next=${encodeURIComponent(nextPath)}`;
+    await page.goto(url);
+    const expectedPathname = nextPath.split("?")[0]!;
+    await page.waitForURL((u) => u.pathname.startsWith(expectedPathname));
+  }
 }
 
 // ============================================================
