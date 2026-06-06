@@ -34,8 +34,10 @@ permissions:
 
 env:
   # 本番ビルド用ダミー値 (実環境では secrets で上書き)
-  # PUBLIC_API_KEY を読む API ルートのビルドが落ちないようにするためのプレースホルダ。
-  PUBLIC_API_KEY: ci-placeholder-public-api-key
+  # PUBLIC_API_KEY: 公開 API の `X-API-Key` 検証で使う。
+  # apps/web/.env のローカル値と同じ値を使うことで、E2E (calendar.spec / public-api.spec)
+  # でハードコードされた dev key と一致させる。
+  PUBLIC_API_KEY: dev-public-api-key-please-change
   NEXT_TELEMETRY_DISABLED: "1"
   CI: "true"
   # Prisma migrate reset 用 (SQLite を使うため file: で十分)。

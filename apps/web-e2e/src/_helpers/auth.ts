@@ -160,8 +160,9 @@ export async function loginByCookie(
   context: BrowserContext,
   nickname: string = DEFAULT_DEV_USER,
 ): Promise<void> {
-  const secret =
-    process.env.AUTH_SECRET ?? "dev-secret-for-build-only-please-replace-in-production";
+  // util-auth-session.ts の getSessionSecret() の fallback と完全一致させる必要がある
+  // (cookie の HMAC 署名を server 側で verify するため)
+  const secret = process.env.AUTH_SECRET ?? "dev-auth-secret-please-change";
   const userId = resolveUserId(nickname);
   const value = buildSessionCookieValue(userId, secret);
   await context.addCookies([
