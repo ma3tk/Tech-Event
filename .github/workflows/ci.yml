@@ -38,6 +38,10 @@ env:
   PUBLIC_API_KEY: ci-placeholder-public-api-key
   NEXT_TELEMETRY_DISABLED: "1"
   CI: "true"
+  # Prisma migrate reset 用 (SQLite を使うため file: で十分)。
+  # db:reset は cwd=apps/web で実行されるため、apps/web/dev.db に作成される。
+  # apps/web 配下のスクリプトから読む場合は file:./dev.db、root からは file:./apps/web/dev.db で参照する。
+  DATABASE_URL: "file:./dev.db"
 
 jobs:
   # ------------------------------------------------------------
@@ -115,7 +119,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - run: pnpm exec tsx apps/web/prisma/seed-test-user.ts
+      - name: Seed test user (apps/web cwd で実行)
+        working-directory: apps/web
+        run: pnpm exec tsx prisma/seed-test-user.ts
 
       # Playwright ブラウザ + system deps (chromium のみ)
       - name: Install Playwright Chromium
@@ -164,7 +170,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - run: pnpm exec tsx apps/web/prisma/seed-test-user.ts
+      - name: Seed test user (apps/web cwd で実行)
+        working-directory: apps/web
+        run: pnpm exec tsx prisma/seed-test-user.ts
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
