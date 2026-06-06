@@ -44,6 +44,13 @@ function isDevLoginEnabled(): boolean {
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  // CI 診断ログ: env が期待通り渡っているか確認するためのテンポラリ log。
+  // 本番では dev-login 自体が NODE_ENV ガードで disable されるので影響なし。
+  if (process.env.CI === "true" || process.env.CI === "1") {
+    console.log(
+      `[dev-login] NODE_ENV=${process.env.NODE_ENV} ENABLE_DEV_LOGIN=${process.env.ENABLE_DEV_LOGIN} enabled=${isDevLoginEnabled()}`,
+    );
+  }
   if (!isDevLoginEnabled()) {
     return new NextResponse("Not Found", { status: 404 });
   }

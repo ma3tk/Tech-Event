@@ -43,11 +43,16 @@ test.describe("Header High Contrast toggle", () => {
   test("通常選択で html[data-contrast=normal] に戻る", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.getByTestId("header-theme-toggle").click();
-    await page.getByTestId("contrast-more").click();
+    // Radix DropdownMenu の open animation 後に click (CI flake 対策)
+    const moreItem = page.getByTestId("contrast-more");
+    await expect(moreItem).toBeVisible();
+    await moreItem.click();
     await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
 
     await page.getByTestId("header-theme-toggle").click();
-    await page.getByTestId("contrast-normal").click();
+    const normalItem = page.getByTestId("contrast-normal");
+    await expect(normalItem).toBeVisible();
+    await normalItem.click();
     await expect(page.locator("html")).toHaveAttribute(
       "data-contrast",
       "normal",
@@ -61,12 +66,18 @@ test.describe("Header High Contrast toggle", () => {
   });
 
   test("リロード後も localStorage の選択値が維持される", async ({ browser }) => {
-    const ctx = await browser.newContext();
+    const ctx = await browser.newContext({
+      // newContext は config の use.baseURL を継承するが、明示の方が flake 耐性が上がる。
+      baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    });
     const page = await ctx.newPage();
     await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await page.getByTestId("header-theme-toggle").click();
-    await page.getByTestId("contrast-more").click();
+    // Radix DropdownMenu の open animation を待ってから click する (CI flake 対策)
+    const moreItem = page.getByTestId("contrast-more");
+    await expect(moreItem).toBeVisible();
+    await moreItem.click();
     await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
 
     await page.reload({ waitUntil: "domcontentloaded" });
