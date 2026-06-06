@@ -41,7 +41,7 @@ env:
 
 jobs:
   # ------------------------------------------------------------
-  # typecheck — tsc --noEmit
+  # typecheck — tsc --noEmit (Nx run-many)
   # ------------------------------------------------------------
   typecheck:
     name: typecheck
@@ -55,12 +55,12 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Prisma client 生成 (typecheck で必要)
-      - run: pnpm exec prisma generate
-      - run: pnpm tsc --noEmit
+      # Prisma client 生成 (typecheck で必要)。Nx 移行後 schema は apps/web/prisma 配下。
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+      - run: pnpm typecheck
 
   # ------------------------------------------------------------
-  # lint — eslint
+  # lint — eslint (Nx run-many)
   # ------------------------------------------------------------
   lint:
     name: lint
@@ -77,7 +77,7 @@ jobs:
       - run: pnpm lint
 
   # ------------------------------------------------------------
-  # build — Next.js production build
+  # build — Next.js production build (Nx)
   # ------------------------------------------------------------
   build:
     name: build
@@ -91,7 +91,7 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       # SQLite DB を seed しないと build 時の事前 fetch / SSG が落ちるパスがあるため
       # 軽量に reset + seed する。`db:reset` は破壊的だが CI のクリーンな環境なので問題なし。
       - run: pnpm db:reset
@@ -113,16 +113,18 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - run: pnpm exec tsx prisma/seed-test-user.ts
+      - run: pnpm exec tsx apps/web/prisma/seed-test-user.ts
 
       # Playwright ブラウザ + system deps (chromium のみ)
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
       # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
+      # Nx 移行後 spec は apps/web-e2e/ 配下に存在する。
       - name: Run Playwright tests
+        working-directory: apps/web-e2e
         run: pnpm exec playwright test
 
       - name: Upload Playwright report
@@ -130,7 +132,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report
+          path: apps/web-e2e/playwright-report
           retention-days: 14
 
   # ------------------------------------------------------------
@@ -160,25 +162,27 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - run: pnpm exec tsx prisma/seed-test-user.ts
+      - run: pnpm exec tsx apps/web/prisma/seed-test-user.ts
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
       # 明示的に a11y 系 spec のみを実行 (critical/serious → spec 側で fail)
+      # Nx 移行後 e2e spec は apps/web-e2e/src/ 配下。
       - name: Run axe-core a11y suite
+        working-directory: apps/web-e2e
         run: |
           pnpm exec playwright test \
             --project=chromium-desktop \
-            e2e/a11y-pages.spec.ts \
-            e2e/components-a11y.spec.ts \
-            e2e/a11y-dark.spec.ts \
-            e2e/high-contrast.spec.ts
+            src/a11y-pages.spec.ts \
+            src/components-a11y.spec.ts \
+            src/a11y-dark.spec.ts \
+            src/high-contrast.spec.ts
           pnpm exec playwright test \
             --project=chromium-mobile \
-            e2e/a11y-pages-mobile.spec.ts
+            src/a11y-pages-mobile.spec.ts
 
       - name: Upload axe-core JSON reports
         if: ${{ !cancelled() }}
@@ -186,6 +190,7 @@ jobs:
         with:
           name: axe-reports
           path: |
+            apps/web/screenshots/**/_axe*.json
             screenshots/**/_axe*.json
           retention-days: 14
           if-no-files-found: ignore
@@ -195,5 +200,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-a11y-report
-          path: playwright-report
+          path: apps/web-e2e/playwright-report
           retention-days: 14

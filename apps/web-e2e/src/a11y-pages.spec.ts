@@ -76,7 +76,7 @@ test.describe("主要ページの axe-core a11y チェック", () => {
   test.afterAll(() => {
     // 既存ファイルとマージしてから書き出す。serial 実行で同 worker 内なら
     // summary だけで足りるが、保険として既存内容も読み込む。
-    let merged = summary.pages.slice();
+    const merged = summary.pages.slice();
     if (fs.existsSync(OUT_FILE)) {
       try {
         const prev = JSON.parse(fs.readFileSync(OUT_FILE, "utf8")) as Summary;

@@ -52,9 +52,11 @@ export default function LanguageSwitcher({
 }) {
   const [locale, setLocale] = useState<Locale>(initialLocale ?? "ja");
 
+  // mount 後に cookie からロケールを反映する hydration パターン。
   useEffect(() => {
     const fromCookie = readCookie(LOCALE_COOKIE);
     if (fromCookie === "ja" || fromCookie === "en") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界で cookie 同期
       setLocale(fromCookie);
     }
   }, []);

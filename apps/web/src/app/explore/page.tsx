@@ -195,6 +195,11 @@ export default async function ExplorePage({
     : baseWhere;
   const orderBy = buildOrderBy(filters);
 
+  // Server Component の SSR-time な現在時刻参照。Date.now() を直接書くと
+  // react-hooks/purity に誤検知されるため、コンポーネント実行直後に const に束ねる。
+  const now = new Date();
+  const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
   const [total, rows, weeklyRows] = await Promise.all([
     prisma.event.count({ where }),
     prisma.event.findMany({
@@ -213,8 +218,8 @@ export default async function ExplorePage({
         status: "published",
         visibility: "public",
         startedAt: {
-          gte: new Date(),
-          lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          gte: now,
+          lte: weekLater,
         },
       },
       orderBy: { acceptedCount: "desc" },

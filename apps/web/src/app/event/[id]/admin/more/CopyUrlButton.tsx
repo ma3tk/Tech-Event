@@ -12,8 +12,10 @@ export default function CopyUrlButton({ path }: { path: string }) {
   const [url, setUrl] = useState(path);
   const [copied, setCopied] = useState(false);
 
+  // SSR ではホスト名 (origin) が不明。mount 後に window.location から URL を構築する。
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界の hydration
       setUrl(`${window.location.origin}${path}`);
     }
   }, [path]);

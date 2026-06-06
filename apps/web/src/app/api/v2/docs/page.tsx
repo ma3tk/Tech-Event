@@ -172,7 +172,7 @@ export default function PublicApiDocsPage(): React.ReactElement {
             401。
           </li>
           <li>
-            <strong>User-Agent 必須</strong>: 空または "curl" 単独は 403。
+            <strong>User-Agent 必須</strong>: 空または &quot;curl&quot; 単独は 403。
           </li>
           <li>
             レート制限: APIキー単位で <strong>1 req / 秒</strong>。超過時 429。
@@ -247,7 +247,7 @@ export default function PublicApiDocsPage(): React.ReactElement {
             </tr>
             <tr>
               <td className="border px-2 py-1">403</td>
-              <td className="border px-2 py-1">User-Agent 未送信 (空 / "curl" 単独)</td>
+              <td className="border px-2 py-1">User-Agent 未送信 (空 / &quot;curl&quot; 単独)</td>
             </tr>
             <tr>
               <td className="border px-2 py-1">404</td>

@@ -33,8 +33,14 @@ const eslintConfig = defineConfig([
     "apps/web/src/generated/**",
     "libs/shared/data-access-prisma/src/generated/**",
     "storybook-static/**",
+    "**/storybook-static/**",
+    "apps/web/storybook-static/**",
     "playwright-report/**",
+    "**/playwright-report/**",
     "test-results/**",
+    "**/test-results/**",
+    "**/dist/**",
+    "**/.nx/**",
   ]),
   // Nx の module boundary rule (TS/TSX のみに適用)。
   {

@@ -138,9 +138,12 @@ export function ThemeProvider({
   const [contrast, setContrastState] = useState<Contrast>(defaultContrast);
 
   /* ---- mount 時に localStorage / OS 設定を反映 ---- */
+  // SSR では localStorage を読めないため、CSR でのみ正規化する hydration パターン。
+  // theme/contrast は必ずクライアント側で OS 設定と整合する必要がある。
   useEffect(() => {
     const stored = readStoredTheme();
     const resolved = stored === "system" ? getSystemTheme() : stored;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR/CSR 境界の hydration
     setThemeState(stored);
     setResolvedTheme(resolved);
     applyTheme(resolved);
