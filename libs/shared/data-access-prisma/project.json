@@ -1,0 +1,19 @@
+{
+  "name": "shared-data-access-prisma",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/data-access-prisma/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:data-access"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/shared/data-access-prisma/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/shared/data-access-prisma/tsconfig.json" },
+      "cache": true
+    }
+  }
+}
