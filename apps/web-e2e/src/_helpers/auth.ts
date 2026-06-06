@@ -129,7 +129,18 @@ function resolveUserId(nickname: string): string {
       .prepare("SELECT id FROM users WHERE nickname = ?")
       .get(nickname) as { id: number | bigint } | undefined;
     if (!row) {
-      throw new Error(`[loginByCookie] user not found in dev.db: ${nickname}`);
+      // 診断: テーブル内容を log してから throw する
+      let usersInDb: { nickname: string }[] = [];
+      try {
+        usersInDb = db
+          .prepare("SELECT nickname FROM users LIMIT 10")
+          .all() as { nickname: string }[];
+      } catch {
+        // テーブルがない場合
+      }
+      throw new Error(
+        `[loginByCookie] user not found in dev.db: ${nickname}. DB_PATH=${DEV_DB_PATH}, users sample=${JSON.stringify(usersInDb)}`,
+      );
     }
     return String(row.id);
   } finally {
