@@ -7,9 +7,11 @@
 
 ## 1. 不変の原則
 
-### 1.0 CI が緑になってからマージ (最優先)
+### 1.0 CI が緑になってからマージ (最優先) + マージ方式は merge commit
 - **PR は CI 全 job が ✅ 緑になるまで merge しない**。`gh pr merge --admin` でバイパスしない
-- 検証手順: `gh pr checks {PR番号}` で全 pass を確認 → `gh pr merge --squash --delete-branch` (`--admin` 不要)
+- 検証手順: `gh pr checks {PR番号}` で全 pass を確認 → `gh pr merge --merge --delete-branch` (`--admin` 不要)
+- **マージ方式は merge commit (`--merge`)** を使う。**`--squash` 禁止** (作業履歴を保存し、bisect / blame で個別 commit を追えるようにする)
+- リポジトリ設定でも `allow_merge_commit=true` がデフォルト (`gh api /repos/{owner}/{repo}` で検証可)
 - CI が落ちたら原因を特定して同じ branch に push し直す。「ローカルでは通る」で押し切らない
 - merge済 main の CI が落ちている状態を放置しない → 即 fix PR を切る
 - 局所的な flake は `flaky:` を本文に明示して再実行 (`gh run rerun {run id}`) → それでも落ちたら fix
