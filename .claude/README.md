@@ -254,6 +254,19 @@ CLAUDE.md §8 の検証手順 (pnpm / playwright / tsc / prisma / git / gh / nx)
 
 ---
 
+## Design.md について
+
+[`../Design.md`](../Design.md) は tech-event の**ビジュアル / インタラクション規範のトップレベル文書**であり、`.claude/` 配下のビジュアル系作業 (agent / skill / command / plugin) すべての**最上位規範**として扱う。
+
+- ビジュアル系 agent (`visual-diff-reviewer`, `design-token-explorer`, `storybook-curator`, `component-screenshot-taker`, `figma-token-syncer`) は **作業前に必ず Design.md を読む**
+- ビジュアル系 command (`/vrt`, `/screenshot`, `/contrast`) も Design.md の §2 (ブランド) / §11 (継続的検証) を参照する設計
+- 輸入した公式 visual 系 skill (`algorithmic-art`, `brand-guidelines`, `canvas-design`, `web-artifacts-builder`, `pdf`, `pptx`, `slack-gif-creator`) は各 `SKILL.md` 末尾の「tech-event 固有メモ」で Design.md を参照する形になっている
+- コード品質規範は引き続き [`../CLAUDE.md`](../CLAUDE.md)、詳細実装は [`../docs/design-system.md`](../docs/design-system.md)
+
+ビジュアル系作業を始める前に、`Design.md` の Top 10 ルールを最低限頭に入れること。`design-token-explorer` agent は Design.md §3 違反 (hex 直書き / 許容外 Tailwind パレット / ブランド色 hex 直書き) を自動検出する。
+
+---
+
 ## ライセンス
 
 - `.claude/skills/<name>/LICENSE.txt` — 各 skill のライセンス (Anthropic)

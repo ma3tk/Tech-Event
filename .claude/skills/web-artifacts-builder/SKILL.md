@@ -72,3 +72,11 @@ To test/visualize the artifact, use available tools (including other Skills or b
 ## Reference
 
 - **shadcn/ui components**: https://ui.shadcn.com/docs/components
+
+---
+
+## tech-event 固有メモ
+- tech-event プロジェクトで使うときは必ず `Design.md` (プロジェクトルート) を最初に読むこと。
+- ブランド: orange `#c2410c` / red `#d23a3a` / blue link `#005d8c`
+- 直接 hex 禁止、トークン経由 (詳細 Design.md §3)
+- WCAG AA 必須

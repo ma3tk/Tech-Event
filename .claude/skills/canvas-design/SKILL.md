@@ -128,3 +128,11 @@ Take a second pass. Go back to the code and refine/polish further to make this a
 ## MULTI-PAGE OPTION
 
 To create additional pages when requested, create more creative pages along the same lines as the design philosophy but distinctly different as well. Bundle those pages in the same .pdf or many .pngs. Treat the first page as just a single page in a whole coffee table book waiting to be filled. Make the next pages unique twists and memories of the original. Have them almost tell a story in a very tasteful way. Exercise full creative freedom.
+
+---
+
+## tech-event 固有メモ
+- tech-event プロジェクトで使うときは必ず `Design.md` (プロジェクトルート) を最初に読むこと。
+- ブランド: orange `#c2410c` / red `#d23a3a` / blue link `#005d8c`
+- 直接 hex 禁止、トークン経由 (詳細 Design.md §3)
+- WCAG AA 必須

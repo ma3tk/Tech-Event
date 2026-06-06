@@ -71,3 +71,12 @@ To access Anthropic's official brand identity and style resources, use this skil
 - Uses RGB color values for precise brand matching
 - Applied via python-pptx's RGBColor class
 - Maintains color fidelity across different systems
+
+---
+
+## tech-event 固有メモ
+- tech-event プロジェクトで使うときは必ず `Design.md` (プロジェクトルート) を最初に読むこと。
+- ブランド: orange `#c2410c` / red `#d23a3a` / blue link `#005d8c`
+- 直接 hex 禁止、トークン経由 (詳細 Design.md §3)
+- WCAG AA 必須
+- 上記の Anthropic ブランドカラー (`#d97757` 等) は **Anthropic 内部資料 / メタ作業のみ**で使用。tech-event のプロダクト面には絶対適用しない (tech-event 側ブランドは Design.md §2 が一意の真実)

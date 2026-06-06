@@ -230,3 +230,11 @@ pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
 - `npm install -g pptxgenjs` - creating from scratch
 - LibreOffice (`soffice`) - PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
 - Poppler (`pdftoppm`) - PDF to images
+
+---
+
+## tech-event 固有メモ
+- tech-event プロジェクトで使うときは必ず `Design.md` (プロジェクトルート) を最初に読むこと。
+- ブランド: orange `#c2410c` / red `#d23a3a` / blue link `#005d8c`
+- 直接 hex 禁止、トークン経由 (詳細 Design.md §3)
+- WCAG AA 必須

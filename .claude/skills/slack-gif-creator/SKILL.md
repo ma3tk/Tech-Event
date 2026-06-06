@@ -252,3 +252,11 @@ Be creative! Combine concepts (bouncing + rotating, pulsing + sliding, etc.) and
 ```bash
 pip install pillow imageio numpy
 ```
+
+---
+
+## tech-event 固有メモ
+- tech-event プロジェクトで使うときは必ず `Design.md` (プロジェクトルート) を最初に読むこと。
+- ブランド: orange `#c2410c` / red `#d23a3a` / blue link `#005d8c`
+- 直接 hex 禁止、トークン経由 (詳細 Design.md §3)
+- WCAG AA 必須
