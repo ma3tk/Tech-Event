@@ -128,9 +128,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - name: Seed test user (apps/web cwd で実行)
+      # `prisma migrate reset --force` は prisma.config.ts の seed コマンドを起動するが、
+      # CI 環境では稀に seed が走らないケースがあるため、明示的に seed.ts を再実行する
+      # (冪等: seed.ts は既存ユーザーがあれば upsert する)。
+      - name: Seed fixture data (apps/web cwd)
         working-directory: apps/web
-        run: pnpm exec tsx prisma/seed-test-user.ts
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
 
       # 個別 spec が process.cwd()/dev.db を参照するため、apps/web-e2e/dev.db に
       # apps/web/dev.db のリンクを張る (シンボリックリンクで参照のみ)。
@@ -185,9 +192,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
-      - name: Seed test user (apps/web cwd で実行)
+      # `prisma migrate reset --force` は prisma.config.ts の seed コマンドを起動するが、
+      # CI 環境では稀に seed が走らないケースがあるため、明示的に seed.ts を再実行する
+      # (冪等: seed.ts は既存ユーザーがあれば upsert する)。
+      - name: Seed fixture data (apps/web cwd)
         working-directory: apps/web
-        run: pnpm exec tsx prisma/seed-test-user.ts
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
 
       - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
         run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
