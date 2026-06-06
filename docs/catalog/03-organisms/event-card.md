@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/EventCard.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6, P7]
+---
+
 # EventCard
 
 > Design.md 準拠 | Storybook: [EventCard stories](../../../libs/shared/ui-composite/src/EventCard.stories.tsx) | 実装: `libs/shared/ui-composite/src/EventCard.tsx`
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (モバイル: 一覧)、P2 田中慎太郎 (週末ブラウジング)、P6 小林一郎 (主催: variant=host)
+- 副次: P3 佐藤健太、P7 高橋真由美、P8 渡辺浩之
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 目的 (Purpose)
 イベントを **カード形式** で見せるドメイン特化の Organism。`list` (横長) / `grid` (縦積み) の 2 variant を持ち、トップページの注目イベント / 関連イベント / 検索結果 (compact 1 行表示は [EventListRow](./event-list-row.md)) で使う。
@@ -54,12 +69,17 @@
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 | レイアウト |
 |---|---|---|
 | `list` | デスクトップの注目枠 / 関連枠 | 横長 1 行型 |
 | `grid` | グリッド表示 / モバイル | 縦積み 16:9 サムネ |
 
 `grid` は内部的に `EventCardCompact` ラッパー経由でも呼べる。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

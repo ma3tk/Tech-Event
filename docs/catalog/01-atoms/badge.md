@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/badge.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6]
+---
+
 # Badge
 
 > Design.md 準拠 | Storybook: [Badge stories](../../../libs/shared/ui/src/badge.stories.tsx) | 実装: `libs/shared/ui/src/badge.tsx`
@@ -31,6 +39,8 @@
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 | 視覚 |
 |---|---|---|
 | `default` | 主要な強調 | brand-orange 塗り |
@@ -39,6 +49,9 @@
 | `destructive` | 警告系 | bg-brand-red + white text |
 
 ステータス8種 (open/full/waitlist/closed/cancelled/ended/upcoming/ongoing) は [EventStatusBadge](../02-molecules/event-status-badge.md) で扱う。Badge atom 単体には乗せない。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/dialog.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6]
+---
+
 # モーダル / シート / ポップオーバー (Modals, Sheets, Popovers)
 
 > Design.md §6 + §8 準拠
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (モバイル: sheet 中心)、P6 小林一郎 (主催: confirmation dialog)
+- 副次: P2 田中慎太郎、P7 高橋真由美
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 使い分け判断フロー
 

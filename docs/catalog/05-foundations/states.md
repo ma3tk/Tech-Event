@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: TODO (Storybook MDX: src/stories/design-system/states.mdx)
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
+---
+
 # States
 
 > Design.md §6.3 + `docs/design-system.md` §8 の再展開

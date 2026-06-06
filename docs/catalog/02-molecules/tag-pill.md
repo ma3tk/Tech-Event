@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/TagPill.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2]
+---
+
 # TagPill
 
 > Design.md 準拠 | Storybook: [TagPill stories](../../../libs/shared/ui-composite/src/TagPill.stories.tsx) | 実装: `libs/shared/ui-composite/src/TagPill.tsx`
@@ -16,12 +24,17 @@
 
 ## 4. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 |
 |---|---|
 | `default` | 静的表示 |
 | `filter` | クリックで絞り込み Link |
 | `selectable` | トグル選択 (aria-pressed) |
 | `outline` | フラットな代替 |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 5. 使用例
 

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/Breadcrumb.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P4, P6]
+---
+
 # Breadcrumb
 
 > Design.md 準拠 | Storybook: [Breadcrumb stories](../../../libs/shared/ui-composite/src/Breadcrumb.stories.tsx) | 実装: `libs/shared/ui-composite/src/Breadcrumb.tsx`

@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/EventCard.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6]
+---
+
 # カード (Cards)
 
 > Design.md §5 + §6 準拠
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (イベント発見)、P2 田中慎太郎 (週末カード閲覧)、P6 小林一郎 (主催: グループカード)
+- 副次: P3 佐藤健太、P5 中村由美 (情報密度の控えめさ)
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. Card 系の使い分け
 

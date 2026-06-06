@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/switch.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P5]
+---
+
 # Switch
 
 > Design.md 準拠 | Storybook: [Switch stories](../../../libs/shared/ui/src/switch.stories.tsx) | 実装: `libs/shared/ui/src/switch.tsx`

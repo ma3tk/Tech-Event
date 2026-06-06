@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/GroupCard.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P2, P6, P7]
+---
+
 # GroupCard
 
 > Design.md 準拠 | Storybook: [GroupCard stories](../../../libs/shared/ui-composite/src/GroupCard.stories.tsx) | 実装: `libs/shared/ui-composite/src/GroupCard.tsx`
@@ -17,11 +25,16 @@
 
 ## 4. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 |
 |---|---|
 | `standard` | 一覧グリッド |
 | `sidebar` | サイドバーの強調カード |
 | `compact` | 関連グループの小カード |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 5. アクセシビリティ
 

@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/toast.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6]
+---
+
 # フィードバック (Feedback)
 
 > Design.md §6 + §10 準拠
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (申込確認 Toast)、P6 小林一郎 (主催: 申込変動通知)
+- 副次: P4 鈴木大輔 (エラーメッセージの正確性)、P7 高橋真由美
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 4 状態のフィードバック
 

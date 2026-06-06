@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/empty-state.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P5]
+---
+
 # EmptyState
 
 > Design.md 準拠 | Storybook: [EmptyState stories](../../../libs/shared/ui/src/empty-state.stories.tsx) | 実装: `libs/shared/ui/src/empty-state.tsx`
@@ -30,10 +38,15 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 `variant`:
 - `default` — 通常
 - `search` — 検索結果 0 件
 - `filter` — フィルタ 0 件 (フィルタをリセットする CTA)
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. アクセシビリティ
 

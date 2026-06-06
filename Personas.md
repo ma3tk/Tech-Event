@@ -780,10 +780,10 @@
 
 このファイル / 関連ドキュメントに関する未完了タスク。
 
-- [ ] `docs/catalog/04-patterns/` の各パターン MD 冒頭に Personas.md 参照を追加 (並列 agent 作業中のため、ファイル揃い次第着手)
-- [ ] `docs/catalog/02-molecules/` / `03-organisms/` の主要コンポーネント MD にも「対象ペルソナ」セクションを追加
-- [ ] PR テンプレート `.github/PULL_REQUEST_TEMPLATE.md` に「対象ペルソナ」チェックリストを追加
-- [ ] `.claude/agents/` の design 系エージェントに Personas.md を前置参照として登録
+- [x] `docs/catalog/04-patterns/` の各パターン MD 冒頭に Personas.md 参照を追加 (2026-06-06 完了: forms / lists-and-tables / modals-and-sheets / navigation / feedback / cards / data-input + 新規 event-status-orchestration / cta-matrix / host-vs-participant-ui)
+- [x] `docs/catalog/02-molecules/` / `03-organisms/` の主要コンポーネント MD にも「対象ペルソナ」セクションを追加 (2026-06-06 完了: share-modal / header / event-card / event-list-row + YAML front-matter で全 catalog MD に `personas` フィールド埋め込み)
+- [x] PR テンプレート `.github/pull_request_template.md` に「対象ペルソナ」チェックリストを追加 (2026-06-06 完了)
+- [x] `.claude/agents/` の design 系エージェントに Personas.md を前置参照として登録 (2026-06-06 完了: visual-diff-reviewer / design-token-explorer / storybook-curator / component-screenshot-taker / figma-token-syncer)
 - [ ] アバター placeholder を実際の DiceBear / Notion アイコン等で置換 (デザイン作業)
 - [ ] 各ペルソナの「成功時の指標 (KPI)」セクションを追加 (例: P1 は月 2 イベント参加が目標)
 - [ ] アンチペルソナの追加検討 (このプロダクトの対象外ユーザー像の明確化)

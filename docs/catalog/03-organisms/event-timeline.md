@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/EventTimeline.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P2, P6]
+---
+
 # EventTimeline
 
 > Design.md 準拠 | Storybook: [EventTimeline stories](../../../libs/shared/ui-composite/src/EventTimeline.stories.tsx) | 実装: `libs/shared/ui-composite/src/EventTimeline.tsx`

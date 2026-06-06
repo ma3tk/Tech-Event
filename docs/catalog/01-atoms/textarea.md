@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/textarea.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P6, P7]
+---
+
 # Textarea
 
 > Design.md 準拠 | Storybook: [Textarea stories](../../../libs/shared/ui/src/textarea.stories.tsx) | 実装: `libs/shared/ui/src/textarea.tsx`
@@ -29,8 +37,13 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - `default`
 - `error` (`aria-invalid` 連動で auto)
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/tabs.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6, P7]
+---
+
 # Tabs
 
 > Design.md 準拠 | Storybook: [Tabs stories](../../../libs/shared/ui/src/tabs.stories.tsx) | 実装: `libs/shared/ui/src/tabs.tsx`
@@ -26,8 +34,13 @@ TabsContent (選択されたタブの中身)
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - horizontal (default)
 - vertical (sidebar 風、稀に使う)
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. 状態
 

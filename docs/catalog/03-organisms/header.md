@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/Header.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6, P7]
+---
+
 # Header
 
 > Design.md 準拠 | Storybook: [Header stories](../../../libs/shared/ui-composite/src/Header.stories.tsx) | 実装: `libs/shared/ui-composite/src/Header.tsx`
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (モバイル: ハンバーガー)、P6 小林一郎 (DevRel: ロール切替)
+- 副次: P2 田中慎太郎、P4 鈴木大輔、P5 中村由美 (言語切替)、P7 高橋真由美
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 目的 (Purpose)
 グローバルヘッダー (Client Component)。ロゴ / 検索 / ナビ / アカウント領域を統合する。`HeaderServer` でログイン状態と通知数を解決し、本 component に props として渡す。
@@ -33,12 +48,17 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 |
 |---|---|
 | `default` | ログイン後 |
 | `guest` | 未ログイン (ログイン / 新規登録 ボタンが代わりに出る) |
 
 `HeaderServer` が current user を解決して切り替える。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/loading-state.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1]
+---
+
 # LoadingState
 
 > Design.md 準拠 | Storybook: [LoadingState stories](../../../libs/shared/ui/src/loading-state.stories.tsx) | 実装: `libs/shared/ui/src/loading-state.tsx`
@@ -23,9 +31,14 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - `inline` — テキスト横に小さくスピナー
 - `block` — ブロック中央 (default)
 - `fullscreen` — 画面全体オーバーレイ
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. アクセシビリティ
 

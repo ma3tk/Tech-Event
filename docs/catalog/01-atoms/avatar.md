@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/avatar.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P5, P6]
+---
+
 # Avatar
 
 > Design.md 準拠 | Storybook: [Avatar stories](../../../libs/shared/ui/src/avatar.stories.tsx) | 実装: `libs/shared/ui/src/avatar.tsx`
@@ -23,12 +31,17 @@
 
 ## 5. バリアント / サイズ
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | サイズ | 用途 | px |
 |---|---|---|
 | sm | リスト行 / コメント | 24 |
 | md | 標準 | 32 |
 | lg | ヘッダー / プロフィール | 48 |
 | xl | プロフィールヘッダー | 64+ |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. 状態
 

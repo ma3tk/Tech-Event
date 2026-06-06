@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/RecentlyViewedEvents.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2]
+---
+
 # RecentlyViewedEvents
 
 > Design.md 準拠 | 実装: `libs/shared/ui-composite/src/RecentlyViewedEvents.tsx`

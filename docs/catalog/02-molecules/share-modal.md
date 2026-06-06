@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/ShareModal.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P6, P7, P8]
+---
+
 # ShareModal
 
 > Design.md 準拠 | 実装: `libs/shared/ui-composite/src/ShareModal.tsx` (Dynamic: `ShareModalDynamic.tsx`)
+
+## 対象ペルソナ
+
+- 主要: P6 小林一郎 (DevRel: SNS シェアで集客)、P7 高橋真由美 (個人主催: QR で当日案内)、P8 渡辺浩之 (企業イベント: OG)
+- 副次: P1 山田美咲 (参加者として友達にシェア)
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 目的 (Purpose)
 イベント / グループの **シェア** を 1 つのモーダルで完結させる統合 UI。OG プレビュー / リンクコピー / SNS シェア / QR / 埋め込みコードを Tabs で切替表示する Client Component。モバイルでは `navigator.share` を先に試行 (Web Share API)。
@@ -41,11 +56,16 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 |
 |---|---|
 | `event` | イベントシェア (default) |
 | `group` | グループ招待 |
 | `profile` | プロフィール共有 (将来) |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

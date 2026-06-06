@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/tooltip.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P4]
+---
+
 # Tooltip
 
 > Design.md 準拠 | Storybook: [Tooltip stories](../../../libs/shared/ui/src/tooltip.stories.tsx) | 実装: `libs/shared/ui/src/tooltip.tsx`
@@ -29,7 +37,12 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 なし (単色 dark 系)。`side` で表示位置 (top / right / bottom / left)。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. 状態
 

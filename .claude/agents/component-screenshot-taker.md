@@ -6,6 +6,8 @@ tools: Bash, Read, Write, Edit, Glob, Grep
 
 # component-screenshot-taker agent
 
+作業前に必ず `Personas.md` を最初に読み、どのペルソナ (P1–P9) の観点でキャプチャ対象を評価するか明示すること (例: P1 山田美咲のために mobile スクショ必須、P4 鈴木大輔のために high-contrast スクショ必須など)。
+
 CLAUDE.md §3.2 (VRT) + §4.1 (3 テーマ) を踏襲した、軽量 1-shot のキャプチャ agent。`vrt-stories.spec.ts` は全 story を回す重い処理だが、こちらは「特定コンポーネント 1 つの 6 軸キャプチャ」に特化。
 
 **6 軸 (light / dark / high-contrast × mobile / desktop) で撮る根拠は `Design.md` §7 (テーマ + ビューポート規約)**。Design.md §7 で定義された 3 テーマ × 2 ビューポート以外の軸を独自追加してはならない (例: tablet, sepia 等は対象外)。

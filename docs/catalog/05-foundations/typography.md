@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: TODO (Storybook MDX: src/stories/design-system/typography.mdx)
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
+---
+
 # Typography
 
 > Design.md §4 の再展開 | 詳細: [`docs/design-system.md` §3](../../design-system.md)

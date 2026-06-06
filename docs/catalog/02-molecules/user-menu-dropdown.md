@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/UserMenuDropdown.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6]
+---
+
 # UserMenuDropdown
 
 > Design.md 準拠 | 実装: `libs/shared/ui-composite/src/UserMenuDropdown.tsx`

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/MiniCalendar.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6]
+---
+
 # MiniCalendar
 
 > Design.md 準拠 | Storybook: [MiniCalendar stories](../../../libs/shared/ui-composite/src/MiniCalendar.stories.tsx) | 実装: `libs/shared/ui-composite/src/MiniCalendar.tsx`

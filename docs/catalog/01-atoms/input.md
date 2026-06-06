@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/input.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6, P7]
+---
+
 # Input
 
 > Design.md 準拠 | Storybook: [Input stories](../../../libs/shared/ui/src/input.stories.tsx) | 実装: `libs/shared/ui/src/input.tsx`
@@ -35,12 +43,17 @@ Error:        エラーは FormMessage で下に赤字
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 | 視覚 |
 |---|---|---|
 | `default` | 通常 | `border-border` |
 | `error` | エラー状態 | `border-destructive` + `focus-visible:ring-destructive` |
 
 `error` は **boolean prop** で切替: `<Input error={!!errors.email} />`。`aria-invalid` も同時に立てる。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ (Sizes)
 

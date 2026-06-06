@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/radio-group.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6]
+---
+
 # RadioGroup
 
 > Design.md 準拠 | Storybook: [RadioGroup stories](../../../libs/shared/ui/src/radio-group.stories.tsx) | 実装: `libs/shared/ui/src/radio-group.tsx`

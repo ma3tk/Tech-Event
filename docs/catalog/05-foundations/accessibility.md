@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: TODO (Storybook MDX: src/stories/design-system/accessibility.mdx)
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
+---
+
 # Accessibility
 
 > Design.md §1.3 / §11 + `docs/design-system.md` §11 の再展開

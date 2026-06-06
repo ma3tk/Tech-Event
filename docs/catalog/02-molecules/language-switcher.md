@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/LanguageSwitcher.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P5]
+---
+
 # LanguageSwitcher
 
 > Design.md 準拠 | 実装: `libs/shared/ui-composite/src/LanguageSwitcher.tsx`

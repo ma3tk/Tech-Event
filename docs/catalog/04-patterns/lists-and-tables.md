@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/EventListRow.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6, P9]
+---
+
 # 一覧表示 (Lists and Tables)
 
 > Design.md §5.4 + §10 準拠
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (モバイル: イベント一覧)、P6 小林一郎 (主催: 参加者一覧テーブル)
+- 副次: P2 田中慎太郎、P3 佐藤健太、P9 木村翔 (運営: admin リスト)
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 判断フロー
 

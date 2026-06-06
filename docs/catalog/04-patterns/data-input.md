@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/input.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6, P7]
+---
+
 # データ入力 (Data Input)
 
 > Design.md §6 + CLAUDE.md §6.3 準拠
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (申込時の最小入力)、P4 鈴木大輔 (入力精度)、P6 小林一郎 (主催: イベント情報入力)
+- 副次: P7 高橋真由美、P8 渡辺浩之
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 選択肢の数で判断する
 

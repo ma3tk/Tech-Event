@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/toast.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6]
+---
+
 # Toast
 
 > Design.md 準拠 | Storybook: [Toast stories](../../../libs/shared/ui/src/toast.stories.tsx) | 実装: `libs/shared/ui/src/toast.tsx`
@@ -30,10 +38,15 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - `default` — 中立 (neutral)
 - `success` — 成功 (`status-open`)
 - `error` — エラー (`destructive`)
 - `info` — 情報 (`link`)
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. 表示時間
 

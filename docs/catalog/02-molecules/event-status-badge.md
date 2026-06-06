@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/EventStatusBadge.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P6, P7]
+---
+
 # EventStatusBadge
 
 > Design.md 準拠 | Storybook: [EventStatusBadge stories](../../../libs/shared/ui-composite/src/EventStatusBadge.stories.tsx) | 実装: `libs/shared/ui-composite/src/EventStatusBadge.tsx`
@@ -30,12 +38,17 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 視覚 |
 |---|---|
 | `subtle` (default) | 淡背景 + 濃文字 |
 | `solid` | 塗り + 白文字 |
 | `outline` | 透明 + 色付き border |
 | `dot` | 小ドット + テキスト |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. アクセシビリティ
 

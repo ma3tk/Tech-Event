@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/popover.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P6, P7]
+---
+
 # Popover
 
 > Design.md 準拠 | Storybook: [Popover stories](../../../libs/shared/ui/src/popover.stories.tsx) | 実装: `libs/shared/ui/src/popover.tsx`

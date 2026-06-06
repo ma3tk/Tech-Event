@@ -1,8 +1,35 @@
 # デザインシステム概要 (Overview)
 
-> Design.md 準拠 | 一次資料: [`Design.md`](../../Design.md), [`docs/design-system.md`](../design-system.md)
+> Design.md 準拠 | 一次資料: [`Design.md`](../../Design.md), [`docs/design-system.md`](../design-system.md), [`Personas.md`](../../Personas.md)
 
 このページは tech-event のデザインシステム全体観を 1 ページで掴むためのサマリです。詳細は各リンク先へ。
+
+---
+
+## 0. 4 媒体役割分担マトリクス (最重要)
+
+> このマトリクスを冒頭に置く理由: tech-event のデザイン情報は 4 媒体に分散しているため、何をどこに書くかをルール化しないと **半年で同じ情報が 4 箇所に重複し、ズレた状態で放置される** ことが catalog review (`research/catalog-review.md`) で指摘された。新規ドキュメント追加・既存更新は **必ずこの表に照らして「どの媒体に書くべきか」を判断する**。
+
+| 媒体 | 役割 (1 行) | 何を書くか | 例 |
+| --- | --- | --- | --- |
+| `docs/design-system.md` (規範本体 / What) | トークン仕様・全コンポーネントの正典 | トークン値・命名規約・全 props 表・全 variant 表 (機械的事実) | "EventStatusBadge の status は 8 種"、"`--color-brand-orange: #c2410c`" |
+| `docs/catalog/*.md` (判断基準 / When) | 言語化された使い分けガイド | いつ使う / いつ使わない / Do's & Don'ts / 関連コンポーネント / 対象ペルソナ | "open は 募集中、full は補欠登録に誘導する"、"破壊的アクションは destructive variant" |
+| Storybook MDX (視覚化 / Why visually) | コンセプト・初心者ガイド | DS 全体図・トークン使い方の視覚資料・ガイド文 | "DS 全体図"、"トークンの使い方マップ" |
+| Storybook Story (実物 / How) | 全 variant × state の生きた実例 | argTypes・interaction・全 variant の同時表示 | "Button × 6 variants × 5 sizes" の matrix story |
+
+### ルール
+
+1. **コードサンプルは Story が唯一の出典** — catalog MD には埋め込まず Story link のみ (重複ゼロ)
+2. **トークン値は `docs/design-system.md` が唯一の出典** — catalog MD には値を書かず参照 link のみ
+3. **Props 表 / Variant 表は TS 型・cva 設定から自動生成** — 手書き禁止 (将来 `react-docgen` 連携。現状は手書きだが `<!-- AUTO-GENERATED START/END -->` で区画化済み)
+4. **判断基準 (いつ使う / 使わない / Don'ts) は catalog MD が唯一の出典** — Storybook MDX / Story には書かない
+5. **ペルソナ (`Personas.md` の P1–P9) 参照は catalog patterns/organisms が一次** — 各コンポーネントは「対象ペルソナ」セクションで明示
+
+### 守らないとどうなるか
+
+- DS リファクタ時に同じ情報を 4 箇所更新する羽目になる
+- ドキュメント間で値がズレた状態が放置される (半年で必ず発生)
+- 「どこを信じればいいか」が新規メンバーに伝わらず、catalog 自体の信頼が落ちる
 
 ---
 

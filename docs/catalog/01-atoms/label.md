@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/label.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6]
+---
+
 # Label
 
 > Design.md 準拠 | Storybook: [Label stories](../../../libs/shared/ui/src/label.stories.tsx) | 実装: `libs/shared/ui/src/label.tsx`
@@ -22,7 +30,12 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 なし (単一スタイル)。スタイル軸は親で `className` で調整。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

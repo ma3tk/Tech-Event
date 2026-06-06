@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/button.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P6, P7]
+---
+
 # Button
 
 > Design.md 準拠 | Storybook: [Button stories](../../../libs/shared/ui/src/button.stories.tsx) | 実装: `libs/shared/ui/src/button.tsx`
@@ -39,6 +47,8 @@
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 | 視覚 | 例 |
 |---|---|---|---|
 | `default` | 主要 CTA (画面で 1 つだけ) | orange 塗り + white text | 「保存」「参加申込」 |
@@ -60,6 +70,9 @@
 ナビ・ツールバー? → ghost
 インラインテキストの一部? → link
 ```
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ (Sizes)
 

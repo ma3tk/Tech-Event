@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/EventListRow.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P6]
+---
+
 # EventListRow
 
 > Design.md 準拠 | Storybook: [EventListRow stories](../../../libs/shared/ui-composite/src/EventListRow.stories.tsx) | 実装: `libs/shared/ui-composite/src/EventListRow.tsx`
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (モバイル: 縦長スクロール)、P2 田中慎太郎、P3 佐藤健太 (抽選イベントの 1 行スキャン)
+- 副次: P4 鈴木大輔、P6 小林一郎 (主催ビュー: 申込数 trailing)
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 目的 (Purpose)
 イベント 1 件を **1 行 88-96px** の高密度フォーマットで表示する Organism。connpass の検索結果 / ランキング / タイムラインに最も近いレイアウト。`showRank` で順位バッジを付加できる。
@@ -45,11 +60,16 @@ connpass を踏襲し、Luma 並みの余白は取らない。
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 | variant | 用途 |
 |---|---|
 | 標準 | 検索結果 / ランキング |
 | `showRank` | ランキングで先頭に順位バッジ (1/2/3 はメダル色) |
 | `compact` | EventTimeline 内部用 (余白縮小) |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

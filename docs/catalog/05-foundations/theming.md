@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: TODO (Storybook MDX: src/stories/design-system/theming.mdx)
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
+---
+
 # Theming
 
 > Design.md §7 の再展開 | 詳細: `src/stories/design-system/DarkMode.mdx`

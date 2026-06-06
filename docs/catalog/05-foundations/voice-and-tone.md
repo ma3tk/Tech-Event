@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: TODO (Storybook MDX: src/stories/design-system/voice-and-tone.mdx)
+last_reviewed: 2026-06-06
+personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
+---
+
 # Voice and Tone
 
 > Design.md §2 (Tone / Voice) の再展開

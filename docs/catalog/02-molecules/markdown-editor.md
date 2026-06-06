@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/MarkdownEditor.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P6, P7, P8]
+---
+
 # MarkdownEditor
 
 > Design.md 準拠 | 実装: `libs/shared/ui-composite/src/MarkdownEditor.tsx` (Dynamic: `MarkdownEditorDynamic.tsx`)
@@ -44,9 +52,14 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - `mode="edit-preview"` (default) — 2 カラム
 - `mode="edit-only"` — ツールバー + textarea のみ
 - `mode="preview-only"` — 表示専用 (`<MarkdownPreview>` だけでも代替可)
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/Header.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P4, P6]
+---
+
 # ナビゲーション (Navigation)
 
 > Design.md §5 + §6 準拠
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (モバイルナビ)、P6 小林一郎 (DevRel: 複数イベント横断)
+- 副次: P2 田中慎太郎、P4 鈴木大輔 (情報構造の見通し)、P9 木村翔
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. ナビゲーション階層
 

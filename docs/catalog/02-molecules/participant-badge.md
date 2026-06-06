@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/ParticipantBadge.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P5, P6, P9]
+---
+
 # ParticipantBadge
 
 > Design.md 準拠 | Storybook: [ParticipantBadge stories](../../../libs/shared/ui-composite/src/ParticipantBadge.stories.tsx) | 実装: `libs/shared/ui-composite/src/ParticipantBadge.tsx`

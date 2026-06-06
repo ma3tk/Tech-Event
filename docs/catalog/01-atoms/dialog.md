@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/dialog.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6]
+---
+
 # Dialog
 
 > Design.md 準拠 | Storybook: [Dialog stories](../../../libs/shared/ui/src/dialog.stories.tsx) | 実装: `libs/shared/ui/src/dialog.tsx`
@@ -49,6 +57,8 @@
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 Dialog 自体に variant はない。**サイズは `className` で制御**:
 
 | サイズ | 用途 | className 例 |
@@ -60,6 +70,9 @@ Dialog 自体に variant はない。**サイズは `className` で制御**:
 | fullscreen | モバイル全画面 | `w-screen h-screen` (`sm:max-w-md` で desktop だけ縮める) |
 
 モバイルでは原則 [Sheet](./sheet.md) (bottom) を使い、Dialog を選ぶのは確認や短い操作のみ。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ (Sizes)
 

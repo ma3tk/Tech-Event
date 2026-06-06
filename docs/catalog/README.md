@@ -1,9 +1,11 @@
 # tech-event デザインシステムカタログ
 
-> Design.md 準拠 | Storybook (視覚) と相互補完する **言語化された使い分けガイド**
+> Design.md + Personas.md 準拠 | Storybook (視覚) と相互補完する **言語化された使い分けガイド**
 
 このカタログは、Storybook (live visual) と並んで「**いつ何を、どう使うか**」を言語化した一次資料です。
 コンポーネント実装の細部は `libs/shared/ui/*.tsx` / `libs/shared/ui-composite/*.tsx` を、視覚は Storybook (`pnpm storybook` → http://localhost:6006) を、本カタログは **設計意図・使い分け・アンチパターン** を担当します。
+
+> **重要**: ドキュメント追加・更新時は必ず [`00-overview.md` §0 「4 媒体役割分担マトリクス」](./00-overview.md#0-4-媒体役割分担マトリクス-最重要) を読むこと。**何をどこに書くか** が固定されています (半年で重複事故しないために)。
 
 ---
 
@@ -93,7 +95,9 @@
 | Header | [03-organisms/header.md](./03-organisms/header.md) | グローバルヘッダー (Client) |
 | HeaderServer | [03-organisms/header-server.md](./03-organisms/header-server.md) | Header の Server ラッパー |
 
-### Patterns (7)
+### Patterns (10)
+
+**汎用 (7)**
 | Pattern | Path |
 |---|---|
 | Forms | [04-patterns/forms.md](./04-patterns/forms.md) |
@@ -103,6 +107,13 @@
 | Feedback | [04-patterns/feedback.md](./04-patterns/feedback.md) |
 | Cards | [04-patterns/cards.md](./04-patterns/cards.md) |
 | Data input | [04-patterns/data-input.md](./04-patterns/data-input.md) |
+
+**tech-event ドメイン固有 (3)** — カタログ全体の **背骨**。Badge / Button / Card / Sticky CTA / Toast はすべてここに従う。
+| Pattern | Path | 何を解く |
+|---|---|---|
+| Event status orchestration | [04-patterns/event-status-orchestration.md](./04-patterns/event-status-orchestration.md) | 8 ステータス (open/full/waitlist/closed/cancelled/ended/upcoming/ongoing) の状態機械と UI 表現の一貫性 |
+| CTA matrix | [04-patterns/cta-matrix.md](./04-patterns/cta-matrix.md) | 4 CTA (参加申込/補欠登録/抽選に申し込む/参加リクエストを送信) の使い分け + multi-state ボタン設計 |
+| Host vs participant UI | [04-patterns/host-vs-participant-ui.md](./04-patterns/host-vs-participant-ui.md) | 主催者 (P6/P7/P8) と参加者 (P1-P5) で見せ方が変わるパターン (情報密度・権限境界・dashboard) |
 
 ### Foundations (10)
 | Foundation | Path |

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/Header.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6]
+---
+
 # HeaderServer
 
 > Design.md 準拠 | 実装: `libs/shared/ui-composite/src/HeaderServer.tsx`

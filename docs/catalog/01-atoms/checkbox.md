@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/checkbox.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6]
+---
+
 # Checkbox
 
 > Design.md 準拠 | Storybook: [Checkbox stories](../../../libs/shared/ui/src/checkbox.stories.tsx) | 実装: `libs/shared/ui/src/checkbox.tsx`
@@ -26,7 +34,12 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 なし (Radix の primitive を使う)。
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. 状態
 

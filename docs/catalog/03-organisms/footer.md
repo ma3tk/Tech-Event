@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui-composite/src/Footer.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P4, P9]
+---
+
 # Footer
 
 > Design.md 準拠 | Storybook: [Footer stories](../../../libs/shared/ui-composite/src/Footer.stories.tsx) | 実装: `libs/shared/ui-composite/src/Footer.tsx`

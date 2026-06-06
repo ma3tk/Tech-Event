@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/card.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P2, P6]
+---
+
 # Card
 
 > Design.md 準拠 | Storybook: [Card stories](../../../libs/shared/ui/src/card.stories.tsx) | 実装: `libs/shared/ui/src/card.tsx`
@@ -40,6 +48,8 @@
 
 ## 5. バリアント (Variants)
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 Card 自体に CVA variant はない (構成スロットのみ)。**ドメイン特化のバリアントは別コンポーネントで**:
 - [EventCard](../03-organisms/event-card.md): list / grid variant
 - [GroupCard](../03-organisms/group-card.md): standard / sidebar / compact variant
@@ -53,6 +63,9 @@ Card 自体に CVA variant はない (構成スロットのみ)。**ドメイン
 | hover で持ち上げ | `shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-normal` | クリック可能なカード |
 | selected | `ring-2 ring-brand-orange` | フィルタ選択中 |
 | ghost (border のみ) | `bg-transparent border border-border` | 二次的なグループ |
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. サイズ
 

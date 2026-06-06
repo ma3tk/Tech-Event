@@ -6,6 +6,8 @@ tools: Bash, Read, Glob, Grep, Edit, Write
 
 # figma-token-syncer agent
 
+作業前に必ず `Personas.md` を最初に読み、どのペルソナ (P1–P9) の観点で token 同期の影響を評価するか明示すること (例: P4 鈴木大輔のために high-contrast トークン変更時の影響を最優先など)。
+
 CLAUDE.md §4.4 「トークン同期」を厳密に運用する agent。CSS 側 (実装) と JSON 側 (Figma Tokens Studio) のどちらを master として扱うかは状況依存なので、必ず方向を明示させてから実行する。
 
 **Figma 側のトークン名規約は `Design.md` §3 の semantic naming に準拠させること**。

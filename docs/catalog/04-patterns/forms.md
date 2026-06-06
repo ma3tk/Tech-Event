@@ -1,6 +1,21 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/form.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P4, P6, P7]
+---
+
 # フォーム (Forms)
 
 > Design.md §6 + §10 準拠 | CLAUDE.md §6.3 準拠 (Zod 検証必須)
+
+## 対象ペルソナ
+
+- 主要: P1 山田美咲 (申込フォーム)、P4 鈴木大輔 (シニア・言葉の正確さ)、P6 小林一郎 (主催: イベント作成フォーム)
+- 副次: P2 田中慎太郎、P7 高橋真由美、P8 渡辺浩之
+
+(根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 基本構成
 

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/separator.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1]
+---
+
 # Separator
 
 > Design.md 準拠 | Storybook: [Separator stories](../../../libs/shared/ui/src/separator.stories.tsx) | 実装: `libs/shared/ui/src/separator.tsx`
@@ -16,8 +24,13 @@
 
 ## 4. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - `horizontal` (default)
 - `vertical`
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 5. 状態
 

@@ -1,3 +1,11 @@
+---
+status: stable
+figma: TODO
+storybook: libs/shared/ui/src/select.stories.tsx
+last_reviewed: 2026-06-06
+personas: [P1, P6, P7]
+---
+
 # Select
 
 > Design.md 準拠 | Storybook: [Select stories](../../../libs/shared/ui/src/select.stories.tsx) | 実装: `libs/shared/ui/src/select.tsx`
@@ -33,7 +41,12 @@
 
 ## 5. バリアント
 
+<!-- AUTO-GENERATED START: variants -->
+<!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 - size: `sm` / `md` (default) / `lg`
+
+
+<!-- AUTO-GENERATED END: variants -->
 
 ## 6. 状態
 
