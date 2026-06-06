@@ -28,6 +28,8 @@ const meta: Meta = {
           "- ❌ Card 内に `position: fixed` の sticky を入れる (= 親の `overflow: hidden` で見切れる)",
           "- ❌ `bg-white` をハードコード (= ダークモードで白カードのまま残る)",
           "- ❌ CardHeader / CardTitle を省略して `<h3>` を直書きする (= タイポグラフィスケールが揃わない)",
+          "",
+          "**カタログ**: [docs/catalog/01-atoms/card.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/01-atoms/card.md) — 使い分けガイド",
         ].join("\n"),
       },
     },

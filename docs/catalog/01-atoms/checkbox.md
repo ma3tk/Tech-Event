@@ -1,0 +1,72 @@
+# Checkbox
+
+> Design.md 準拠 | Storybook: [Checkbox stories](../../../libs/shared/ui/src/checkbox.stories.tsx) | 実装: `libs/shared/ui/src/checkbox.tsx`
+
+## 1. 目的
+**複数選択可能** な ON/OFF 状態を表す入力要素。indeterminate (一部選択) もサポート。Radix UI ベース。
+
+## 2. いつ使うか
+- 複数のオプションから複数選択 (タグ複数選択 / 通知設定 等)
+- 同意チェック (利用規約)
+- フィルタ群 (1 つの軸で複数選択)
+- 親-子の一括選択 (indeterminate で親が「一部選択」)
+
+## 3. いつ使わないか
+- 1 つだけ選ぶ → [RadioGroup](./radio-group.md)
+- 即時 ON/OFF → [Switch](./switch.md)
+- 5+ 個から 1 つ選ぶ → [Select](./select.md)
+
+## 4. 構造
+
+```
+☐ ラベル           (unchecked)
+☑ ラベル           (checked)
+⊟ ラベル           (indeterminate)
+```
+
+## 5. バリアント
+
+なし (Radix の primitive を使う)。
+
+## 6. 状態
+
+unchecked / checked / indeterminate / disabled / error。
+
+## 7. アクセシビリティ
+
+- Label 必須 (`<Label htmlFor>` + checkbox の `id`)
+- `aria-checked` は Radix が `true` / `false` / `mixed` で処理
+- グループは `fieldset` + `legend` で意味的に括る
+
+## 8. 使用例
+
+```tsx
+import { Checkbox } from "@tech-event/shared-ui";
+
+<div className="flex items-center gap-2">
+  <Checkbox id="agree" />
+  <Label htmlFor="agree">利用規約に同意する</Label>
+</div>
+```
+
+```tsx
+// indeterminate (一部選択)
+<Checkbox checked="indeterminate" onCheckedChange={...} />
+```
+
+## 9. アンチパターン
+
+- ❌ 単独で ON/OFF → ✅ Switch (より即時的)
+- ❌ Label 抜け → ✅ 必須
+- ❌ 1 個だけ選びたい → ✅ RadioGroup
+
+## 10. 関連
+
+- [RadioGroup](./radio-group.md)
+- [Switch](./switch.md)
+- [Form](./form.md)
+- [04-patterns/data-input.md](../04-patterns/data-input.md)
+
+## 11. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース、indeterminate 対応

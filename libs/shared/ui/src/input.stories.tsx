@@ -21,6 +21,8 @@ const meta: Meta<typeof Input> = {
           "- ❌ placeholder だけでラベルを省略する (= SR + 認知障害ユーザーに不親切)",
           "- ❌ エラー時に `invalid` ではなく className で直接 border-red を書く (`aria-invalid` が抜ける)",
           "- ❌ `type=number` で `step` を省略 (小数許容かどうかブラウザ依存になる)",
+          "",
+          "**カタログ**: [docs/catalog/01-atoms/input.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/01-atoms/input.md) — 使い分けガイド",
         ].join("\n"),
       },
     },

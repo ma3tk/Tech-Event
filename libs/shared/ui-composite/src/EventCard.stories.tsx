@@ -4,7 +4,15 @@ import EventCard, { type EventCardData } from "./EventCard";
 const meta: Meta<typeof EventCard> = {
   title: "Organisms/EventCard",
   component: EventCard,
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "イベントカード本体。`list` (横長 1 行) / `grid` (縦積み 16:9 サムネ) の 2 variant を持つ。詳細仕様は Design.md §5.4。\n\n**カタログ**: [docs/catalog/03-organisms/event-card.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/03-organisms/event-card.md) — 使い分けガイド (いつ使う / いつ使わない / アンチパターン)",
+      },
+    },
+  },
   argTypes: {
     variant: { control: "inline-radio", options: ["list", "grid"] },
   },

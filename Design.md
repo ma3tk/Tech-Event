@@ -281,6 +281,7 @@ dark mode で `bg-white` `bg-zinc-100` などのハードコード禁止 → 必
 | ドキュメント | 内容 |
 |---|---|
 | [`CLAUDE.md`](./CLAUDE.md) | コード品質・作業フロー規範 |
+| [`docs/catalog/README.md`](./docs/catalog/README.md) | デザインシステムカタログ — コンポーネント言語化 (使い分け / アンチパターン) |
 | [`docs/design-system.md`](./docs/design-system.md) | トークン詳細・全コンポーネント仕様 |
 | [`docs/design-system-audit.md`](./docs/design-system-audit.md) | DS 100% 監査 |
 | [`docs/design-system-changelog.md`](./docs/design-system-changelog.md) | DS バージョン管理 (v1.0.0+) |

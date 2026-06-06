@@ -5,7 +5,15 @@ import type { EventCardData } from "./EventCard";
 const meta: Meta<typeof EventListRow> = {
   title: "Organisms/EventListRow",
   component: EventListRow,
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "1 行 88-96px の高密度フォーマット。検索結果 / ランキング / タイムラインの内部要素として使う。Design.md §5.4 厳格仕様準拠。\n\n**カタログ**: [docs/catalog/03-organisms/event-list-row.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/03-organisms/event-list-row.md) — 使い分けガイド",
+      },
+    },
+  },
   argTypes: {
     showRank: { control: { type: "number", min: 1 } },
     compact: { control: "boolean" },
