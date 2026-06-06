@@ -3,9 +3,9 @@
 最終レビュー日: 2026-06-05 / 対象: `tech-event` v1.0 DS (21 primitive + 18 composite = 39 component)
 
 本ドキュメントは、デザインシステムを構成する全コンポーネントの **API 安定性** を
-明示するものである。利用側 (Page / 他 Organism) はこの表をもとに依存度を判断する。
+明示するものである。利用側 (Page / 他 component) はこの表をもとに依存度を判断する。
 
-> 関連: [`docs/design-system.md`](./design-system.md) / [`docs/component-taxonomy.md`](./component-taxonomy.md) /
+> 関連: [`docs/design-system.md`](./design-system.md) / [`docs/component-classification.md`](./component-classification.md) /
 > [`docs/design-system-changelog.md`](./design-system-changelog.md) / `src/stories/design-system/ComponentStatus.mdx`
 
 ---
@@ -28,7 +28,7 @@
 
 ---
 
-## 2. Primitive (Atom) — `src/components/ui/`
+## 2. ui (primitives) — `libs/shared/ui/`
 
 すべて Radix UI ベース + cva。ドメイン知識なし、`tech-event` 以外でも再利用可能。
 
@@ -60,7 +60,7 @@
 
 ---
 
-## 3. Composite (Molecule / Organism) — `src/components/`
+## 3. components (composite) — `libs/shared/ui-composite/`
 
 | # | Component | Stability | Variants | Coverage | Last reviewed | Known issues |
 | --: | --- | --- | --: | --: | --- | --- |
@@ -91,8 +91,8 @@
 
 | カテゴリ | 総数 | stable | beta | alpha | deprecated | 平均 Coverage |
 | --- | --: | --: | --: | --: | --: | --: |
-| Primitive (Atom) | 21 | 20 | 1 | 0 | 0 | 98.4 % |
-| Composite (Molecule + Organism) | 18 | 15 | 3 | 0 | 0 | 94.4 % |
+| ui (primitives) | 21 | 20 | 1 | 0 | 0 | 98.4 % |
+| components (composite) | 18 | 15 | 3 | 0 | 0 | 94.4 % |
 | **合計** | **39** | **35** | **4** | **0** | **0** | **96.6 %** |
 
 → **35 / 39 = 89.7 % が stable**, alpha / deprecated は 0 件。

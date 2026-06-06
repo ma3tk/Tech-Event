@@ -40,8 +40,8 @@ personas: [P4, P9]
 
 ## 6. 関連
 
-- [Separator](../01-atoms/separator.md)
-- [04-patterns/navigation.md](../04-patterns/navigation.md)
+- [Separator](../ui/separator.md)
+- [blocks/navigation.md](../blocks/navigation.md)
 
 ## 7. 変更履歴
 

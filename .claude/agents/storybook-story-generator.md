@@ -13,8 +13,8 @@ CLAUDE.md §4.2-4.3 に従い、すべての新規コンポーネントは Story
 - Storybook 10.x, `@storybook/nextjs-vite` framework
 - アドオン: `@storybook/addon-a11y`, `@storybook/addon-docs`, `@storybook/addon-vitest`, `@chromatic-com/storybook`
 - Story の置き場所:
-  - Atom (ui/): `apps/web/src/components/ui/<name>.stories.tsx`
-  - Composite: `apps/web/src/components/<name>.stories.tsx`
+  - ui primitives: `libs/shared/ui/src/<name>.stories.tsx`
+  - components (composite): `libs/shared/ui-composite/src/<name>.stories.tsx`
   - Design System docs: `apps/web/src/stories/design-system/*.mdx`
 - VRT: `toHaveScreenshot()` で全 story にベースラインがある
 - Light / Dark / High-Contrast の三テーマで PASS が条件

@@ -66,4 +66,4 @@ src/styles/themes/high-contrast.css  ← AAA mapping
 - [Design.md §7](../../../Design.md)
 - [colors.md](./colors.md)
 - [accessibility.md](./accessibility.md)
-- [ThemeSwitcher](../02-molecules/theme-switcher.md)
+- [ThemeSwitcher](../components/theme-switcher.md)

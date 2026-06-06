@@ -89,9 +89,9 @@
 - **登壇ハードルを下げる**: 「初登壇歓迎」フラグ、LT 枠の可視化
 
 ### 関連コンポーネント
-- 重要: [`EventListRow`](docs/catalog/03-organisms/event-list-row.md)、[`EventStickyCTA`](docs/catalog/02-molecules/event-sticky-cta.md)、[`MiniCalendar`](docs/catalog/02-molecules/mini-calendar.md)
-- 通知系: [`Toast`](docs/catalog/01-atoms/toast.md)、[`BookmarkButton`](docs/catalog/01-atoms/bookmark-button.md)
-- パターン: [`EventCard`](docs/catalog/04-patterns/event-card.md)
+- 重要: [`EventListRow`](docs/catalog/components/event-list-row.md)、[`EventStickyCTA`](docs/catalog/components/event-sticky-cta.md)、[`MiniCalendar`](docs/catalog/components/mini-calendar.md)
+- 通知系: [`Toast`](docs/catalog/ui/toast.md)、[`BookmarkButton`](docs/catalog/ui/bookmark-button.md)
+- パターン: [`EventCard`](docs/catalog/blocks/event-card.md)
 
 ### 反パターン (このペルソナに向かない設計)
 - 申込までに 3 ステップ以上要するフロー (フォーム入力過多)
@@ -151,9 +151,9 @@
 - **フォロー機能**: 気になる主催者・参加者をフォローして次回情報を受け取る
 
 ### 関連コンポーネント
-- 重要: [`BeginnerFriendlyFilter`](docs/catalog/02-molecules/beginner-friendly-filter.md)、[`EventAttendeeStack`](docs/catalog/02-molecules/event-attendee-stack.md)、[`WelcomeBoard`](docs/catalog/03-organisms/welcome-board.md)
-- 通知系: [`Toast`](docs/catalog/01-atoms/toast.md)
-- パターン: [`UserProfile`](docs/catalog/04-patterns/user-profile.md)
+- 重要: [`BeginnerFriendlyFilter`](docs/catalog/components/beginner-friendly-filter.md)、[`EventAttendeeStack`](docs/catalog/components/event-attendee-stack.md)、[`WelcomeBoard`](docs/catalog/components/welcome-board.md)
+- 通知系: [`Toast`](docs/catalog/ui/toast.md)
+- パターン: [`UserProfile`](docs/catalog/blocks/user-profile.md)
 
 ### 反パターン
 - 申込時に長大な自由記述を求める
@@ -214,8 +214,8 @@
 - **採用導線**: プロフィールに会社の採用ページリンク (押し付けず)
 
 ### 関連コンポーネント
-- 重要: [`CFPSubmitForm`](docs/catalog/03-organisms/cfp-submit-form.md)、[`SpeakerKit`](docs/catalog/03-organisms/speaker-kit.md)、[`SpeakerCheckin`](docs/catalog/02-molecules/speaker-checkin.md)
-- パターン: [`UserProfile`](docs/catalog/04-patterns/user-profile.md)、[`OrganizerDashboard`](docs/catalog/04-patterns/organizer-dashboard.md)
+- 重要: [`CFPSubmitForm`](docs/catalog/components/cfp-submit-form.md)、[`SpeakerKit`](docs/catalog/components/speaker-kit.md)、[`SpeakerCheckin`](docs/catalog/components/speaker-checkin.md)
+- パターン: [`UserProfile`](docs/catalog/blocks/user-profile.md)、[`OrganizerDashboard`](docs/catalog/blocks/organizer-dashboard.md)
 
 ### 反パターン
 - 登壇申込に履歴書並みの情報を要求
@@ -275,8 +275,8 @@
 - **オンライン視聴 URL**: 申込確定時点で表示 (直前公開を避ける)
 
 ### 関連コンポーネント
-- 重要: [`EventModeBadge`](docs/catalog/02-molecules/event-mode-badge.md)、[`StudentFilter`](docs/catalog/02-molecules/student-filter.md)、[`LiveQA`](docs/catalog/03-organisms/live-qa.md)
-- パターン: [`EventCard`](docs/catalog/04-patterns/event-card.md)、[`OnlineEventLayout`](docs/catalog/04-patterns/online-event-layout.md)
+- 重要: [`EventModeBadge`](docs/catalog/components/event-mode-badge.md)、[`StudentFilter`](docs/catalog/components/student-filter.md)、[`LiveQA`](docs/catalog/components/live-qa.md)
+- パターン: [`EventCard`](docs/catalog/blocks/event-card.md)、[`OnlineEventLayout`](docs/catalog/blocks/online-event-layout.md)
 
 ### 反パターン
 - 申込時に「学生か社会人か」を問わない (学生は学生として可視化されたい)
@@ -337,8 +337,8 @@
 - **コミュニティとしての継続性**: 転職完了後も追い出されない
 
 ### 関連コンポーネント
-- 重要: [`OrganizerProfile`](docs/catalog/03-organisms/organizer-profile.md)、[`AudienceFilter`](docs/catalog/02-molecules/audience-filter.md)
-- パターン: [`EventCard`](docs/catalog/04-patterns/event-card.md)、[`UserProfile`](docs/catalog/04-patterns/user-profile.md)
+- 重要: [`OrganizerProfile`](docs/catalog/components/organizer-profile.md)、[`AudienceFilter`](docs/catalog/components/audience-filter.md)
+- パターン: [`EventCard`](docs/catalog/blocks/event-card.md)、[`UserProfile`](docs/catalog/blocks/user-profile.md)
 
 ### 反パターン
 - 申込時に「転職検討中?」のチェックボックス
@@ -407,8 +407,8 @@
 - **当日オペレーション**: QR キオスク、印刷物バックアップ
 
 ### 関連コンポーネント
-- 重要: [`AnalyticsDashboard`](docs/catalog/03-organisms/analytics-dashboard.md)、[`CheckinKiosk`](docs/catalog/03-organisms/checkin-kiosk.md)、[`EventSeriesEditor`](docs/catalog/03-organisms/event-series-editor.md)
-- パターン: [`OrganizerDashboard`](docs/catalog/04-patterns/organizer-dashboard.md)、[`EnterpriseInvoice`](docs/catalog/04-patterns/enterprise-invoice.md)
+- 重要: [`AnalyticsDashboard`](docs/catalog/components/analytics-dashboard.md)、[`CheckinKiosk`](docs/catalog/components/checkin-kiosk.md)、[`EventSeriesEditor`](docs/catalog/components/event-series-editor.md)
+- パターン: [`OrganizerDashboard`](docs/catalog/blocks/organizer-dashboard.md)、[`EnterpriseInvoice`](docs/catalog/blocks/enterprise-invoice.md)
 
 ### 反パターン
 - 個人主催者と同じシンプル画面に押し込める (情報不足)
@@ -470,8 +470,8 @@
 - **無料でも使える**: 有料機能を必須にしない、UI で有料機能を煽らない
 
 ### 関連コンポーネント
-- 重要: [`CommunityPageEditor`](docs/catalog/03-organisms/community-page-editor.md)、[`SlackIntegration`](docs/catalog/03-organisms/slack-integration.md)、[`WaitlistAutoPromote`](docs/catalog/02-molecules/waitlist-auto-promote.md)
-- パターン: [`OrganizerDashboard`](docs/catalog/04-patterns/organizer-dashboard.md)、[`CommunityPage`](docs/catalog/04-patterns/community-page.md)
+- 重要: [`CommunityPageEditor`](docs/catalog/components/community-page-editor.md)、[`SlackIntegration`](docs/catalog/components/slack-integration.md)、[`WaitlistAutoPromote`](docs/catalog/components/waitlist-auto-promote.md)
+- パターン: [`OrganizerDashboard`](docs/catalog/blocks/organizer-dashboard.md)、[`CommunityPage`](docs/catalog/blocks/community-page.md)
 
 ### 反パターン
 - 「Pro プランで解放」のような有料機能を頻繁に提示
@@ -537,8 +537,8 @@
 - **信頼性**: 申込開始の同時アクセス対応、SLA 99.9%+
 
 ### 関連コンポーネント
-- 重要: [`ConferenceEditor`](docs/catalog/03-organisms/conference-editor.md)、[`SessionScheduler`](docs/catalog/03-organisms/session-scheduler.md)、[`LotteryEngine`](docs/catalog/03-organisms/lottery-engine.md)、[`OpsCenter`](docs/catalog/03-organisms/ops-center.md)
-- パターン: [`OrganizerDashboard`](docs/catalog/04-patterns/organizer-dashboard.md)、[`EnterpriseInvoice`](docs/catalog/04-patterns/enterprise-invoice.md)、[`ConferenceSchedule`](docs/catalog/04-patterns/conference-schedule.md)
+- 重要: [`ConferenceEditor`](docs/catalog/components/conference-editor.md)、[`SessionScheduler`](docs/catalog/components/session-scheduler.md)、[`LotteryEngine`](docs/catalog/components/lottery-engine.md)、[`OpsCenter`](docs/catalog/components/ops-center.md)
+- パターン: [`OrganizerDashboard`](docs/catalog/blocks/organizer-dashboard.md)、[`EnterpriseInvoice`](docs/catalog/blocks/enterprise-invoice.md)、[`ConferenceSchedule`](docs/catalog/blocks/conference-schedule.md)
 
 ### 反パターン
 - チケット種別が固定数 (e.g. 3 種類まで)
@@ -780,8 +780,8 @@
 
 このファイル / 関連ドキュメントに関する未完了タスク。
 
-- [x] `docs/catalog/04-patterns/` の各パターン MD 冒頭に Personas.md 参照を追加 (2026-06-06 完了: forms / lists-and-tables / modals-and-sheets / navigation / feedback / cards / data-input + 新規 event-status-orchestration / cta-matrix / host-vs-participant-ui)
-- [x] `docs/catalog/02-molecules/` / `03-organisms/` の主要コンポーネント MD にも「対象ペルソナ」セクションを追加 (2026-06-06 完了: share-modal / header / event-card / event-list-row + YAML front-matter で全 catalog MD に `personas` フィールド埋め込み)
+- [x] `docs/catalog/blocks/` の各パターン MD 冒頭に Personas.md 参照を追加 (2026-06-06 完了: forms / lists-and-tables / modals-and-sheets / navigation / feedback / cards / data-input + 新規 event-status-orchestration / cta-matrix / host-vs-participant-ui)
+- [x] `docs/catalog/components/` / `components/` の主要コンポーネント MD にも「対象ペルソナ」セクションを追加 (2026-06-06 完了: share-modal / header / event-card / event-list-row + YAML front-matter で全 catalog MD に `personas` フィールド埋め込み)
 - [x] PR テンプレート `.github/pull_request_template.md` に「対象ペルソナ」チェックリストを追加 (2026-06-06 完了)
 - [x] `.claude/agents/` の design 系エージェントに Personas.md を前置参照として登録 (2026-06-06 完了: visual-diff-reviewer / design-token-explorer / storybook-curator / component-screenshot-taker / figma-token-syncer)
 - [ ] アバター placeholder を実際の DiceBear / Notion アイコン等で置換 (デザイン作業)

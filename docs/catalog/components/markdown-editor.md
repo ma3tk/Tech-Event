@@ -20,8 +20,8 @@ personas: [P6, P7, P8]
 - お知らせ / 告知の編集
 
 ## 3. いつ使わないか (When NOT to use)
-- 短い 1 行入力 → [Input](../01-atoms/input.md)
-- 数行の Plain text → [Textarea](../01-atoms/textarea.md)
+- 短い 1 行入力 → [Input](../ui/input.md)
+- 数行の Plain text → [Textarea](../ui/textarea.md)
 - リッチテキスト (画像インライン編集が必要) → 別 WYSIWYG (将来的に検討)
 - コメント (短文) → 軽量 textarea + preview ボタンで十分
 
@@ -115,10 +115,10 @@ uncontrolled (`name` + `defaultValue`) なので Server Action にそのまま�
 
 ## 12. 関連
 
-- [Textarea](../01-atoms/textarea.md)
-- [Tabs](../01-atoms/tabs.md)
-- [ErrorState](../01-atoms/error-state.md)
-- [04-patterns/forms.md](../04-patterns/forms.md)
+- [Textarea](../ui/textarea.md)
+- [Tabs](../ui/tabs.md)
+- [ErrorState](../ui/error-state.md)
+- [blocks/forms.md](../blocks/forms.md)
 
 ## 13. 変更履歴
 

@@ -18,7 +18,7 @@ personas: [P1, P2, P3, P4, P6]
 (根拠: [`Personas.md`](../../../Personas.md))
 
 ## 1. 目的 (Purpose)
-イベント 1 件を **1 行 88-96px** の高密度フォーマットで表示する Organism。connpass の検索結果 / ランキング / タイムラインに最も近いレイアウト。`showRank` で順位バッジを付加できる。
+イベント 1 件を **1 行 88-96px** の高密度フォーマットで表示する composite component。connpass の検索結果 / ランキング / タイムラインに最も近いレイアウト。`showRank` で順位バッジを付加できる。
 
 ## 2. いつ使うか (When to use)
 - 検索結果 (`/search`)
@@ -30,7 +30,7 @@ personas: [P1, P2, P3, P4, P6]
 ## 3. いつ使わないか (When NOT to use)
 - **カード表示 (グリッド)** → [EventCard](./event-card.md) `variant="grid"`
 - **トップページの注目** → [EventCard](./event-card.md) `variant="list"`
-- **3 件以下の小プレビュー** → [RecentlyViewedEvents](../02-molecules/recently-viewed-events.md)
+- **3 件以下の小プレビュー** → [RecentlyViewedEvents](../components/recently-viewed-events.md)
 - **詳細ページ本体** → 専用テンプレート
 
 ## 4. 構造 (Anatomy) — Design.md §5.4 厳格仕様
@@ -82,7 +82,7 @@ connpass を踏襲し、Luma 並みの余白は取らない。
 | default | `bg-surface` + `border-b border-border` |
 | hover | `bg-background` (薄く反転) |
 | loading | [EventListRowSkeleton](./event-list-row.md) |
-| empty | 親で [EmptyState](../01-atoms/empty-state.md) |
+| empty | 親で [EmptyState](../ui/empty-state.md) |
 
 ## 8. アクセシビリティ (Accessibility)
 
@@ -143,10 +143,10 @@ import { EventListRow } from "@tech-event/shared-ui-composite";
 
 - [EventCard](./event-card.md) — カード表示
 - [EventTimeline](./event-timeline.md) — タイムラインの内部実装
-- [EventCardSkeleton / EventListRowSkeleton](../01-atoms/skeleton.md)
-- [Pagination](../02-molecules/pagination.md)
-- [EventStatusBadge](../02-molecules/event-status-badge.md)
-- [04-patterns/lists-and-tables.md](../04-patterns/lists-and-tables.md)
+- [EventCardSkeleton / EventListRowSkeleton](../ui/skeleton.md)
+- [Pagination](../components/pagination.md)
+- [EventStatusBadge](../components/event-status-badge.md)
+- [blocks/lists-and-tables.md](../blocks/lists-and-tables.md)
 
 ## 13. 変更履歴
 

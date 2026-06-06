@@ -17,7 +17,7 @@ personas: [P1, P2, P5, P6]
 - ユーザーアイコン (ヘッダー / コメント / 参加者リスト)
 - グループのロゴ
 - 主催者表示
-- アバターと名前のセット ([ParticipantBadge](../02-molecules/participant-badge.md))
+- アバターと名前のセット ([ParticipantBadge](../components/participant-badge.md))
 
 ## 3. いつ使わないか
 - 画像のみの装飾 → `<Image>` を直接
@@ -73,8 +73,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@tech-event/shared-ui";
 
 ## 10. 関連
 
-- [ParticipantBadge](../02-molecules/participant-badge.md)
-- [HostAvatarStack](../02-molecules/host-avatar-stack.md)
+- [ParticipantBadge](../components/participant-badge.md)
+- [HostAvatarStack](../components/host-avatar-stack.md)
 
 ## 11. 変更履歴
 

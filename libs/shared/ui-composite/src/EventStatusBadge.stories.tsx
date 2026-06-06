@@ -5,7 +5,7 @@ import EventStatusBadge, {
 } from "./EventStatusBadge";
 
 const meta: Meta<typeof EventStatusBadge> = {
-  title: "Atoms/EventStatusBadge",
+  title: "Components/EventStatusBadge",
   component: EventStatusBadge,
   parameters: {
     layout: "centered",

@@ -8,7 +8,7 @@
 > [`docs/component-api-status.md`](./component-api-status.md) /
 > [`docs/design-system-changelog.md`](./design-system-changelog.md) /
 > [`docs/release-criteria.md`](./release-criteria.md) / `docs/icons.md` /
-> `docs/component-taxonomy.md` / `src/stories/design-system/`
+> `docs/component-classification.md` / `src/stories/design-system/`
 
 ---
 
@@ -51,7 +51,7 @@
 | 8 | アイコン規約 | ✓ | `docs/icons.md` + `Icons.mdx` (推奨 50 + Extra 20 = 70 種、strokeWidth 1.5、14/16/20/24 px) |
 | 9 | モーション規約 | ✓ | `docs/motion.md` + `Motion.mdx` + Motion tokens (`--duration-fast/std/slow`, `--ease-standard/accel/decel`) |
 | 10 | Token JSON 出力 | ✓ | `pnpm tokens` / `pnpm tokens:validate` + `tokens.yml` CI で CSS↔JSON 双方向強制 |
-| 11 | コンポーネント分類ドキュメント | ✓ | `docs/component-taxonomy.md` (Atom / Molecule / Organism / Template / Page) |
+| 11 | コンポーネント分類ドキュメント | ✓ | `docs/component-classification.md` (ui / components / blocks / foundations、shadcn/ui スタイル) |
 | 12 | Storybook サイドバー順序固定 | ✓ | `.storybook/preview.tsx` `storySort` |
 | 13 | Storybook トップランディング | ✓ | `src/stories/Welcome.mdx` |
 | 14 | Component Checklist MDX | ✓ | `Design System/Component Checklist` |

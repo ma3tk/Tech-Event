@@ -23,7 +23,7 @@
 2. **トークン値は `docs/design-system.md` が唯一の出典** — catalog MD には値を書かず参照 link のみ
 3. **Props 表 / Variant 表は TS 型・cva 設定から自動生成** — 手書き禁止 (将来 `react-docgen` 連携。現状は手書きだが `<!-- AUTO-GENERATED START/END -->` で区画化済み)
 4. **判断基準 (いつ使う / 使わない / Don'ts) は catalog MD が唯一の出典** — Storybook MDX / Story には書かない
-5. **ペルソナ (`Personas.md` の P1–P9) 参照は catalog patterns/organisms が一次** — 各コンポーネントは「対象ペルソナ」セクションで明示
+5. **ペルソナ (`Personas.md` の P1–P9) 参照は catalog blocks/components が一次** — 各コンポーネントは「対象ペルソナ」セクションで明示
 
 ### 守らないとどうなるか
 
@@ -67,7 +67,7 @@
 
 ブランド色は **必ずトークン経由** (`bg-brand-orange` 等) で参照。`#c2410c` をコードに直書きしない。
 
-詳細: [`05-foundations/colors.md`](./05-foundations/colors.md)
+詳細: [`foundations/colors.md`](./foundations/colors.md)
 
 ---
 
@@ -120,7 +120,7 @@ Theme (mapping)
 4. `word-break: keep-all` + `overflow-wrap: anywhere`
 5. 数字は 3 桁区切り (`Intl.NumberFormat`)
 
-詳細: [`05-foundations/typography.md`](./05-foundations/typography.md)
+詳細: [`foundations/typography.md`](./foundations/typography.md)
 
 ---
 
@@ -130,19 +130,19 @@ Theme (mapping)
 - 主要ページは **メイン + 右サイド** 2 カラム (lg 以上、2:1〜3:1)
 - スペーシング: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 px のみ (任意値禁止)
 
-詳細: [`05-foundations/spacing.md`](./05-foundations/spacing.md), [`05-foundations/responsive.md`](./05-foundations/responsive.md)
+詳細: [`foundations/spacing.md`](./foundations/spacing.md), [`foundations/responsive.md`](./foundations/responsive.md)
 
 ---
 
 ## 6. コンポーネント原則 (Design.md §6)
 
-### 6.1 Atomic 階層
-| 階層 | 場所 | 例 |
+### 6.1 コンポーネント階層 (shadcn/ui スタイル)
+| カテゴリ | 場所 | 例 |
 |---|---|---|
-| Atom | `libs/shared/ui/` (21) | Button / Input / Badge / Card / Dialog |
-| Molecule | `libs/shared/ui-composite/` | TagPill / Breadcrumb / EventStatusBadge |
-| Organism | `libs/shared/ui-composite/` | Header / EventListRow / ShareModal |
-| Template | `apps/(showcase)/components/` | `/components` showcase |
+| ui | `libs/shared/ui/` (24) | Button / Input / Badge / Card / Dialog (Radix UI + CVA primitives) |
+| components | `libs/shared/ui-composite/` (23) | Header / EventListRow / ShareModal / TagPill / EventStatusBadge |
+| blocks | `docs/catalog/blocks/` (10) | event-status-orchestration / cta-matrix / host-vs-participant-ui (構成パターン) |
+| foundations | `src/styles/tokens.css` 他 (10) | colors / typography / spacing / motion (デザイン言語) |
 | Page | `apps/web/src/app/**/page.tsx` | 各画面 |
 
 ### 6.2 設計原則
@@ -155,7 +155,7 @@ Theme (mapping)
 ### 6.3 状態 (全コンポーネント共通)
 default / hover / focus-visible / active / disabled / loading / empty / error
 
-詳細: [`05-foundations/states.md`](./05-foundations/states.md)
+詳細: [`foundations/states.md`](./foundations/states.md)
 
 ---
 
@@ -169,7 +169,7 @@ light / dark / high-contrast の 3 テーマすべてで:
 
 `bg-white` / `bg-zinc-100` などハードコード禁止 → 必ず `bg-surface` / `bg-surface-muted`。
 
-詳細: [`05-foundations/theming.md`](./05-foundations/theming.md)
+詳細: [`foundations/theming.md`](./foundations/theming.md)
 
 ---
 
@@ -185,7 +185,7 @@ light / dark / high-contrast の 3 テーマすべてで:
 
 Easing: `ease-out` (開く) / `ease-in` (閉じる) / `ease-in-out` (同質) / `ease-spring` (微弾み)。
 
-詳細: [`05-foundations/motion.md`](./05-foundations/motion.md)
+詳細: [`foundations/motion.md`](./foundations/motion.md)
 
 ---
 
@@ -196,7 +196,7 @@ Easing: `ease-out` (開く) / `ease-in` (閉じる) / `ease-in-out` (同質) / `
 - サイズ: 14 / 16 / 20 / 24 px (`h-3.5 w-3.5` 〜 `h-6 w-6`)
 - 機能の意味補強用 (装飾はしない)
 
-詳細: [`05-foundations/iconography.md`](./05-foundations/iconography.md), [`docs/icons.md`](../icons.md)
+詳細: [`foundations/iconography.md`](./foundations/iconography.md), [`docs/icons.md`](../icons.md)
 
 ---
 

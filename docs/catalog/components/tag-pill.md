@@ -20,7 +20,7 @@ personas: [P1, P2]
 
 ## 3. いつ使わないか
 - 状態表示 → [EventStatusBadge](./event-status-badge.md)
-- カウント → [Badge](../01-atoms/badge.md)
+- カウント → [Badge](../ui/badge.md)
 
 ## 4. バリアント
 
@@ -63,7 +63,7 @@ import { TagPill } from "@tech-event/shared-ui-composite";
 
 ## 8. 関連
 
-- [Badge](../01-atoms/badge.md)
+- [Badge](../ui/badge.md)
 - [EventStatusBadge](./event-status-badge.md)
 
 ## 9. 変更履歴

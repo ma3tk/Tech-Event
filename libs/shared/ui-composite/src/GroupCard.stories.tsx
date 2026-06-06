@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import GroupCard, { type GroupCardData } from "./GroupCard";
 
 const meta: Meta<typeof GroupCard> = {
-  title: "Organisms/GroupCard",
+  title: "Components/GroupCard",
   component: GroupCard,
   parameters: { layout: "padded" },
   argTypes: {

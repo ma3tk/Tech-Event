@@ -79,7 +79,7 @@ import { Input } from "@tech-event/shared-ui";
 
 - [Input](./input.md)
 - [Form](./form.md)
-- [04-patterns/forms.md](../04-patterns/forms.md)
+- [blocks/forms.md](../blocks/forms.md)
 
 ## 12. 変更履歴
 

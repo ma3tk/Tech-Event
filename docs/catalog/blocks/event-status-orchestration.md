@@ -8,7 +8,7 @@ personas: [P1, P2, P3, P6, P7]
 
 # イベントステータス オーケストレーション (Event status orchestration)
 
-> Design.md §10 + Personas.md (P1 山田美咲 / P6 小林一郎) | 一次資料: [`docs/design-system.md` §10](../../design-system.md), [`02-molecules/event-status-badge.md`](../02-molecules/event-status-badge.md)
+> Design.md §10 + Personas.md (P1 山田美咲 / P6 小林一郎) | 一次資料: [`docs/design-system.md` §10](../../design-system.md), [`components/event-status-badge.md`](../components/event-status-badge.md)
 
 ## 対象ペルソナ
 
@@ -64,12 +64,12 @@ tech-event は **イベント駆動プロダクト** であり、1 つのイベ�
 
 | component | upcoming | open | full | waitlist | closed | ongoing | ended | cancelled |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [EventStatusBadge](../02-molecules/event-status-badge.md) | gray pill | green pill | orange pill | yellow pill | gray pill | blue pill (animate-pulse 弱) | gray-dark pill | red pill |
-| [Button](../01-atoms/button.md) (主 CTA) | `disabled` "公開前" | `default` "参加申込" | `disabled` "満員" | `secondary` "補欠登録" | `disabled` "申込終了" | `link` "会場へ" | `ghost` "アーカイブを見る" | `disabled` "中止" |
-| [EventCard](../03-organisms/event-card.md) | 通常 | 通常 | overlay 弱 | overlay + 補欠 hint | 通常 | "LIVE" 装飾 | 彩度 -30% | 取り消し線 + reason |
-| [EventListRow](../03-organisms/event-list-row.md) | 同上 | 同上 | trailing icon `Users` | trailing icon `Clock` | 同上 | trailing icon `Radio` | 同上 | 同上 |
-| [EventStickyCTA](../02-molecules/event-sticky-cta.md) | 非表示 | 表示・主 CTA | 表示・disabled | 表示・補欠 CTA | 非表示 | 表示・"会場へ" | 非表示 | 非表示 |
-| [Toast](../01-atoms/toast.md) (status 変化通知) | — | "募集開始" | "満員になりました" | "補欠受付開始" | "申込終了" | "開催開始" | — | "中止: 理由" |
+| [EventStatusBadge](../components/event-status-badge.md) | gray pill | green pill | orange pill | yellow pill | gray pill | blue pill (animate-pulse 弱) | gray-dark pill | red pill |
+| [Button](../ui/button.md) (主 CTA) | `disabled` "公開前" | `default` "参加申込" | `disabled` "満員" | `secondary` "補欠登録" | `disabled` "申込終了" | `link` "会場へ" | `ghost` "アーカイブを見る" | `disabled` "中止" |
+| [EventCard](../components/event-card.md) | 通常 | 通常 | overlay 弱 | overlay + 補欠 hint | 通常 | "LIVE" 装飾 | 彩度 -30% | 取り消し線 + reason |
+| [EventListRow](../components/event-list-row.md) | 同上 | 同上 | trailing icon `Users` | trailing icon `Clock` | 同上 | trailing icon `Radio` | 同上 | 同上 |
+| [EventStickyCTA](../components/event-sticky-cta.md) | 非表示 | 表示・主 CTA | 表示・disabled | 表示・補欠 CTA | 非表示 | 表示・"会場へ" | 非表示 | 非表示 |
+| [Toast](../ui/toast.md) (status 変化通知) | — | "募集開始" | "満員になりました" | "補欠受付開始" | "申込終了" | "開催開始" | — | "中止: 理由" |
 
 > この表が **catalog 全体の背骨**。Badge / Button / Card / Sticky CTA / Toast はすべてこの表に従う。乖離を見つけたら本ファイルで議論し、表を更新してから実装する。
 
@@ -83,8 +83,8 @@ tech-event は **イベント駆動プロダクト** であり、1 つのイベ�
 
 ## 4. 関連
 
-- [02-molecules/event-status-badge.md](../02-molecules/event-status-badge.md) — Badge 単体仕様
-- [04-patterns/cta-matrix.md](./cta-matrix.md) — CTA ラベルの状態別使い分け
-- [04-patterns/host-vs-participant-ui.md](./host-vs-participant-ui.md) — 主催者 / 参加者で見せ方が変わる
-- [04-patterns/feedback.md](./feedback.md) — Toast / 通知の文言
+- [components/event-status-badge.md](../components/event-status-badge.md) — Badge 単体仕様
+- [blocks/cta-matrix.md](./cta-matrix.md) — CTA ラベルの状態別使い分け
+- [blocks/host-vs-participant-ui.md](./host-vs-participant-ui.md) — 主催者 / 参加者で見せ方が変わる
+- [blocks/feedback.md](./feedback.md) — Toast / 通知の文言
 - [`Personas.md`](../../../Personas.md) P1 / P6 のジャーニー (status 変化時の感情曲線)

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import SearchBox from "./SearchBox";
 
 const meta: Meta<typeof SearchBox> = {
-  title: "Molecules/SearchBox",
+  title: "Components/SearchBox",
   component: SearchBox,
   parameters: { layout: "padded" },
   argTypes: {

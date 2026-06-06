@@ -20,9 +20,9 @@ personas: [P1, P2, P6]
 - サイドバーの **小機能パネル** (MiniCalendar / RecentlyViewedEvents)
 
 ## 3. いつ使わないか (When NOT to use)
-- **完全フラットなリスト 1 行** → [EventListRow](../03-organisms/event-list-row.md) (Card で囲まない)
+- **完全フラットなリスト 1 行** → [EventListRow](../components/event-list-row.md) (Card で囲まない)
 - **モーダルの本体** → [Dialog](./dialog.md) を直接 (Card は不要)
-- **小さな chip / pill** → [Badge](./badge.md) / [TagPill](../02-molecules/tag-pill.md)
+- **小さな chip / pill** → [Badge](./badge.md) / [TagPill](../components/tag-pill.md)
 - **ページ全体の背景** → `bg-background` のみ
 
 ## 4. 構造 (Anatomy)
@@ -51,9 +51,9 @@ personas: [P1, P2, P6]
 <!-- AUTO-GENERATED START: variants -->
 <!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 -->
 Card 自体に CVA variant はない (構成スロットのみ)。**ドメイン特化のバリアントは別コンポーネントで**:
-- [EventCard](../03-organisms/event-card.md): list / grid variant
-- [GroupCard](../03-organisms/group-card.md): standard / sidebar / compact variant
-- [RecentlyViewedEvents](../02-molecules/recently-viewed-events.md): サイドバー特化
+- [EventCard](../components/event-card.md): list / grid variant
+- [GroupCard](../components/group-card.md): standard / sidebar / compact variant
+- [RecentlyViewedEvents](../components/recently-viewed-events.md): サイドバー特化
 
 ### スタイル軸 (Tailwind で表現)
 
@@ -158,11 +158,11 @@ import {
 
 ## 12. 関連 (Related)
 
-- [EventCard](../03-organisms/event-card.md) — イベント特化 (list/grid variant)
-- [GroupCard](../03-organisms/group-card.md) — グループ特化
+- [EventCard](../components/event-card.md) — イベント特化 (list/grid variant)
+- [GroupCard](../components/group-card.md) — グループ特化
 - [Skeleton](./skeleton.md) — loading 状態
 - [EmptyState](./empty-state.md) — 空状態
-- [04-patterns/cards.md](../04-patterns/cards.md) — Card 系の使い分け詳細
+- [blocks/cards.md](../blocks/cards.md) — Card 系の使い分け詳細
 
 ## 13. 変更履歴
 

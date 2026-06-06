@@ -78,7 +78,7 @@ import { Checkbox } from "@tech-event/shared-ui";
 - [RadioGroup](./radio-group.md)
 - [Switch](./switch.md)
 - [Form](./form.md)
-- [04-patterns/data-input.md](../04-patterns/data-input.md)
+- [blocks/data-input.md](../blocks/data-input.md)
 
 ## 11. 変更履歴
 

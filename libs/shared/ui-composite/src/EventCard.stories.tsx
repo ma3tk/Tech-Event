@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import EventCard, { type EventCardData } from "./EventCard";
 
 const meta: Meta<typeof EventCard> = {
-  title: "Organisms/EventCard",
+  title: "Components/EventCard",
   component: EventCard,
   parameters: {
     layout: "padded",

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import Header from "./Header";
 
 const meta: Meta<typeof Header> = {
-  title: "Organisms/Header",
+  title: "Components/Header",
   component: Header,
   parameters: {
     layout: "fullscreen",

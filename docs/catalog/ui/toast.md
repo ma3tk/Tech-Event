@@ -93,7 +93,7 @@ toast("予約が完了しました", {
 - ToastListener (`libs/shared/ui-composite/src/ToastListener.tsx` で provider)
 - [ErrorState](./error-state.md)
 - [Dialog](./dialog.md)
-- [04-patterns/feedback.md](../04-patterns/feedback.md)
+- [blocks/feedback.md](../blocks/feedback.md)
 
 ## 11. 変更履歴
 

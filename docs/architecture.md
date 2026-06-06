@@ -319,7 +319,7 @@ playwright.config.ts
 - [docs/completion-report.md](completion-report.md) — 完成度マトリクス
 - [docs/perf-report.md](perf-report.md) — bundle / latency 計測
 - [docs/icons.md](icons.md) — アイコン規約
-- [docs/component-taxonomy.md](component-taxonomy.md) — Atomic 分類
+- [docs/component-classification.md](component-classification.md) — コンポーネント分類 (shadcn/ui スタイル: ui / components / blocks / foundations)
 - [docs/motion.md](motion.md) — モーション規約
 - [docs/design-system-audit.md](design-system-audit.md) — DS 最終監査
 - [research/README.md](../research/README.md) — connpass 調査資料

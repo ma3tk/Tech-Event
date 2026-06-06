@@ -136,14 +136,19 @@ connpass を踏襲し、Luma 並みの余白は取らない。
 
 ## 6. コンポーネント原則
 
-### 6.1 Atomic 階層
-| 階層 | 場所 | 例 |
+### 6.1 コンポーネント階層 (shadcn/ui スタイル)
+
+shadcn/ui 公式 (https://ui.shadcn.com/) の分類に倣う。ui = Radix primitive、components = composite、blocks = 構成パターン、foundations = デザイントークン。
+
+| カテゴリ | 配置 | 例 |
 |---|---|---|
-| Atom | `libs/shared/ui/` | Button / Input / Badge / Avatar / Card / Dialog |
-| Molecule | `libs/shared/ui-composite/` | TagPill / Breadcrumb / EventStatusBadge |
-| Organism | `libs/shared/ui-composite/` | Header / EventListRow / ShareModal |
-| Template | `apps/(showcase)/components/` | `/components` showcase |
-| Page | `apps/web/src/app/**/page.tsx` | 各画面 |
+| ui | `libs/shared/ui/` | Button / Input / Dialog / Avatar / Card (Radix UI + CVA) |
+| components | `libs/shared/ui-composite/` | Header / EventListRow / ShareModal / TagPill / EventStatusBadge |
+| blocks | `docs/catalog/blocks/` | event-status-orchestration / cta-matrix / host-vs-participant-ui |
+| foundations | `src/styles/tokens.css` 他 | colors / spacing / motion / typography / theming |
+| Page | `apps/web/src/app/**/page.tsx` | 各画面 (Server Component、データ取得 + 認可) |
+
+> 旧 Atomic Design 命名 (atoms / molecules / organisms / patterns) は廃止した。対応表は [`docs/component-classification.md`](./docs/component-classification.md) 末尾を参照。
 
 ### 6.2 設計原則
 - **propsの公開APIは変えない** (refactor 時) — 互換性で破壊しない
@@ -290,7 +295,7 @@ dark mode で `bg-white` `bg-zinc-100` などのハードコード禁止 → 必
 | [`docs/design-system.md`](./docs/design-system.md) | トークン詳細・全コンポーネント仕様 |
 | [`docs/design-system-audit.md`](./docs/design-system-audit.md) | DS 100% 監査 |
 | [`docs/design-system-changelog.md`](./docs/design-system-changelog.md) | DS バージョン管理 (v1.0.0+) |
-| [`docs/component-taxonomy.md`](./docs/component-taxonomy.md) | Atomic 分類 |
+| [`docs/component-classification.md`](./docs/component-classification.md) | コンポーネント分類 (shadcn/ui スタイル ui/components/blocks/foundations) + 旧 Atomic 対応表 |
 | [`docs/component-api-status.md`](./docs/component-api-status.md) | API 成熟度 (stable/beta/alpha) |
 | [`docs/motion.md`](./docs/motion.md) | モーション詳細規約 |
 | [`docs/icons.md`](./docs/icons.md) | アイコン使い分けガイド |

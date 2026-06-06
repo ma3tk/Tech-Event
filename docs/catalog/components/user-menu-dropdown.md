@@ -40,9 +40,9 @@ personas: [P1, P6]
 
 ## 5. 関連
 
-- [DropdownMenu](../01-atoms/dropdown-menu.md)
-- [Avatar](../01-atoms/avatar.md)
-- [Header](../03-organisms/header.md)
+- [DropdownMenu](../ui/dropdown-menu.md)
+- [Avatar](../ui/avatar.md)
+- [Header](../components/header.md)
 
 ## 6. 変更履歴
 

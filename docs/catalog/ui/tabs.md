@@ -79,7 +79,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@tech-event/shared-ui"
 ## 10. 関連
 
 - [DropdownMenu](./dropdown-menu.md)
-- [04-patterns/navigation.md](../04-patterns/navigation.md)
+- [blocks/navigation.md](../blocks/navigation.md)
 
 ## 11. 変更履歴
 

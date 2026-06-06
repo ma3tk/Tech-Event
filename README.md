@@ -627,7 +627,7 @@ docs/
   design-system.md                    # デザイントークン + コンポーネント (本ドキュメント)
   design-system-audit.md              # 最終 DS 監査 + 業界標準比較 + Top10 残課題
   icons.md                            # アイコン規約 (lucide-react 70 種 = 推奨 50 + Extra 20)
-  component-taxonomy.md               # Atomic 分類
+  component-classification.md         # コンポーネント分類 (shadcn/ui スタイル ui/components/blocks/foundations) + 旧 Atomic 対応表
   motion.md                           # モーション規約
   perf-report.md                      # bundle 分析 + ページ応答時間計測
   completion-report.md                # 完成度 / Connpass+Luma カバー率 / 残課題
@@ -669,8 +669,8 @@ public/                               # static assets
 | Primitive tokens | `src/styles/tokens.css` | 色スケール / spacing / radius / shadow / z-index |
 | Semantic tokens | `src/styles/semantic.css` | radius-control / radius-card 等のエイリアス |
 | Themes (light / dark / high-contrast) | `src/styles/themes/*.css` | テーマ別の意味付け |
-| UI primitives (Atom) | `src/components/ui/` | **21** |
-| Composite (Molecule / Organism) | `src/components/` | **18** (Molecule 5 + Organism 13) |
+| ui primitives | `libs/shared/ui/` | **24** (shadcn/ui スタイル) |
+| components (composite) | `libs/shared/ui-composite/` | **23** (shadcn/ui スタイル) |
 | MDX documentation | `src/stories/design-system/` + Welcome | **14** |
 | Storybook stories | `*.stories.tsx` | 35 file / **190 story entries** (21 ui + 14 composite) |
 | アイコン | lucide-react | **70 種** (推奨 50 + Extra 20) |
@@ -707,7 +707,7 @@ VRT は warn only モード (CI を block しない)。差分が出ても consol
 | [docs/design-system.md](docs/design-system.md) | デザイントークン / コンポーネント仕様 / a11y チェックリスト (axe 結果含む) ※一次資料 |
 | [docs/design-system-audit.md](docs/design-system-audit.md) | 最終 DS 監査レポート + 業界標準 (Polaris / Material 3 / shadcn / Atlassian) 比較 + Top10 残課題 |
 | [docs/icons.md](docs/icons.md) | アイコン規約 (lucide-react / 14·16·20·24 px / strokeWidth 1.5 / 70 種選定 = 推奨 50 + Extra 20) |
-| [docs/component-taxonomy.md](docs/component-taxonomy.md) | Atom / Molecule / Organism / Template / Page の分類 |
+| [docs/component-classification.md](docs/component-classification.md) | コンポーネント分類 (shadcn/ui スタイル: ui / components / blocks / foundations) + 旧 Atomic 対応表 |
 | [docs/motion.md](docs/motion.md) | モーション規約 (duration / easing / reduced-motion) |
 | Storybook (`Welcome`) | カタログのトップランディング |
 | Storybook (`Design System/*`) | Introduction / Tokens / Colors / Typography / Spacing / Radius / Icons / Components / Accessibility / Dark Mode / Component Checklist |
@@ -834,7 +834,7 @@ docker compose up -d        # postgres + redis + worker + (mailpit + minio)
 | [docs/design-system-changelog.md](docs/design-system-changelog.md) | DS 単体の Changelog (v0.1.0 → v1.0.0) |
 | [docs/release-criteria.md](docs/release-criteria.md) | DS リリース判定基準 (patch / minor / major) |
 | [docs/icons.md](docs/icons.md) | アイコン規約 (lucide-react 70 種 = 推奨 50 + Extra 20) |
-| [docs/component-taxonomy.md](docs/component-taxonomy.md) | コンポーネント分類 (Atomic Design ベース) |
+| [docs/component-classification.md](docs/component-classification.md) | コンポーネント分類 (shadcn/ui スタイル: ui / components / blocks / foundations) |
 | [docs/motion.md](docs/motion.md) | モーション規約 |
 
 ### 8.3 一次調査資料

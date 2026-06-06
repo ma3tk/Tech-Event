@@ -91,7 +91,7 @@ import {
 
 - [RadioGroup](./radio-group.md)
 - [Checkbox](./checkbox.md)
-- [04-patterns/data-input.md](../04-patterns/data-input.md)
+- [blocks/data-input.md](../blocks/data-input.md)
 
 ## 11. 変更履歴
 

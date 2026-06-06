@@ -90,7 +90,7 @@ import {
 
 ## 10. 関連
 
-- [UserMenuDropdown](../02-molecules/user-menu-dropdown.md)
+- [UserMenuDropdown](../components/user-menu-dropdown.md)
 - [Tabs](./tabs.md)
 - [Select](./select.md)
 

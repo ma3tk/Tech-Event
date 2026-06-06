@@ -75,7 +75,7 @@ import { RadioGroup, RadioGroupItem } from "@tech-event/shared-ui";
 
 - [Checkbox](./checkbox.md)
 - [Select](./select.md)
-- [04-patterns/data-input.md](../04-patterns/data-input.md)
+- [blocks/data-input.md](../blocks/data-input.md)
 
 ## 10. 変更履歴
 

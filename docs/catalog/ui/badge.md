@@ -20,8 +20,8 @@ personas: [P1, P2, P6]
 - メンバーシップ / プラン (「Pro」「Free」)
 
 ## 3. いつ使わないか (When NOT to use)
-- **イベントステータス** → [EventStatusBadge](../02-molecules/event-status-badge.md) (8 状態のドメイン特化)
-- **タグ** → [TagPill](../02-molecules/tag-pill.md) (クリック可能 / 削除可能のドメイン特化)
+- **イベントステータス** → [EventStatusBadge](../components/event-status-badge.md) (8 状態のドメイン特化)
+- **タグ** → [TagPill](../components/tag-pill.md) (クリック可能 / 削除可能のドメイン特化)
 - **ボタン (押せる)** → [Button](./button.md) `size="xs"`
 - **長文** → 通常のテキスト + アイコンを使う
 
@@ -48,7 +48,7 @@ personas: [P1, P2, P6]
 | `outline` | フラット | border-border + bg-transparent |
 | `destructive` | 警告系 | bg-brand-red + white text |
 
-ステータス8種 (open/full/waitlist/closed/cancelled/ended/upcoming/ongoing) は [EventStatusBadge](../02-molecules/event-status-badge.md) で扱う。Badge atom 単体には乗せない。
+ステータス8種 (open/full/waitlist/closed/cancelled/ended/upcoming/ongoing) は [EventStatusBadge](../components/event-status-badge.md) で扱う。Badge atom 単体には乗せない。
 
 
 <!-- AUTO-GENERATED END: variants -->
@@ -93,8 +93,8 @@ import { Badge } from "@tech-event/shared-ui";
 
 ## 11. 関連
 
-- [EventStatusBadge](../02-molecules/event-status-badge.md)
-- [TagPill](../02-molecules/tag-pill.md)
+- [EventStatusBadge](../components/event-status-badge.md)
+- [TagPill](../components/tag-pill.md)
 - [Button](./button.md)
 
 ## 12. 変更履歴

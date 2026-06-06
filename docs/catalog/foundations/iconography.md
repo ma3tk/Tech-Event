@@ -47,4 +47,4 @@ personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
 
 - [Design.md §9](../../../Design.md)
 - [docs/icons.md](../../icons.md)
-- [Button](../01-atoms/button.md) (icon-only Button)
+- [Button](../ui/button.md) (icon-only Button)

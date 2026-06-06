@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import ParticipantBadge from "./ParticipantBadge";
 
 const meta: Meta<typeof ParticipantBadge> = {
-  title: "Molecules/ParticipantBadge",
+  title: "Components/ParticipantBadge",
   component: ParticipantBadge,
   parameters: { layout: "padded" },
   argTypes: {

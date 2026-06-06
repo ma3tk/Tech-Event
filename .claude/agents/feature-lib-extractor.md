@@ -13,8 +13,8 @@ tools: Bash, Read, Edit, Write, Grep, Glob
 - Nx 22.x
 - 既存 libs:
   - `libs/shared/util-*` (action-error, audit, categories, cn, env, ...)
-  - `libs/shared/ui` (Atom primitives)
-  - `libs/shared/ui-composite` (Molecule / Organism)
+  - `libs/shared/ui` (ui primitives — shadcn/ui スタイル)
+  - `libs/shared/ui-composite` (components — shadcn/ui スタイル composite)
   - `libs/shared/data-access-prisma`
 - 抽出先候補: `libs/web/feature-events`, `libs/web/feature-checkout`, `libs/web/feature-dashboard` など
 - tsconfig path: `tsconfig.base.json` の `paths` に `@tech-event/feature-<name>` を追加

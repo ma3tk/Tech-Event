@@ -61,7 +61,7 @@ import { Breadcrumb } from "@tech-event/shared-ui-composite";
 
 ## 8. 関連
 
-- [04-patterns/navigation.md](../04-patterns/navigation.md)
+- [blocks/navigation.md](../blocks/navigation.md)
 
 ## 9. 変更履歴
 

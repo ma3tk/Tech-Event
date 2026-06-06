@@ -53,7 +53,7 @@ DS の **API / トークン / ドキュメント** 変更だけを追跡する�
   Radius / Icons / Components / Accessibility / Dark Mode / Component Checklist)。
 - ライト/ダーク切替 (`<html data-theme="dark">` + `ThemeProvider`) + localStorage 永続化。
 - `docs/design-system.md` 一次資料 22K 行 / `docs/design-system-audit.md` / `docs/icons.md` /
-  `docs/component-taxonomy.md` / `docs/motion.md`。
+  `docs/component-classification.md` (旧 `component-taxonomy.md`) / `docs/motion.md`。
 - 視覚比較 spec `e2e/visual-compare-dark.spec.ts` + ダークモード a11y `e2e/a11y-dark.spec.ts` /
   ハイコントラスト `e2e/high-contrast.spec.ts`。
 - Motion トークン (`--duration-fast/std/slow`, `--ease-standard/accel/decel`) + `Motion.mdx`。

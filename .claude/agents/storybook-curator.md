@@ -10,16 +10,16 @@ tools: Bash, Read, Glob, Grep, Write, Edit
 
 CLAUDE.md §4.3 「全コンポーネントに Storybook story + variant 100% カバー」を維持する。`storybook-story-generator` agent と相補的で、こちらは「全体監査 → ギャップ可視化」を担当する。
 
-作業前に `Design.md` §6 (Atomic 階層: Atom / Molecule / Organism / Template / Page) と §10 (status バリアント / CTA 規約) を読み、カバレッジ判定に組み込む:
-- Atom level の variant は §10 で定義された status (info / warning / success / error / neutral) を全部覆っているか
+作業前に `Design.md` §6 (コンポーネント階層: ui / components / blocks / foundations、shadcn/ui スタイル) と §10 (status バリアント / CTA 規約) を読み、カバレッジ判定に組み込む:
+- ui level の variant は §10 で定義された status (info / warning / success / error / neutral) を全部覆っているか
 - CTA 系コンポーネント (Button / RegisterButton 等) は primary / secondary / destructive / ghost を Design.md §10 規約どおりに覆っているか
-- Atomic 階層を跨いだ story を「過剰提案」しないこと (Atom は Atom 単体、Molecule は組み合わせのみ)
+- カテゴリを跨いだ story を「過剰提案」しないこと (ui は primitive 単体、components は ui の組み合わせのみ)
 
 ## コンテキスト
 
 - Storybook 10.x / `@storybook/nextjs-vite`
-- Atom (ui/): `apps/web/src/components/ui/*.tsx`
-- Composite: `apps/web/src/components/*.tsx`
+- ui primitives: `libs/shared/ui/src/*.tsx`
+- components (composite): `libs/shared/ui-composite/src/*.tsx`
 - Story: 同階層の `*.stories.tsx`
 - ビルド成果物: `storybook-static/`
 - CVA 利用箇所は `cva(...)` を Grep で抽出可能

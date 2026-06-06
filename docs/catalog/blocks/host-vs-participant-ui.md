@@ -45,7 +45,7 @@ tech-event の同じ画面 (例: `/event/[id]`) は **主催者と参加者で�
 
 ### 3.1 EventCard
 
-[EventCard](../03-organisms/event-card.md) は参加者向け / 主催者向けで以下を切り替える。
+[EventCard](../components/event-card.md) は参加者向け / 主催者向けで以下を切り替える。
 
 | 部位 | 参加者表示 | 主催者表示 |
 | --- | --- | --- |
@@ -57,11 +57,11 @@ tech-event の同じ画面 (例: `/event/[id]`) は **主催者と参加者で�
 
 ### 3.2 EventListRow
 
-[EventListRow](../03-organisms/event-list-row.md) も同様。主催者ビューでは "申込数 / 定員 / waitlist 数" の 3 数値を trailing に。
+[EventListRow](../components/event-list-row.md) も同様。主催者ビューでは "申込数 / 定員 / waitlist 数" の 3 数値を trailing に。
 
 ### 3.3 Header
 
-[Header](../03-organisms/header.md) の右側メニューは主催者の場合 `?role=host` クエリで `/host/dashboard` シノニムを優先候補に表示。
+[Header](../components/header.md) の右側メニューは主催者の場合 `?role=host` クエリで `/host/dashboard` シノニムを優先候補に表示。
 
 ## 4. 権限境界の UI 表現
 
@@ -93,10 +93,10 @@ P1 山田は通勤電車片手操作、P6 小林は PC でダッシュボード�
 
 ## 7. 関連
 
-- [03-organisms/event-card.md](../03-organisms/event-card.md) — variant prop 仕様
-- [03-organisms/event-list-row.md](../03-organisms/event-list-row.md) — 主催者ビュー
-- [03-organisms/header.md](../03-organisms/header.md) — Role toggle
-- [04-patterns/cta-matrix.md](./cta-matrix.md) — 主催者 CTA (公開 / 中止) は別系統
-- [04-patterns/event-status-orchestration.md](./event-status-orchestration.md) — status はどちらでも共通
-- [04-patterns/navigation.md](./navigation.md) — Header / nav の分岐
+- [components/event-card.md](../components/event-card.md) — variant prop 仕様
+- [components/event-list-row.md](../components/event-list-row.md) — 主催者ビュー
+- [components/header.md](../components/header.md) — Role toggle
+- [blocks/cta-matrix.md](./cta-matrix.md) — 主催者 CTA (公開 / 中止) は別系統
+- [blocks/event-status-orchestration.md](./event-status-orchestration.md) — status はどちらでも共通
+- [blocks/navigation.md](./navigation.md) — Header / nav の分岐
 - [`Personas.md`](../../../Personas.md) P6 / P7 / P8 のジャーニー

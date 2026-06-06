@@ -97,11 +97,13 @@ src/styles/themes/high-contrast.css  ← AAA mapping (prefers-contrast 対応)
 src/app/globals.css         ← @theme inline で Tailwind v4 bridge
 ```
 
-### 4.2 コンポーネント階層 (Atomic Design)
-- **Atom** = `src/components/ui/` の Radix UI + CVA primitives (21 個)
-- **Molecule / Organism** = `src/components/` の composite (Header / EventListRow / ShareModal 等)
-- **Template** = `/components` showcase ページ
-- **Page** = `src/app/**/page.tsx`
+### 4.2 コンポーネント階層 (shadcn/ui スタイル)
+- **ui** = `libs/shared/ui/` の Radix UI + CVA primitives (24 個)
+- **components** = `libs/shared/ui-composite/` の composite (Header / EventListRow / ShareModal 等、23 個)
+- **blocks** = `docs/catalog/blocks/` の構成パターン (10 個、MD のみ)
+- **foundations** = `src/styles/tokens.css` + `docs/catalog/foundations/` (10 個)
+- **Page** = `apps/web/src/app/**/page.tsx`
+- 詳細・判定基準・旧 Atomic 対応表は [`docs/component-classification.md`](./docs/component-classification.md) を参照
 
 ### 4.3 ルール
 - 既存 Tailwind ユーティリティクラス名は **互換性維持** (refactor 負担最小化)
@@ -126,7 +128,7 @@ docs/            — プロジェクト固有 docs
   design-system.md          — 設計思想・トークン
   design-system-audit.md    — 完成度監査
   design-system-changelog.md — DS版数管理
-  component-taxonomy.md     — Atomic 分類
+  component-classification.md — コンポーネント分類 (shadcn/ui スタイル ui/components/blocks/foundations) + 旧 Atomic 対応表
   component-api-status.md   — API 成熟度
   motion.md                 — モーション規約
   icons.md                  — アイコン規約
