@@ -103,6 +103,11 @@ for (const section of SECTIONS) {
 test.describe("Mobile Visual regression (toHaveScreenshot)", () => {
   for (const section of SECTIONS) {
     test(`mobile snapshot diff: ${section}`, async ({ page }) => {
+      // CI (Linux) では darwin baseline しかないため skip。
+      test.skip(
+        process.env.CI === "true" && process.platform === "linux",
+        "Linux 用 visual baseline 未生成のため CI では skip",
+      );
       await page.goto("/components", { waitUntil: "domcontentloaded" });
       const locator = page.getByTestId(`section-${section}`);
       await locator.scrollIntoViewIfNeeded();

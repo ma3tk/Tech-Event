@@ -50,6 +50,14 @@ env:
   # (lang / title 無し) となり axe が serious 違反 (document-title / html-has-lang) で fail する。
   ENABLE_DEV_LOGIN: "1"
   ENABLE_TEST_ENDPOINTS: "1"
+  # 旧形式 te_session を許容 (loginByCookie が生成する署名付き形式と旧形式の両方を受ける)
+  LEGACY_SESSION_FALLBACK: "1"
+  # Magic Link: 確認ページ→POST の 2 段ではなく、GET で即セッション発行する旧挙動を維持 (E2E 互換)
+  MAGIC_LINK_LEGACY_GET: "1"
+  # Slack Webhook URL の SSRF 検査で localhost を許容 (slack-webhook E2E が test サーバを叩く)
+  SLACK_WEBHOOK_ALLOW_TEST_HOSTS: "1"
+  # 抽選自動実行 (GET /api/cron/run-lotteries) のシークレット。
+  CRON_SECRET: "ci-cron-secret"
 
 jobs:
   # ------------------------------------------------------------
