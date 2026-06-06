@@ -7,8 +7,15 @@
  * 発行する。
  *
  * 戻り値はなく、ページ遷移完了後に解決する。
+ *
+ * CI 用フォールバック: Turbopack の app-route compile が初回 hit で間に合わない
+ * (or env が ENABLE_DEV_LOGIN を読めない) ケースが起きると dev-login は 404 を返す。
+ * `loginByCookie(...)` で session cookie を直接合成してフォールバックできる。
  */
-import type { Page } from "@playwright/test";
+import { createHmac } from "node:crypto";
+import Database from "better-sqlite3";
+import path from "node:path";
+import type { BrowserContext, Page } from "@playwright/test";
 
 /** デフォルトの dev-login ユーザー (seed: id=1) */
 export const DEFAULT_DEV_USER = "fast_moon_169";
@@ -66,4 +73,76 @@ export async function devLoginLegacy(
   // クエリを含む nextPath にも対応するため pathname プレフィックス一致で待つ
   const expectedPathname = nextPath.split("?")[0]!;
   await page.waitForURL((u) => u.pathname.startsWith(expectedPathname));
+}
+
+// ============================================================
+// loginByCookie — dev-login HTTP route を経由せず session cookie を直接合成。
+// CI で Turbopack の app-route compile が間に合わず dev-login が 404 を返す
+// 状況のフォールバックとして使う。形式は `<userId>.<HMAC-SHA256(userId, AUTH_SECRET)>`
+// (`libs/shared/util-auth-session/src/auth-session.ts` の signUserId に一致)。
+// ============================================================
+const SESSION_COOKIE_NAME = "te_session";
+const DEV_DB_PATH = path.resolve(__dirname, "../../../web/dev.db");
+
+function base64url(buf: Buffer): string {
+  return buf
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function signUserId(userId: string, secret: string): string {
+  const h = createHmac("sha256", secret).update(userId).digest();
+  return base64url(h);
+}
+
+function buildSessionCookieValue(userId: string | bigint, secret: string): string {
+  const idStr = typeof userId === "bigint" ? userId.toString() : userId;
+  return `${idStr}.${signUserId(idStr, secret)}`;
+}
+
+function resolveUserId(nickname: string): string {
+  const db = new Database(DEV_DB_PATH, { readonly: true });
+  try {
+    const row = db
+      .prepare("SELECT id FROM users WHERE nickname = ?")
+      .get(nickname) as { id: number | bigint } | undefined;
+    if (!row) {
+      throw new Error(`[loginByCookie] user not found in dev.db: ${nickname}`);
+    }
+    return String(row.id);
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * BrowserContext に te_session cookie を直接セットする。
+ * dev-login HTTP route を呼ばないため、Turbopack compile timing や env 未伝搬の
+ * 影響を受けず CI でも安定する。
+ *
+ * @param context Playwright BrowserContext
+ * @param nickname dev.db に存在する user nickname (デフォルト: `fast_moon_169`)
+ */
+export async function loginByCookie(
+  context: BrowserContext,
+  nickname: string = DEFAULT_DEV_USER,
+): Promise<void> {
+  const secret =
+    process.env.AUTH_SECRET ?? "dev-secret-for-build-only-please-replace-in-production";
+  const userId = resolveUserId(nickname);
+  const value = buildSessionCookieValue(userId, secret);
+  await context.addCookies([
+    {
+      name: SESSION_COOKIE_NAME,
+      value,
+      domain: "localhost",
+      path: "/",
+      httpOnly: true,
+      sameSite: "Lax",
+      // production フラグは false (Playwright は http://localhost に対して secure を許容しない)
+      secure: false,
+    },
+  ]);
 }
