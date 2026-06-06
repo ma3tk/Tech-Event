@@ -1,0 +1,19 @@
+{
+  "name": "shared-util-reserved-words",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-reserved-words/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/shared/util-reserved-words/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/shared/util-reserved-words/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

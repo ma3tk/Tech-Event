@@ -9,7 +9,8 @@
  */
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient } from "../src/generated/prisma/index.js";
+import { PrismaClient } from "@tech-event/shared-data-access-prisma";
+import { computeInsightsSQL } from "@tech-event/web-feature-host-dashboard";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./dev.db",
@@ -92,12 +93,7 @@ async function main() {
     nextPartId += BigInt(1);
   }
 
-  // dynamic import of insights _lib (tsx 直接実行する想定で .ts 拡張子を含めるのは
-  // typecheck で弾かれるので、`as any` キャストで吸収する)
-  const lib = (await import(
-    /* @vite-ignore */ "../src/app/event/[id]/admin/insights/_lib"
-  )) as { computeInsightsSQL: (e: { id: bigint; groupId: bigint; title: string; startedAt: Date }) => Promise<unknown> };
-  const { computeInsightsSQL } = lib;
+  // computeInsightsSQL は @tech-event/web-feature-host-dashboard から提供される。
 
   // warm up
   await computeInsightsSQL(target);

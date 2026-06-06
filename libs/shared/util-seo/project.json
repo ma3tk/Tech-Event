@@ -1,0 +1,19 @@
+{
+  "name": "shared-util-seo",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-seo/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/shared/util-seo/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/shared/util-seo/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "shared-util-logger",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-logger/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/shared/util-logger/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/shared/util-logger/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

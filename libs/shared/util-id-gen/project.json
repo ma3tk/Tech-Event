@@ -1,0 +1,19 @@
+{
+  "name": "shared-util-id-gen",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-id-gen/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:data-access"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/shared/util-id-gen/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/shared/util-id-gen/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

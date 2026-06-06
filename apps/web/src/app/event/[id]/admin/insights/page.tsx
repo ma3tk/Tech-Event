@@ -21,7 +21,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-import { computeInsightsSQL, type Insights } from "./_lib";
+import { computeInsightsSQL, type Insights } from "@tech-event/web-feature-host-dashboard";
 
 export const dynamic = "force-dynamic";
 

@@ -1,0 +1,19 @@
+{
+  "name": "web-feature-i18n",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/feature-i18n/src",
+  "projectType": "library",
+  "tags": ["scope:web", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/web/feature-i18n/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/web/feature-i18n/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

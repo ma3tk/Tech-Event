@@ -57,3 +57,37 @@ export function buildSessionCookieValue(userId: bigint | string): string {
   const sig = signUserId(idStr);
   return `${idStr}.${sig}`;
 }
+
+/* ============================================================
+ * next-auth セッション取得 fetcher の registry (DI)
+ *
+ * `feature-user` の `getCurrentUser()` は next-auth (`@/auth`) のセッションを
+ * 優先取得するが、`@/auth` は app レイヤー (`apps/web/auth.ts`) のため
+ * feature lib から静的依存できない (Nx boundary `type:feature → type:app` 違反)。
+ * apps/web 側で起動時にこの registry へ fetcher を登録し、
+ * feature-user は本 registry 越しに呼び出す。
+ * ============================================================ */
+
+export type NextAuthSession = {
+  user?: { id?: string } | null;
+} | null;
+
+/** next-auth の `auth()` 関数と同じ shape の fetcher。 */
+export type NextAuthSessionFetcher = () => Promise<NextAuthSession>;
+
+type GlobalWithFetcher = typeof globalThis & {
+  __teNextAuthFetcher?: NextAuthSessionFetcher;
+};
+
+/** apps/web/auth.ts などから登録するエントリポイント。 */
+export function registerNextAuthSessionFetcher(
+  fetcher: NextAuthSessionFetcher,
+): void {
+  (globalThis as GlobalWithFetcher).__teNextAuthFetcher = fetcher;
+}
+
+/** feature-user 等から取得するエントリポイント (未登録なら null)。 */
+export function getNextAuthSessionFetcher(): NextAuthSessionFetcher | null {
+  const g = globalThis as GlobalWithFetcher;
+  return g.__teNextAuthFetcher ?? null;
+}
