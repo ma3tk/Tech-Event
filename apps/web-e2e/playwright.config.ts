@@ -67,9 +67,12 @@ export default defineConfig({
         reuseExistingServer: true,
         timeout: 120_000,
         // CI で `/api/auth/dev-login` を 200 で動かすために環境変数を子プロセスへ明示伝搬。
-        // Playwright は通常 process.env を継承するが、CI / `pnpm exec` 経由だと
-        // 一部の env が落ちることがあるので冪等に再宣言する。
+        // Playwright の webServer.env は process.env と merge されるはずだが、
+        // CI で実際には継承されない事例があるため (NODE_ENV / CI / PATH 系)、明示的に列挙する。
         env: {
+          // PATH / HOME / shell 系は process.env から漏らさず継承する
+          ...process.env,
+          // 明示上書き
           ENABLE_DEV_LOGIN: process.env.ENABLE_DEV_LOGIN ?? "1",
           ENABLE_TEST_ENDPOINTS: process.env.ENABLE_TEST_ENDPOINTS ?? "1",
           AUTH_SECRET:
@@ -81,6 +84,9 @@ export default defineConfig({
           PUBLIC_API_KEY:
             process.env.PUBLIC_API_KEY ?? "ci-placeholder-public-api-key",
           NEXT_TELEMETRY_DISABLED: "1",
+          // `next dev` は内部で NODE_ENV=development を強制設定するが、明示しておけば
+          // dev-login route の `isDevLoginEnabled()` が確実に true になる。
+          NODE_ENV: process.env.NODE_ENV ?? "development",
         },
       },
 });
