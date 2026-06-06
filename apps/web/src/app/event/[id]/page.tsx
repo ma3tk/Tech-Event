@@ -42,7 +42,7 @@ import ShareModal from "@/components/ShareModalDynamic";
 import EventStickyCTA, {
   type StickyState,
 } from "@/components/EventStickyCTA";
-import ActionForm from "@/components/forms/ActionForm";
+import ActionForm from "../../../components/forms/ActionForm";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";

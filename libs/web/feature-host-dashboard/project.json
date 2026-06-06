@@ -1,0 +1,19 @@
+{
+  "name": "web-feature-host-dashboard",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/feature-host-dashboard/src",
+  "projectType": "library",
+  "tags": ["scope:web", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/web/feature-host-dashboard/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p libs/web/feature-host-dashboard/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

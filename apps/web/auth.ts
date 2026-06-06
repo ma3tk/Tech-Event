@@ -33,6 +33,8 @@ import { prisma } from "@/lib/prisma";
 import {
   SESSION_COOKIE_NAME,
   buildSessionCookieValue,
+  registerNextAuthSessionFetcher,
+  type NextAuthSessionFetcher,
 } from "@/lib/auth-session";
 import { nextId } from "@/lib/id-gen";
 
@@ -318,3 +320,10 @@ export const authConfig: NextAuthConfig = {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+
+// feature lib (`web-feature-user`) の getCurrentUser() が next-auth セッションを
+// 取得できるよう registry へ登録 (DI)。これにより feature → app の静的依存を
+// 持たずに済む (Nx boundary `type:feature → type:app` 違反を回避)。
+registerNextAuthSessionFetcher(
+  auth as unknown as NextAuthSessionFetcher,
+);

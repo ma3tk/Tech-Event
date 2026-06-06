@@ -27,7 +27,7 @@
 
 import * as React from "react";
 
-import { toast } from "@/components/ui/toast";
+import { toast } from "@tech-event/shared-ui";
 import { isActionError } from "@/lib/action-error";
 
 type ToastKind = "success" | "info" | "error";

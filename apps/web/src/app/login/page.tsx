@@ -14,7 +14,7 @@
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { signIn } from "@/auth";
+import { signIn } from "../../../auth";
 import { MagicLinkForm } from "./MagicLinkForm";
 import { loadDict, t } from "@/lib/i18n";
 

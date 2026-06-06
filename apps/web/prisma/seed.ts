@@ -20,7 +20,7 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../src/generated/prisma/index.js";
+import { PrismaClient } from "@tech-event/shared-data-access-prisma";
 
 // DATABASE_URL の接頭で adapter を切り替える (SQLite/PG 両対応)。
 // SQLite 専用の挙動を維持しつつ、PG 切替時も同じ seed が動くようにする。

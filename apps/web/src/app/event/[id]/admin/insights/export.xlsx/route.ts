@@ -19,7 +19,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-import { computeInsightsSQL } from "../_lib";
+import { computeInsightsSQL } from "@tech-event/web-feature-host-dashboard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";

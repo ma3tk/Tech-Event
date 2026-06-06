@@ -31,6 +31,7 @@ const eslintConfig = defineConfig([
     "apps/web/.next/**",
     "apps/web/next-env.d.ts",
     "apps/web/src/generated/**",
+    "libs/shared/data-access-prisma/src/generated/**",
     "storybook-static/**",
     "playwright-report/**",
     "test-results/**",
@@ -40,12 +41,9 @@ const eslintConfig = defineConfig([
     files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
     plugins: { "@nx": nxPlugin },
     rules: {
-      // Foundation PR では severity を warn に。
-      // 次の PR (feature lib 切り出し) で error に昇格させて strict 化する。
-      // 現状は app 内 `@/...` self-import (circular) や `@/generated/prisma` を
-      // 大量に含むため、boundary 違反を許容する。
+      // Feature lib 切り出し PR で error に昇格。strict 運用。
       "@nx/enforce-module-boundaries": [
-        "warn",
+        "error",
         {
           enforceBuildableLibDependency: false,
           allow: ["^.*/eslint(\\.base)?\\.config\\.[cm]?js$"],

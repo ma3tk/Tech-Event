@@ -14,7 +14,7 @@
 
 import * as React from "react";
 
-import { useActionToast } from "@/hooks/useActionToast";
+import { useActionToast } from "../../hooks/useActionToast";
 
 type Props = Omit<React.FormHTMLAttributes<HTMLFormElement>, "action"> & {
   action: (formData: FormData) => Promise<unknown> | unknown;
