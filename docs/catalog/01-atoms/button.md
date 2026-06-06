@@ -1,0 +1,207 @@
+# Button
+
+> Design.md 準拠 | Storybook: [Button stories](../../../libs/shared/ui/src/button.stories.tsx) | 実装: `libs/shared/ui/src/button.tsx`
+
+## 1. 目的 (Purpose)
+ユーザーの **意思決定 / 副作用を伴うアクション** をトリガーするための最も基本的な操作要素。形式の異なる 6 variant × 5 size を CVA で型付けし、`asChild` パターンにより `<a>` / Next の `<Link>` などにスタイルを乗せ替えられる。
+
+## 2. いつ使うか (When to use)
+- フォーム送信 (「保存」「送信」「申込」)
+- 副作用を伴う操作 (「削除」「キャンセル」「ログアウト」)
+- モーダル / ダイアログを開く (「シェア」「編集」「設定」)
+- 主要な遷移を促す CTA (「参加申込」「登録」)
+- ツールバーの個別操作 (Markdown editor の太字 / 見出し挿入など)
+
+## 3. いつ使わないか (When NOT to use)
+- **画面遷移のみ** → [Link](#) (`<Link>` / `<a>`) を使う。`<Button onClick={() => router.push(...)}>` は最悪
+- **トグル状態** → [Switch](./switch.md) または `aria-pressed` 付きの specialized component
+- **チェック / ラジオ** → [Checkbox](./checkbox.md) / [RadioGroup](./radio-group.md)
+- **ナビメニュー項目** → [DropdownMenu](./dropdown-menu.md) の `MenuItem`
+- **タブ切替** → [Tabs](./tabs.md) の `TabsTrigger`
+- **ステータス表示** (押せない) → [Badge](./badge.md)
+
+## 4. 構造 (Anatomy)
+
+```
+┌─────────────────────────────┐
+│  [icon] Label  [trailing]   │
+└─────────────────────────────┘
+   ▲      ▲           ▲
+   │      │           └─ trailing icon (optional)
+   │      └────────────── label text (required)
+   └───────────────────── leading icon (optional)
+```
+
+- `leading icon` (optional, 16px) — 例: 「保存」の前にディスクアイコン
+- `label` (required) — 動詞 + 名詞のシンプル文 (「参加申込」「キャンセル」)
+- `trailing icon` (optional, 16px) — 例: 「次へ」の後の `ChevronRight`
+- フォーカスリング: `outline 2px brand-orange offset 2px`
+
+## 5. バリアント (Variants)
+
+| variant | 用途 | 視覚 | 例 |
+|---|---|---|---|
+| `default` | 主要 CTA (画面で 1 つだけ) | orange 塗り + white text | 「保存」「参加申込」 |
+| `secondary` | 補助操作 | surface + border | 「キャンセル」「もどる」 |
+| `destructive` | 破壊的操作 | red 塗り + white text | 「削除」「退会」「アカウント削除」 |
+| `outline` | フラットな補助 | 透明 + border-strong | 「下書き保存」 |
+| `ghost` | ナビ / ツールバー内 | 完全フラット + hover で background | DropdownMenu の trigger |
+| `link` | テキスト風リンク | text-link + underline on hover | 「詳細を見る」 |
+
+### variant 使い分けの判断フロー
+
+```
+副作用を伴うか?
+  ├─ Yes
+  │   ├─ 破壊的 (削除/退会)? → destructive
+  │   └─ そうでない         → default (画面で 1 つだけ)
+  └─ No (代替) ─→ secondary / outline / ghost
+
+ナビ・ツールバー? → ghost
+インラインテキストの一部? → link
+```
+
+## 6. サイズ (Sizes)
+
+| size | 用途 | 高さ | 内パディング |
+|---|---|---|---|
+| `xs` | コンパクトな補助 (TagPill の削除等) | 28px (`h-7`) | px-2 |
+| `sm` | フィルタ / ツールバー | 32px (`h-8`) | px-3 |
+| `md` | 標準 (default) | 40px (`h-10`) | px-4 |
+| `lg` | 大型 CTA (申込ボタン等) | 44px (`h-11`) | px-6 |
+| `icon` | アイコンのみの正方形 | 40×40 (`h-10 w-10`) | p-0 |
+
+モバイル (<640px) では `min-h-11` 相当に拡張するか、`size="lg"` を使うことで **44×44px タッチ領域** を確保する。
+
+## 7. 状態 (States)
+
+| 状態 | 視覚ルール | 実装 |
+|---|---|---|
+| default | base styles | — |
+| hover | 1 段濃く (`bg-brand-orange-hover` 等) | `hover:bg-brand-orange-hover` |
+| focus-visible | brand-orange リング 2px + offset 2px | `focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2` |
+| active | hover と同色 (押下中の沈み込み) | `active:bg-brand-orange-hover` |
+| disabled | opacity-50 + pointer-events-none | `disabled:opacity-50 disabled:pointer-events-none` |
+| loading | `aria-busy="true"` + 中身の前にスピナー | カスタム実装 |
+
+`disabled` 時は `aria-disabled="true"` も必ず併記する (スクリーンリーダーへの伝達)。
+
+## 8. アクセシビリティ (Accessibility)
+
+- **WCAG AA コントラスト**: `default` (white on `#c2410c`) で 4.93:1、`destructive` (white on `#d23a3a`) で 4.5:1+ を確保 (Design.md §2)
+- **キーボード**: `Enter` / `Space` で activate (`<button>` のネイティブ挙動)
+- **`aria-disabled`** / **`aria-busy`** を状態と整合させる
+- **アイコンのみのボタン** (`size="icon"`) は **必ず `aria-label`** を付ける
+  ```tsx
+  <Button size="icon" aria-label="閉じる"><X /></Button>
+  ```
+- **フォーカスリングは隠さない**: `outline-none` を `focus-visible:ring-*` で置き換える形 (Tailwind の慣用)
+
+## 9. レスポンシブ
+
+- モバイル (<640px) ではタッチ領域 **44×44px** を確保 → `size="lg"` または `min-h-11 min-w-11` クラス
+- 長文ラベルは `whitespace-nowrap` で潰さず、可能なら短縮 (「参加申込」のように 4-5 文字以内)
+- グループ化 (cancel / save の 2 ボタン) は `flex-col sm:flex-row` で縦 → 横切替
+
+## 10. 使用例 (Code)
+
+### 10.1 基本
+```tsx
+import { Button } from "@tech-event/shared-ui";
+
+<Button variant="default" size="md">
+  参加申込
+</Button>
+```
+
+### 10.2 アイコン + テキスト
+```tsx
+import { Save } from "lucide-react";
+
+<Button variant="default">
+  <Save />
+  下書き保存
+</Button>
+```
+
+`[&_svg]:size-4` が base に入っているため、子の SVG は自動で 16px になる。
+
+### 10.3 アイコンのみ
+```tsx
+import { X } from "lucide-react";
+
+<Button size="icon" variant="ghost" aria-label="閉じる">
+  <X />
+</Button>
+```
+
+### 10.4 asChild で `<a>` にスタイルを乗せる
+```tsx
+import Link from "next/link";
+
+<Button asChild variant="default">
+  <Link href="/event/new">イベントを作成</Link>
+</Button>
+```
+
+### 10.5 ローディング状態
+```tsx
+<Button
+  type="submit"
+  disabled={isPending}
+  aria-busy={isPending}
+>
+  {isPending ? (
+    <>
+      <Loader2 className="animate-spin" />
+      送信中…
+    </>
+  ) : (
+    "送信"
+  )}
+</Button>
+```
+
+### 10.6 destructive + 確認モーダル
+```tsx
+<Dialog>
+  <DialogTrigger asChild>
+    <Button variant="destructive">アカウント削除</Button>
+  </DialogTrigger>
+  <DialogContent>
+    {/* 確認内容 */}
+    <DialogFooter>
+      <DialogClose asChild>
+        <Button variant="secondary">キャンセル</Button>
+      </DialogClose>
+      <Button variant="destructive" onClick={handleDelete}>
+        削除する
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+## 11. アンチパターン (Anti-patterns)
+
+- ❌ `<Button onClick={() => router.push("/foo")}>` → ✅ `<Button asChild><Link href="/foo">...</Link></Button>` (画面遷移は a タグ)
+- ❌ `<Button className="bg-blue-500">` → ✅ variant prop で表現 (任意 hex / Tailwind パレットは禁止)
+- ❌ `<Button>OK</Button>` の連発 → ✅ ラベルは具体的に (「保存」「送信」「申込」など動詞 + 名詞)
+- ❌ `<div onClick role="button">` → ✅ `<Button>` (キーボード操作と SR 対応)
+- ❌ `default` を 1 画面に 3 つ以上 → ✅ 主要 CTA は 1 画面 1 つに絞る
+- ❌ icon-only で `aria-label` 抜け → ✅ 必須
+- ❌ disabled で説明なし → ✅ tooltip で「○○の理由で操作できません」を補う
+- ❌ loading 中も中身を非表示にする (CLS 発生) → ✅ サイズを保ったままスピナーで上書き
+
+## 12. 関連 (Related)
+
+- [Form](./form.md) — フォーム送信ボタンは内部の `<button type="submit">` として使う
+- [Dialog](./dialog.md) — `DialogTrigger` / `DialogClose` の中で `asChild` 利用
+- [DropdownMenu](./dropdown-menu.md) — `MenuItem` は Button ではない
+- [Tabs](./tabs.md) — `TabsTrigger` は Button ではない
+- [LoadingState](./loading-state.md) — 大きい範囲のローディングはこちら
+- [EventStickyCTA](../02-molecules/event-sticky-cta.md) — 詳細ページの CTA 統合
+
+## 13. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース、CVA で variant + size を型付け、6 variant × 5 size、`asChild` パターン採用

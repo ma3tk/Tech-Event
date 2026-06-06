@@ -317,3 +317,21 @@ pnpm build-storybook   # 静的ビルド (storybook-static/)
 ```
 
 Storybook のサイドバーで **Design System** を開き、目的のページに移動する。本 `docs/design-system.md` は一次資料 (原本) であり、MDX は人間向けの視覚的補完であるという位置付け。新トークンを追加した場合は、両者を同期して更新する。
+
+---
+
+## 15. デザインシステムカタログ (言語化ガイド)
+
+Storybook (視覚) と相互補完する **言語化された使い分けガイド** を `docs/catalog/` に整備している。コンポーネントごとに「いつ使うか」「いつ使わないか」「アンチパターン」を言語化し、Atomic Design の 5 階層 (Atom / Molecule / Organism / Pattern / Foundation) で構成。
+
+| エントリ | 内容 |
+| --- | --- |
+| [`docs/catalog/README.md`](./catalog/README.md) | カタログトップ + 全コンポーネント早見表 |
+| [`docs/catalog/00-overview.md`](./catalog/00-overview.md) | Design.md の要約 (1 ページサマリ) |
+| [`docs/catalog/01-atoms/`](./catalog/01-atoms/) | 21 primitives (`libs/shared/ui/`) |
+| [`docs/catalog/02-molecules/`](./catalog/02-molecules/) | 15 molecules (`libs/shared/ui-composite/`) |
+| [`docs/catalog/03-organisms/`](./catalog/03-organisms/) | 8 organisms (`libs/shared/ui-composite/`) |
+| [`docs/catalog/04-patterns/`](./catalog/04-patterns/) | 7 構成パターン (Forms / Lists / Modals / Navigation / Feedback / Cards / Data Input) |
+| [`docs/catalog/05-foundations/`](./catalog/05-foundations/) | 10 デザイン言語 (Colors / Typography / Spacing / Iconography / Motion / Voice / A11y / Responsive / States / Theming) |
+
+本 `docs/design-system.md` がトークン値 / API の **一次資料** であるのに対し、`docs/catalog/` は **使い分けの意図** を言語化したガイドという位置付け。新規コンポーネント追加時は両者を同期して更新する。

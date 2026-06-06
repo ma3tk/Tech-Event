@@ -1,0 +1,70 @@
+# EventStatusBadge
+
+> Design.md 準拠 | Storybook: [EventStatusBadge stories](../../../libs/shared/ui-composite/src/EventStatusBadge.stories.tsx) | 実装: `libs/shared/ui-composite/src/EventStatusBadge.tsx`
+
+## 1. 目的
+イベント **8 状態のステータスバッジ** (open / full / waitlist / closed / cancelled / ended / upcoming / ongoing)。Design.md §10.1 / docs/design-system.md §2.5 の規約を厳守する唯一の表示コンポーネント。
+
+## 2. いつ使うか
+- イベントカード / リスト行 / 詳細ページのステータス表示
+- ダッシュボードの一覧表
+
+## 3. いつ使わないか
+- DB 互換の生 enum (`draft` / `published`) を直接表示 → 状態に変換してから渡す
+- 一般的な「NEW」「Beta」 → [Badge](../01-atoms/badge.md)
+
+## 4. 8 状態の対応
+
+| status | 色 | ラベル (ja/en) |
+|---|---|---|
+| open | green | 募集中 / Open |
+| full | red | 満員 / Full |
+| waitlist | yellow | 補欠登録受付中 / Waitlist |
+| closed | gray | 募集締切 / Closed |
+| cancelled | dark-red | 中止 / Cancelled |
+| ended | gray | 終了 / Ended |
+| upcoming | blue | 開催前 / Upcoming |
+| ongoing | orange | 開催中 / Ongoing |
+
+色 + テキスト併記 (Design.md §10.1)。
+
+## 5. バリアント
+
+| variant | 視覚 |
+|---|---|
+| `subtle` (default) | 淡背景 + 濃文字 |
+| `solid` | 塗り + 白文字 |
+| `outline` | 透明 + 色付き border |
+| `dot` | 小ドット + テキスト |
+
+## 6. アクセシビリティ
+
+- ラベルは必ず色と併記
+- aria-label でステータス名を強化
+- コントラスト比は全 8 状態で AA (4.5:1) 以上 (`docs/design-system.md` §2.5)
+
+## 7. 使用例
+
+```tsx
+import { EventStatusBadge } from "@tech-event/shared-ui-composite";
+
+<EventStatusBadge status="open" />
+<EventStatusBadge status="full" variant="solid" />
+<EventStatusBadge status="waitlist" variant="dot" />
+```
+
+## 8. アンチパターン
+
+- ❌ 独自に色だけのバッジ → ✅ 必ずこの compoennt
+- ❌ ラベル日本語を独自に → ✅ Design.md §10.1 の文言を遵守
+- ❌ 8 状態以外を追加 → ✅ Design.md の改訂が必要
+
+## 9. 関連
+
+- [Badge](../01-atoms/badge.md)
+- [Design.md §10.1](../../../Design.md)
+- [docs/design-system.md §2.5](../../design-system.md)
+
+## 10. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース、8 状態 + 4 variant

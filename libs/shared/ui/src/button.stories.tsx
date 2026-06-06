@@ -22,6 +22,8 @@ const meta: Meta<typeof Button> = {
           "- ❌ `<a>` を直接 className でスタイルする (= `asChild` を使う)",
           "- ❌ `variant=destructive` を成功系の CTA に使う (色の意味の濫用)",
           "- ❌ `size=icon` で `aria-label` を省略する (SR ユーザーが何のボタンか分からない)",
+          "",
+          "**カタログ**: [docs/catalog/01-atoms/button.md](https://github.com/findyinc/tech-event/blob/main/docs/catalog/01-atoms/button.md) — 使い分けガイド (いつ使う / いつ使わない / アンチパターン)",
         ].join("\n"),
       },
     },
