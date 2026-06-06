@@ -137,9 +137,10 @@ jobs:
 
       # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
       # Nx 移行後 spec は apps/web-e2e/ 配下に存在する。
+      # pnpm exec は workspace root を cwd と見なすため、--config に絶対パスを渡す。
       - name: Run Playwright tests
         working-directory: apps/web-e2e
-        run: pnpm exec playwright test --config=playwright.config.ts
+        run: pnpm exec playwright test --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts"
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
@@ -190,18 +191,19 @@ jobs:
 
       # 明示的に a11y 系 spec のみを実行 (critical/serious → spec 側で fail)
       # Nx 移行後 e2e spec は apps/web-e2e/src/ 配下。
+      # pnpm exec は workspace root を cwd と見なすため、--config に絶対パスを渡す。
       - name: Run axe-core a11y suite
         working-directory: apps/web-e2e
         run: |
           pnpm exec playwright test \
-            --config=playwright.config.ts \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
             --project=chromium-desktop \
             src/a11y-pages.spec.ts \
             src/components-a11y.spec.ts \
             src/a11y-dark.spec.ts \
             src/high-contrast.spec.ts
           pnpm exec playwright test \
-            --config=playwright.config.ts \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
             --project=chromium-mobile \
             src/a11y-pages-mobile.spec.ts
 
