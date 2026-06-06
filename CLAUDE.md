@@ -71,6 +71,8 @@
 
 ## 4. デザインシステム
 
+ビジュアル / UI 関連の作業は [Design.md](./Design.md) を最初に読む (本章はコード規約、Design.md はビジュアル規範のトップレベル文書)。
+
 ### 4.1 3 層トークン体系
 ```
 src/styles/tokens.css       ← Primitive (color scales, typography, spacing, radius, shadow, z, motion, border-width)
