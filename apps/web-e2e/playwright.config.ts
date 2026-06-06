@@ -66,5 +66,21 @@ export default defineConfig({
         url: "http://localhost:3000",
         reuseExistingServer: true,
         timeout: 120_000,
+        // CI で `/api/auth/dev-login` を 200 で動かすために環境変数を子プロセスへ明示伝搬。
+        // Playwright は通常 process.env を継承するが、CI / `pnpm exec` 経由だと
+        // 一部の env が落ちることがあるので冪等に再宣言する。
+        env: {
+          ENABLE_DEV_LOGIN: process.env.ENABLE_DEV_LOGIN ?? "1",
+          ENABLE_TEST_ENDPOINTS: process.env.ENABLE_TEST_ENDPOINTS ?? "1",
+          AUTH_SECRET:
+            process.env.AUTH_SECRET ??
+            "ci-placeholder-auth-secret-32chars-min-length-ok",
+          DATABASE_URL: process.env.DATABASE_URL ?? "file:./dev.db",
+          NEXT_PUBLIC_BASE_URL:
+            process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
+          PUBLIC_API_KEY:
+            process.env.PUBLIC_API_KEY ?? "ci-placeholder-public-api-key",
+          NEXT_TELEMETRY_DISABLED: "1",
+        },
       },
 });
