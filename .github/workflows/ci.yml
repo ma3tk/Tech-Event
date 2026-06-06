@@ -40,8 +40,11 @@ env:
   CI: "true"
   # Prisma migrate reset 用 (SQLite を使うため file: で十分)。
   # db:reset は cwd=apps/web で実行されるため、apps/web/dev.db に作成される。
-  # apps/web 配下のスクリプトから読む場合は file:./dev.db、root からは file:./apps/web/dev.db で参照する。
   DATABASE_URL: "file:./dev.db"
+  # @t3-oss/env-nextjs の Zod 検証は NODE_ENV=production だと必須項目を厳格化する。
+  # CI ビルドではこれらは本物ではなく placeholder で十分 (本番は secrets で上書き)。
+  AUTH_SECRET: "ci-placeholder-auth-secret-32chars-min-length-ok"
+  NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
 
 jobs:
   # ------------------------------------------------------------
@@ -123,6 +126,11 @@ jobs:
         working-directory: apps/web
         run: pnpm exec tsx prisma/seed-test-user.ts
 
+      # 個別 spec が process.cwd()/dev.db を参照するため、apps/web-e2e/dev.db に
+      # apps/web/dev.db のリンクを張る (シンボリックリンクで参照のみ)。
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
+
       # Playwright ブラウザ + system deps (chromium のみ)
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
@@ -131,7 +139,7 @@ jobs:
       # Nx 移行後 spec は apps/web-e2e/ 配下に存在する。
       - name: Run Playwright tests
         working-directory: apps/web-e2e
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --config=playwright.config.ts
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
@@ -174,6 +182,9 @@ jobs:
         working-directory: apps/web
         run: pnpm exec tsx prisma/seed-test-user.ts
 
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
+
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
@@ -183,12 +194,14 @@ jobs:
         working-directory: apps/web-e2e
         run: |
           pnpm exec playwright test \
+            --config=playwright.config.ts \
             --project=chromium-desktop \
             src/a11y-pages.spec.ts \
             src/components-a11y.spec.ts \
             src/a11y-dark.spec.ts \
             src/high-contrast.spec.ts
           pnpm exec playwright test \
+            --config=playwright.config.ts \
             --project=chromium-mobile \
             src/a11y-pages-mobile.spec.ts
 
