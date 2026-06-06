@@ -5,6 +5,8 @@
 
 > 著作物 (ロゴ・固有テキスト・画像) は一切複製していない。本リポジトリの実装はすべて research/ の自前調査資料に基づく独自再構築である。
 
+> **PR 時の必須ルール**: コードを変更したら関連ドキュメント (本 README / [`CLAUDE.md`](./CLAUDE.md) §5.0 / [`Design.md`](./Design.md) / [`Personas.md`](./Personas.md) / [`docs/`](./docs/) / [`docs/catalog/`](./docs/catalog/) / [`CHANGELOG.md`](./CHANGELOG.md) / `.env.example` / Storybook stories / i18n キー) を **同じ PR の中で同期更新する**。詳細は [`CLAUDE.md §5.0`](./CLAUDE.md)。リンク切れは PR レビューで blocker。
+
 ---
 
 ## 1. 構成
