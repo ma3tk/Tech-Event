@@ -105,7 +105,10 @@ test.describe("申込時アンケート (Survey)", () => {
     ).toHaveValue("ご経験年数を教えてください");
 
     // ============ 3. 別アカウントで参加申込 (別 context) ============
-    const ctx2 = await browser.newContext();
+    const ctx2 = await browser.newContext({
+      // baseURL は config の use.baseURL とは独立なので明示する。
+      baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    });
     const page2 = await ctx2.newPage();
     await devLogin(page2, APPLICANT, `/event/${eventId}`);
 

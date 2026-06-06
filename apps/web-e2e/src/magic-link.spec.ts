@@ -16,7 +16,9 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { test, expect } from "@playwright/test";
 
-const DB_PATH = path.resolve(process.cwd(), "dev.db");
+// Nx 化で e2e は apps/web-e2e/ に切り出されたが、dev.db は apps/web/ にある。
+// __dirname (apps/web-e2e/src) を基準に絶対パスで解決する。
+const DB_PATH = path.resolve(__dirname, "../../web/dev.db");
 
 type TokenRow = { id: string; email: string; expiresAt: number; usedAt: number | null };
 

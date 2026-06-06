@@ -45,6 +45,11 @@ env:
   # CI ビルドではこれらは本物ではなく placeholder で十分 (本番は secrets で上書き)。
   AUTH_SECRET: "ci-placeholder-auth-secret-32chars-min-length-ok"
   NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+  # E2E / a11y で `/api/auth/dev-login?nickname=...` 経由のログインを使うために必須。
+  # 未設定だと dev-login が 404 を返し、dashboard 等の認証必須ページが空の HTML
+  # (lang / title 無し) となり axe が serious 違反 (document-title / html-has-lang) で fail する。
+  ENABLE_DEV_LOGIN: "1"
+  ENABLE_TEST_ENDPOINTS: "1"
 
 jobs:
   # ------------------------------------------------------------
@@ -110,7 +115,8 @@ jobs:
   e2e:
     name: e2e (playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # workers=4 で 4 並列化したが 328 tests の余裕枠として 45 分を確保 (旧 30 分 → 45 分)。
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

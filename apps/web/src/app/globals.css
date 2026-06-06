@@ -15,6 +15,17 @@
  * ============================================================ */
 @import "tailwindcss";
 
+/*
+ * Nx 移行で UI コンポーネント (Header / ThemeSwitcher / UserMenuDropdown など) は
+ * libs/shared/ui-... 配下に切り出されている。Tailwind v4 はデフォルトで apps/web
+ * 配下しか scan しないため、libs を明示的に @source 指定しないと md:flex などの
+ * クラスが生成されず DOM が常に display:none になる
+ * (例: header の theme toggle が visible でなくなり E2E が落ちる)。
+ * パスは globals.css からの相対 (apps/web/src/app から repo root への 4 階層遡り)。
+ */
+@source "../../../../libs/**/*.tsx";
+@source "../../../../libs/**/*.ts";
+
 @import "../styles/tokens.css";
 @import "../styles/themes/light.css";
 @import "../styles/themes/dark.css";

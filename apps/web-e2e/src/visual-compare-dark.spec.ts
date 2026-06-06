@@ -66,6 +66,8 @@ for (const spec of PAGES) {
     const ctx = await browser.newContext({
       viewport: { width: 1280, height: 1600 },
       colorScheme: "dark",
+      // Playwright config の use.baseURL は newContext には自動継承されない。
+      baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     });
     // ThemeProvider が mount 時に localStorage を読むので、navigation の前に
     // 値を注入しておく。`addInitScript` は new document ごとに走るため、

@@ -13,7 +13,10 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { test, expect } from "@playwright/test";
 
-const DB_PATH = path.resolve(process.cwd(), "dev.db");
+// Nx 化で e2e は apps/web-e2e/ に切り出されたが、dev.db は apps/web/ にある。
+// __dirname (apps/web-e2e/src) を基準に絶対パスで解決することで、Playwright を
+// どこから起動しても同じ DB を参照する。
+const DB_PATH = path.resolve(__dirname, "../../web/dev.db");
 // 他テスト (comment-bookmark, participate, lottery 等) と衝突しないよう
 // 専用の event id を使う (event 8 はどのテストにも未使用)
 const TARGET_EVENT_ID = 8;

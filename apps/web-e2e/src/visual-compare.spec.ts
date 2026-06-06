@@ -43,10 +43,18 @@ test.beforeAll(async () => {
   }
 });
 
+// Playwright config の `use.baseURL` は `browser.newContext()` には自動継承されない。
+// CI で `page.goto("/")` を呼ぶと "Invalid URL" になるため、env override も含めて
+// 明示的に baseURL を context に渡す。
+const E2E_BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+
 for (const pair of PAIRS) {
   test(`screenshot pair: ${pair.name}`, async ({ browser }) => {
     test.setTimeout(120_000);
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 1600 } });
+    const ctx = await browser.newContext({
+      viewport: { width: 1280, height: 1600 },
+      baseURL: E2E_BASE_URL,
+    });
     const page = await ctx.newPage();
 
     // 認証が必要な clone ページは dev-login 経由でセッションを張ってから遷移する。

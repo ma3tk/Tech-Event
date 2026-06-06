@@ -18,7 +18,9 @@ import Database from "better-sqlite3";
 import { test, expect } from "@playwright/test";
 import { devLogin, DEFAULT_DEV_USER } from "./_helpers/auth";
 
-const DB_PATH = path.resolve(process.cwd(), "dev.db");
+// Nx 化で e2e は apps/web-e2e/ に切り出されたが、dev.db は apps/web/ にある。
+// __dirname (apps/web-e2e/src) を基準に絶対パスで解決する。
+const DB_PATH = path.resolve(__dirname, "../../web/dev.db");
 
 type CountRow = { c: number };
 type AuditRow = {

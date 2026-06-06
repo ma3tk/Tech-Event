@@ -16,7 +16,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // CI で workers=1 にすると 328 tests が直列で 30 分 timeout に達するため 4 並列にする。
+  // - serial mode のテスト群 (event-theme / lottery / stripe-payment 等) は
+  //   `test.describe.configure({ mode: "serial" })` 内で逐次化されており、
+  //   別 worker で別 spec が並列実行されても衝突しない。
+  // - DB 書き込み test は固定 event id を分けて衝突を避けている設計
+  //   (global-setup.ts のコメント参照)。
+  workers: process.env.CI ? 4 : undefined,
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   timeout: 60_000,
   expect: {
