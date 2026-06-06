@@ -26,6 +26,7 @@ graph.json
 
 # production
 /build
+/dist/
 
 # misc
 .DS_Store
@@ -49,6 +50,7 @@ next-env.d.ts
 
 /src/generated/prisma
 apps/web/src/generated/
+libs/shared/data-access-prisma/src/generated/
 .env
 *.db
 

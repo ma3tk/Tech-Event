@@ -1,0 +1,46 @@
+{
+  "name": "worker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/worker/src",
+  "projectType": "application",
+  "tags": ["scope:worker", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p apps/worker/tsconfig.build.json",
+          "tsc-alias -p apps/worker/tsconfig.build.json"
+        ],
+        "parallel": false,
+        "cwd": "."
+      },
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/worker"]
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx apps/worker/src/main.ts",
+        "cwd": "."
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx watch apps/worker/src/main.ts",
+        "cwd": "."
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint apps/worker/src" },
+      "cache": true
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p apps/worker/tsconfig.json" },
+      "cache": true
+    }
+  }
+}

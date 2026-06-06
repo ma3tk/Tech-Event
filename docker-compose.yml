@@ -92,7 +92,45 @@ services:
       echo 'tech-event bucket ready'
       "
 
+  # Redis: BullMQ (apps/worker) のキュー / job 状態 / pub-sub のバックエンド。
+  # 接続先 env: REDIS_URL="redis://localhost:6379"
+  redis:
+    image: redis:7-alpine
+    container_name: tech-event-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # BullMQ worker: participation / notification / lottery キューを subscribe。
+  # apps/worker/Dockerfile からビルドし、Next.js とは独立に動く。
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: tech-event-worker
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      REDIS_URL: "redis://redis:6379"
+      DATABASE_URL: "postgresql://techevent:techevent@postgres:5432/techevent?sslmode=disable"
+      WORKER_CONCURRENCY: "5"
+      LOG_LEVEL: "info"
+
 volumes:
   postgres-data:
   mailpit-data:
   minio-data:
+  redis-data:
