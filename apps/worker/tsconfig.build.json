@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "../../dist/apps/worker",
+    "rootDir": "../..",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "declaration": false,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "../../libs/shared/data-access-queue/src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

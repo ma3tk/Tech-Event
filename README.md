@@ -721,6 +721,97 @@ VRT は warn only モード (CI を block しない)。差分が出ても consol
 
 ---
 
+## 7.5 申込パス アーキテクチャ (BullMQ + Redis)
+
+apps/web の重い同期処理 (定員チェック / Participant 作成 / 主催者通知 / メール)
+を BullMQ で非同期化し、受付窓口を高速化する設計を 2026-06 から導入。
+
+### 構成図 (テキスト)
+
+```
+                       [Browser]
+                          │  POST /event/<id>/join
+                          ▼
+   ┌──────────────────────────────────────┐
+   │ apps/web (Next.js Server Action)     │
+   │   - zod 検証 + 認証                  │
+   │   - enqueueJoin({userId,eventId,…}) │──┐
+   │   - 受付完了レスポンス (job id)       │  │
+   └──────────────────────────────────────┘  │
+                          ▲                  │ BullMQ.add
+                          │                  ▼
+                          │              ┌───────┐
+        GET /api/jobs/:id │  ◄───状態 ─► │ Redis │
+                          │              └───────┘
+                          │                  ▲
+                          │                  │ Worker.process
+                          │  ┌───────────────┴──────────────┐
+                          │  │ apps/worker (standalone)     │
+                          │  │   participation processor    │
+                          │  │   → Prisma 直叩き             │
+                          │  │   notification processor      │
+                          │  │   → mail / slack 送信         │
+                          │  │   lottery processor           │
+                          │  │   → 抽選バッチ                │
+                          │  └──────────────────────────────┘
+```
+
+### 主要ファイル
+
+| パス | 役割 |
+| --- | --- |
+| `libs/shared/data-access-queue/` | Redis 接続 + Queue/QueueEvents factory + `enqueueJoin` 等の domain helper |
+| `apps/worker/src/main.ts` | 3 worker (participation/notification/lottery) のエントリ |
+| `apps/worker/src/processors/` | 各キューの実処理 (Prisma 直叩き) |
+| `apps/web/src/app/api/jobs/[id]/route.ts` | client polling 用 job 状態 API (認証必須・自分の job のみ) |
+| `apps/web/src/app/api/admin/queues/dashboard/[[...path]]/route.ts` | Bull Board ダッシュボード (admin/organizer 限定) |
+| `apps/web/src/app/admin/queues/page.tsx` | ダッシュボード埋め込みページ |
+
+### キュー一覧
+
+| 名前 | jobId 形式 | retry | DLQ |
+| --- | --- | --- | --- |
+| `participation` | `join:<userId>:<eventId>:<eventRoleId>` | 3 (exponential) | なし |
+| `notification` | 任意 | 3 (exponential) | `notification-dlq` に手動 push |
+| `lottery` | `lottery:<eventId>` | 2 (exponential) | なし |
+
+### 起動手順 (ローカル開発)
+
+```bash
+# 1. Redis (+PG/Mailpit/MinIO) を docker-compose で起動
+docker compose up -d redis
+
+# 2. 環境変数を設定
+echo 'REDIS_URL="redis://localhost:6379"' >> .env
+
+# 3. web + worker を並列起動
+pnpm dev:full                # = next dev + tsx watch apps/worker/src/main.ts
+
+# (代替) 個別起動
+pnpm dev                     # web のみ
+pnpm dev:worker              # worker のみ
+```
+
+### 起動手順 (本番 / docker compose)
+
+```bash
+docker compose up -d        # postgres + redis + worker + (mailpit + minio)
+```
+
+### キュー監視
+
+- `/admin/queues` (UI): admin / organizer ロールのみ、Bull Board UI が iframe で埋め込まれる。
+- `/api/admin/queues/dashboard/...` (API): 同上の REST 直叩き。
+- `/api/jobs/:id` (polling): 申込者本人のみ自分の job 状態を取得可能。
+  - inline モード (`REDIS_URL` 未設定) では即 `state=completed` を返す。
+
+### Fallback (REDIS_URL 未設定時)
+
+- `enqueueJoin()` などは `inlineHandler` を渡されると同期で従来通り処理する。
+- 既存テスト / dev 環境 (Redis なし) では挙動が変わらない (= 互換維持)。
+
+---
+
 ## 8. 関連ドキュメント
 
 ### 8.1 アーキテクチャ / 進捗

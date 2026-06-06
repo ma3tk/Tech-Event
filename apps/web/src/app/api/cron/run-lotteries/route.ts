@@ -5,19 +5,22 @@
  *
  * - `Event.recruitmentMethod === 'lottery'` かつ
  *   `lotteryAnnounceAt <= now` かつ
- *   `pending` 参加者を持つ EventRole が 1 つ以上ある event を抽出し、
- *   各イベントの全 lottery 枠で抽選 (`runLotteryForEvent`) を実行する。
+ *   `pending` 参加者を持つ EventRole が 1 つ以上ある event を抽出する。
+ * - 候補 event ごとに `lottery` キューに job を投入し、実処理は worker が行う。
+ *   `REDIS_URL` 未設定なら従来通り同期で `runLotteryForEvent` を呼ぶ (fallback)。
  * - シークレットは環境変数 `CRON_SECRET` に置く。未設定なら 503 を返し disable。
- * - 戻り値は JSON: `{ processed: number, errors: [{ eventId, message }] }`
+ * - 戻り値は JSON: `{ enqueued: number, inlineProcessed: number, errors: [...] }`
  *
  * NOTE: 実運用では Vercel Cron / Cloud Scheduler 等から定期的に叩く想定。
- * 本実装はシンプルな手動 / E2E 用バッチで、並列性は考慮しない。
+ * queue 化により本 endpoint は「候補抽出 + enqueue」しか行わなくなり、
+ * 1 リクエストの処理時間が短くなる (worker 側で並列実行される)。
  */
 
 import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { runLotteryForEvent } from "@/app/actions/lottery-actions";
+import { enqueueLottery, isRedisEnabled } from "@tech-event/shared-data-access-queue";
 
 // 動的レンダリングが必要 (環境変数 / DB クエリに依存)
 export const dynamic = "force-dynamic";
@@ -58,14 +61,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   });
 
   const errors: ErrorEntry[] = [];
-  let processed = 0;
+  let enqueued = 0;
+  let inlineProcessed = 0;
 
   for (const c of candidates) {
     try {
-      await prisma.$transaction(async (tx) => {
-        await runLotteryForEvent(tx, c.id);
-      });
-      processed += 1;
+      const result = await enqueueLottery(
+        { eventId: c.id.toString() },
+        async () => {
+          // fallback: REDIS_URL 未設定なら従来通り同期で実行
+          await prisma.$transaction(async (tx) => {
+            await runLotteryForEvent(tx, c.id);
+          });
+        },
+      );
+      if (result.mode === "queued") {
+        enqueued++;
+      } else {
+        inlineProcessed++;
+      }
     } catch (e) {
       errors.push({
         eventId: c.id.toString(),
@@ -74,5 +88,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  return NextResponse.json({ processed, errors });
+  return NextResponse.json({
+    mode: isRedisEnabled() ? "queued" : "inline",
+    enqueued,
+    inlineProcessed,
+    // 後方互換: 既存テストが `processed` を見る可能性に備え、合計値も返す
+    processed: enqueued + inlineProcessed,
+    errors,
+  });
 }

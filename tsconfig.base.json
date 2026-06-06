@@ -73,7 +73,8 @@
       "@tech-event/shared-util-zod-schemas": ["libs/shared/util-zod-schemas/src/index.ts"],
       "@tech-event/shared-util-auth-session": ["libs/shared/util-auth-session/src/index.ts"],
       "@tech-event/shared-util-design-tokens": ["libs/shared/util-design-tokens/src/index.ts"],
-      "@tech-event/shared-data-access-prisma": ["libs/shared/data-access-prisma/src/index.ts"]
+      "@tech-event/shared-data-access-prisma": ["libs/shared/data-access-prisma/src/index.ts"],
+      "@tech-event/shared-data-access-queue": ["libs/shared/data-access-queue/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
