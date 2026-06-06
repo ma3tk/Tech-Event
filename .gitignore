@@ -16,6 +16,13 @@
 # next.js
 /.next/
 /out/
+**/.next/
+apps/*/.next/
+apps/*/out/
+
+# Nx workspace
+.nx/
+graph.json
 
 # production
 /build
@@ -41,6 +48,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+apps/web/src/generated/
 .env
 *.db
 
@@ -49,10 +57,13 @@ storybook-static
 
 # 画像アップロードの local provider 保存先
 /public/uploads
+apps/web/public/uploads/
 
 # Playwright artifacts
 /test-results/
 /playwright-report/
+apps/web-e2e/playwright-report/
+apps/web-e2e/test-results/
 
 # E2E DB snapshot
 *.db.baseline

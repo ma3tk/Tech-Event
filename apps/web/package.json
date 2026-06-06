@@ -1,0 +1,6 @@
+{
+  "name": "@tech-event/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "tech-event (connpass + Luma クローン) の Next.js アプリ本体。実装は src/ 配下。"
+}
