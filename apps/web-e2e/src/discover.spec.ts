@@ -145,11 +145,14 @@ test.describe("Discover ページ", () => {
   test("トップページに Discover CTA バナーがあり /discover に遷移する", async ({
     page,
   }) => {
+    // CI dev サーバの turbopack 初回コンパイルで `/discover` の navigation が
+    // 60s を超えることがあるため timeout を 180s に伸ばす。
+    test.setTimeout(180_000);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     const cta = page.getByTestId("home-discover-cta");
     await expect(cta).toBeVisible();
     await cta.click();
-    await page.waitForURL(/\/discover/);
+    await page.waitForURL(/\/discover/, { timeout: 120_000 });
     expect(page.url()).toContain("/discover");
   });
 

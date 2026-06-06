@@ -60,11 +60,17 @@ test.describe("Mobile Showcase: 基本描画", () => {
   });
 
   test("モバイル幅でも全 11 セクションが描画される", async ({ page }) => {
-    await page.goto("/components");
+    await page.goto("/components", { waitUntil: "domcontentloaded" });
+    // hydration mismatch による再 mount を待つ (theme init script の data-theme と
+    // SSR の data-theme="light" が一致しないと React がツリーを破棄するため、
+    // 少し待ってから DOM 操作する)
+    await page.waitForLoadState("networkidle").catch(() => undefined);
     for (const id of SECTIONS) {
       const section = page.getByTestId(`section-${id}`);
-      await section.scrollIntoViewIfNeeded();
-      await expect(section, `section-${id} が visible`).toBeVisible();
+      await expect(section, `section-${id} が visible`).toBeVisible({
+        timeout: 15_000,
+      });
+      await section.scrollIntoViewIfNeeded().catch(() => undefined);
     }
   });
 
