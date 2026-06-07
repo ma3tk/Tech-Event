@@ -190,8 +190,9 @@ export default function EventStickyCTA({
       data-state={state}
       className={cn(
         // 下部固定 / モバイル 56px / セーフエリア考慮
+        // Luma 風: shadow-soft-lg (Tailwind v4 @theme inline 経由)
         "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface",
-        "shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.12)]",
+        "shadow-soft-lg",
         "pb-[env(safe-area-inset-bottom)] transition-transform duration-200",
         visible ? "translate-y-0" : "translate-y-full",
       )}
@@ -214,8 +215,9 @@ export default function EventStickyCTA({
           <Button
             asChild
             // 旧見た目: h-10 / px-5 / brand-orange + white / font-semibold
+            // Luma 風: rounded-2xl + shadow-soft-md
             size="md"
-            className="h-10 px-5 text-sm font-semibold"
+            className="h-10 rounded-2xl px-5 text-sm font-semibold shadow-soft-md"
           >
             <Link
               href={`/login?next=${encodeURIComponent(`/event/${eventId}`)}`}
@@ -237,7 +239,7 @@ export default function EventStickyCTA({
                   : "default"
             }
             className={cn(
-              "h-10 px-5 text-sm font-semibold",
+              "h-10 rounded-2xl px-5 text-sm font-semibold shadow-soft-md",
               disabled &&
                 "cursor-not-allowed bg-border-strong text-muted-foreground pointer-events-none border-0",
               !disabled &&

@@ -50,6 +50,9 @@ export const buttonVariants = cva(
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-6 text-base",
         icon: "h-10 w-10 p-0",
+        // Luma 風 大きめ CTA: rounded-2xl + px-6 + font-semibold + shadow-soft-md
+        // 主要 CTA (申込ボックス / Discover バナー等) で利用
+        luma: "h-11 rounded-2xl px-6 py-3 text-base font-semibold shadow-soft-md hover:shadow-soft-lg",
       },
     },
     defaultVariants: {
