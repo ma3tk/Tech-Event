@@ -1,0 +1,93 @@
+# ============================================================
+# tech-event Lighthouse 計測 (nightly のみ)
+#
+# トリガ: schedule (毎日 UTC 19:00 = JST 04:00)
+#        + workflow_dispatch (手動)
+#
+# 実行内容:
+#   - main の主要 10 ページに対し Lighthouse 計測 (apps/web-e2e/src/lighthouse.spec.ts)
+#   - 結果を artifact として upload (commit はしない、docs/lighthouse-report.md は手動更新運用)
+#
+# A 案で nightly に分離した理由:
+#   - Lighthouse は計測のばらつきが大きく、PR ごとに走らせるとノイズになる
+#   - 主要 10 ページ× 4 カテゴリで 15-25min かかる
+# ============================================================
+name: lighthouse
+
+on:
+  schedule:
+    # 毎日 UTC 19:00 = JST 04:00 (nightly Lighthouse)
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: lighthouse-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PUBLIC_API_KEY: dev-public-api-key-please-change
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+  DATABASE_URL: "file:./dev.db"
+  AUTH_SECRET: "ci-placeholder-auth-secret-32chars-min-length-ok"
+  NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+  ENABLE_DEV_LOGIN: "1"
+  ENABLE_TEST_ENDPOINTS: "1"
+  LEGACY_SESSION_FALLBACK: "1"
+
+jobs:
+  lighthouse:
+    name: lighthouse (nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+      - run: pnpm db:reset
+
+      - name: Seed fixture data (apps/web cwd)
+        working-directory: apps/web
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
+
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # 既存 spec: apps/web-e2e/src/lighthouse.spec.ts (主要 10 ページ × Lighthouse)
+      - name: Run Lighthouse spec
+        working-directory: apps/web-e2e
+        run: |
+          pnpm exec playwright test \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
+            --project=chromium-desktop \
+            src/lighthouse.spec.ts
+
+      - name: Upload Lighthouse reports (artifact)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: |
+            apps/web-e2e/playwright-report
+            docs/lighthouse-report.md
+            screenshots/lighthouse/**
+          retention-days: 30
+          if-no-files-found: ignore

@@ -12,9 +12,11 @@
 ## 検証
 
 - [ ] CI 全 job ✅ (`gh pr checks` で確認、`--admin` バイパス禁止 — [`CLAUDE.md §1.0`](../CLAUDE.md))
+- [ ] smoke CI 緑 (PR default check: smoke + lint + typecheck + build)
+- [ ] UI / DB 大改修なら `e2e:full` ラベル付けてフル E2E 緑も確認
 - [ ] `pnpm nx run-many -t typecheck`
 - [ ] `pnpm nx run web:build`
-- [ ] `pnpm nx run web-e2e:e2e` (主要 spec)
+- [ ] `pnpm nx run web-e2e:e2e --grep @smoke` (smoke のみ高速確認)
 - [ ] axe-core violations 0 (主要ページ)
 - [ ] Storybook 影響範囲を `pnpm storybook` で目視確認 (UI 変更時)
 - [ ] VRT (`pnpm nx run web-e2e:vrt`) baseline 更新確認 (見た目の変更があった場合)

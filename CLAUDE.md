@@ -16,6 +16,9 @@
 - merge済 main の CI が落ちている状態を放置しない → 即 fix PR を切る
 - 局所的な flake は `flaky:` を本文に明示して再実行 (`gh run rerun {run id}`) → それでも落ちたら fix
 - CI 高速化: `pnpm nx affected` で PR 差分のみ test/lint/build
+- **PR の必須 CI**: smoke + lint + typecheck + build (~5min)
+- **フル E2E の発火条件**: `e2e:full` ラベル付与 / `[full-e2e]` コミット / main push / nightly cron
+- PR で UI 変更が大きい場合は `e2e:full` ラベルを付けてマージ前にフル E2E を走らせる
 
 ### 1.1 既存機能・既存テストを削減しない
 - **追加・拡張は良いが、削除・縮小は禁止** (ユーザーが明示的に要請した場合のみ削除可)
@@ -67,6 +70,7 @@
 - chromium-desktop と chromium-mobile の両プロジェクトで PASS が必須
 - skipped は 0 を目指す (mobile-only / desktop-only は別)
 - flake は許容しない (timing race は locator-based 待機で解消)
+- smoke は PR の最低保証、フル E2E は label/nightly/post-merge で網羅
 
 ### 3.2 視覚回帰 (VRT)
 - `toHaveScreenshot()` で全 Storybook story + 主要ページのベースライン管理

@@ -8,6 +8,29 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-07 — CI A 案 (タイプ別パイプライン)
+
+### Changed
+- **`.github/workflows/ci.yml`** — A 案 (タイプ別運用) に組み換え。PR / push main では
+  `lint` + `typecheck` + `build` + **`smoke`** (4 job, ~5min) のみ実行。旧 `e2e (playwright)`
+  (20min) と `a11y (axe-core)` は新規 workflow へ移植。
+- **`apps/web-e2e/src/smoke.spec.ts`** — 全 test に `@smoke` タグ付与し、`--grep @smoke`
+  で抽出可能に。主要 8 ページ SSR / dev-login + イベント申込 / SSE / axe critical=0 を集約。
+
+### Added
+- **`.github/workflows/e2e-full.yml`** — フル E2E + a11y-full + VRT。
+  発火条件: PR label `e2e:full` / `[full-e2e]` コミット / push main / nightly cron
+  (JST 03:00) / `workflow_dispatch`。
+- **`.github/workflows/lighthouse.yml`** — nightly Lighthouse 計測 (JST 04:00)。
+  artifact 出力のみ (commit はしない)。
+
+### Docs
+- `CLAUDE.md` §1.0 / §3.1 に A 案ルールを追記。
+- `.github/pull_request_template.md` に smoke / フル E2E label の checkbox を追加。
+- `README.md` テストセクションに CI トリガマトリクスを追記。
+
+---
+
 ## [0.9.0] — 2026-06-05 — Design System v1.0.0 (完成度 100 %)
 
 ### Added
