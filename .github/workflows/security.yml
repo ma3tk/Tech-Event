@@ -49,8 +49,8 @@ jobs:
     name: semgrep (SAST)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    container:
-      image: semgrep/semgrep:latest
+    # Docker Hub からの pull は GHA から timeout しやすいため、
+    # container 指定ではなく pip install で semgrep を導入する (公式推奨の代替)。
     # fork PR (head_repository != base_repository) は SARIF upload 不可
     # → ベース動作だけ実行 (job 自体は走らせる)
     if: (github.actor != 'dependabot[bot]')
@@ -60,9 +60,47 @@ jobs:
           # baseline diff のため少し深めに fetch (PR の base..head 確実取得)
           fetch-depth: ${{ github.event_name == 'pull_request' && 100 || 1 }}
 
-      - name: Semgrep scan
+      - name: Set up Python (for semgrep)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Semgrep (via pip)
+        run: pip install --no-cache-dir semgrep
+
+      - name: Semgrep scan (PR differential)
+        if: github.event_name == 'pull_request'
         run: |
-          semgrep ci \
+          set +e
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/typescript \
+            --config p/nextjs \
+            --config p/react \
+            --config p/secrets \
+            --config p/javascript \
+            --config p/jwt \
+            --config p/sql-injection \
+            --config p/xss \
+            --config p/insecure-transport \
+            --config p/security-audit \
+            --baseline-commit "${SEMGREP_BASELINE_REF}" \
+            --sarif --output=semgrep.sarif \
+            --error \
+            --metrics=off
+          EXIT=$?
+          set -e
+          # SARIF を生成した上で job exit を反映 (Upload step は !cancelled() で必ず走る)
+          exit ${EXIT}
+        env:
+          SEMGREP_BASELINE_REF: ${{ github.event.pull_request.base.sha }}
+          SEMGREP_RULES_CACHE_DIR: /tmp/semgrep-cache
+
+      - name: Semgrep scan (full)
+        if: github.event_name != 'pull_request'
+        run: |
+          set +e
+          semgrep scan \
             --config p/owasp-top-ten \
             --config p/typescript \
             --config p/nextjs \
@@ -75,11 +113,12 @@ jobs:
             --config p/insecure-transport \
             --config p/security-audit \
             --sarif --output=semgrep.sarif \
-            --error
+            --error \
+            --metrics=off
+          EXIT=$?
+          set -e
+          exit ${EXIT}
         env:
-          # PR では base sha との差分 (新規違反のみで fail)
-          # push / schedule / dispatch では未設定 = full scan
-          SEMGREP_BASELINE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
           SEMGREP_RULES_CACHE_DIR: /tmp/semgrep-cache
 
       - name: Upload SARIF to Code Scanning
