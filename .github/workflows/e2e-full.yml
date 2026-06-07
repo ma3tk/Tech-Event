@@ -1,0 +1,265 @@
+# ============================================================
+# tech-event フル E2E / a11y / VRT (A 案 / on-demand & nightly)
+#
+# トリガマトリクス:
+#   - pull_request (`labeled` / `synchronize` / `opened` / `reopened`)
+#       label `e2e:full` が付いている、または HEAD commit に `[full-e2e]` を含む場合のみ実行
+#   - push: main ブランチ (post-merge regression catch)
+#   - workflow_dispatch (手動)
+#   - schedule: 毎日 UTC 18:00 (= JST 03:00) — nightly
+#
+# 実行内容:
+#   - e2e-full : Playwright 全 spec (chromium-desktop + chromium-mobile)
+#   - a11y-full: axe-core 系 spec (light / dark / high-contrast / mobile)
+#   - vrt      : `pnpm vrt` — Storybook 全 story の Visual Regression Test
+#
+# 想定時間: ~25min (e2e-full の workers=4 並列で吸収)
+# ============================================================
+name: e2e-full
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # 毎日 UTC 18:00 = JST 03:00 (nightly)
+    - cron: "0 18 * * *"
+
+concurrency:
+  group: e2e-full-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PUBLIC_API_KEY: dev-public-api-key-please-change
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+  DATABASE_URL: "file:./dev.db"
+  AUTH_SECRET: "ci-placeholder-auth-secret-32chars-min-length-ok"
+  NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
+  ENABLE_DEV_LOGIN: "1"
+  ENABLE_TEST_ENDPOINTS: "1"
+  LEGACY_SESSION_FALLBACK: "1"
+  MAGIC_LINK_LEGACY_GET: "1"
+  SLACK_WEBHOOK_ALLOW_TEST_HOSTS: "1"
+  CRON_SECRET: "ci-cron-secret"
+
+jobs:
+  # ------------------------------------------------------------
+  # 起動条件判定 (PR の場合)
+  #
+  # 以下のいずれかなら下流 job を実行:
+  #   - PR labels に `e2e:full` を含む
+  #   - PR HEAD commit message に `[full-e2e]` を含む
+  #   - イベントが `push` (main) / `workflow_dispatch` / `schedule` のいずれか
+  # ------------------------------------------------------------
+  trigger-check:
+    name: should-run
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          LABELS_JSON: ${{ toJson(github.event.pull_request.labels) }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_COMMIT_MSG: ${{ github.event.head_commit.message }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # push / workflow_dispatch / schedule は無条件 run
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # PR の場合: label e2e:full か、commit message に [full-e2e]
+          if echo "$LABELS_JSON" | grep -q '"name": *"e2e:full"'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # PR HEAD commit message を取得 (checkout 不要、 PR title + body も保険で確認)
+          if [[ -n "$PR_HEAD_SHA" ]]; then
+            COMMIT_MSG=$(curl -sSL \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/commits/${PR_HEAD_SHA}" \
+              | jq -r '.commit.message // ""')
+            if echo "$COMMIT_MSG" | grep -q '\[full-e2e\]'; then
+              echo "run=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          # PR title にも `[full-e2e]` があれば run (運用補助)
+          if echo "$PR_TITLE" | grep -q '\[full-e2e\]'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run=false" >> "$GITHUB_OUTPUT"
+
+  # ------------------------------------------------------------
+  # e2e-full — Playwright 全 spec (chromium-desktop + chromium-mobile)
+  #
+  # 旧 ci.yml `e2e (playwright)` job (20-30min) を移植。
+  # ------------------------------------------------------------
+  e2e-full:
+    name: e2e-full
+    needs: trigger-check
+    if: ${{ needs.trigger-check.outputs.run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+      - run: pnpm db:reset
+
+      - name: Seed fixture data (apps/web cwd)
+        working-directory: apps/web
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
+
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
+      - name: Run Playwright tests (full)
+        working-directory: apps/web-e2e
+        run: pnpm exec playwright test --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts"
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-full
+          path: apps/web-e2e/playwright-report
+          retention-days: 14
+
+  # ------------------------------------------------------------
+  # a11y-full — axe-core 系 spec (旧 a11y job を移植)
+  # ------------------------------------------------------------
+  a11y-full:
+    name: a11y-full
+    needs: trigger-check
+    if: ${{ needs.trigger-check.outputs.run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+      - run: pnpm db:reset
+
+      - name: Seed fixture data (apps/web cwd)
+        working-directory: apps/web
+        run: |
+          pnpm exec tsx prisma/seed.ts || true
+          pnpm exec tsx prisma/seed-test-user.ts
+          pnpm exec tsx scripts/init-fts.ts || true
+          pnpm exec tsx scripts/recalc-counters.ts || true
+
+      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
+        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run axe-core a11y suite
+        working-directory: apps/web-e2e
+        run: |
+          pnpm exec playwright test \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
+            --project=chromium-desktop \
+            src/a11y-pages.spec.ts \
+            src/components-a11y.spec.ts \
+            src/a11y-dark.spec.ts \
+            src/high-contrast.spec.ts
+          pnpm exec playwright test \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
+            --project=chromium-mobile \
+            src/a11y-pages-mobile.spec.ts
+
+      - name: Upload axe-core JSON reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: axe-reports-full
+          path: |
+            apps/web/screenshots/**/_axe*.json
+            screenshots/**/_axe*.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright a11y report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-a11y-report-full
+          path: apps/web-e2e/playwright-report
+          retention-days: 14
+
+  # ------------------------------------------------------------
+  # vrt — Visual Regression Test (Storybook 全 story)
+  #
+  # `pnpm vrt` = playwright test src/vrt-stories.spec.ts --project=chromium-desktop
+  # baseline は apps/web-e2e/src/vrt-stories.spec.ts-snapshots/
+  # ------------------------------------------------------------
+  vrt:
+    name: vrt
+    needs: trigger-check
+    if: ${{ needs.trigger-check.outputs.run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Storybook を build → static-preview として serve した状態で VRT を実行する。
+      # vrt-stories.spec.ts は STORYBOOK_URL を参照する設計 (既存 spec の挙動を維持)。
+      - name: Build Storybook (static)
+        run: pnpm build-storybook
+
+      - name: Run VRT (Storybook stories)
+        run: pnpm vrt
+
+      - name: Upload VRT snapshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vrt-snapshots
+          path: |
+            apps/web-e2e/playwright-report
+            apps/web-e2e/screenshots/stories
+          retention-days: 14
+          if-no-files-found: ignore

@@ -473,6 +473,18 @@ npx playwright test --project=chromium-desktop e2e/perf.spec.ts
 pnpm vitest                            # or `pnpm vitest run`
 ```
 
+#### CI トリガマトリクス (A 案 / タイプ別運用)
+
+- `pnpm nx run web-e2e:e2e --grep @smoke` で smoke のみ実行 (~3min)
+- PR 時は smoke + lint + typecheck + build が自動実行 (~5min)
+- フル E2E + a11y + VRT は次のいずれかで起動:
+  - PR に `e2e:full` ラベル付与
+  - コミットメッセージに `[full-e2e]` を含む
+  - main への push (post-merge regression catch)
+  - nightly cron (毎日 JST 03:00 / UTC 18:00 — `.github/workflows/e2e-full.yml`)
+  - 手動 (`workflow_dispatch`)
+- Lighthouse は nightly のみ (`.github/workflows/lighthouse.yml`, JST 04:00 / UTC 19:00)
+
 #### テスト隔離 (DB スナップショット方式)
 
 `playwright.config.ts` の `globalSetup` で `dev.db` を `dev.db.baseline` にコピー、

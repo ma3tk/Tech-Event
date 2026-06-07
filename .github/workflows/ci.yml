@@ -1,14 +1,20 @@
 # ============================================================
-# tech-event 本体 CI
+# tech-event 本体 CI (A 案 / タイプ別運用)
 #
-# 実行内容 (すべて並列ジョブで実行):
+# 実行内容 (PR の最低保証 = ~5min を目標):
 #   - typecheck : pnpm tsc --noEmit
 #   - lint      : pnpm lint (eslint v9)
 #   - build     : pnpm build (Next.js / Turbopack)
-#   - e2e       : Playwright 全テスト (chromium-desktop, chromium-mobile)
+#   - smoke     : Playwright smoke (--grep @smoke, chromium-desktop のみ、~3min)
+#
+# フル E2E / a11y / VRT / Lighthouse は別 workflow:
+#   - .github/workflows/e2e-full.yml
+#     trigger: PR (label `e2e:full`) / `[full-e2e]` コミット / push main / nightly cron /
+#             workflow_dispatch
+#   - .github/workflows/lighthouse.yml (optional, nightly のみ)
 #
 # 実行環境:
-#   - Node.js 22 LTS (現状開発は v26 だが、CI は安定性重視で LTS を採用)
+#   - Node.js 22 LTS
 #   - Ubuntu latest
 #   - pnpm 9 (cache あり)
 #
@@ -120,13 +126,20 @@ jobs:
       - run: pnpm build
 
   # ------------------------------------------------------------
-  # e2e — Playwright (chromium-desktop + chromium-mobile)
+  # smoke — Playwright smoke (`@smoke` タグ filter, chromium-desktop only)
+  #
+  # 目的:
+  #   - PR の最低保証として critical path を ~3min で検証する
+  #   - 詳細は apps/web-e2e/src/smoke.spec.ts (主要 8 ページ + dev-login + SSE + axe)
+  #
+  # フル E2E / a11y / VRT はここで実行しない。
+  # 起動条件: PR label `e2e:full` / `[full-e2e]` コミット / push main / nightly cron。
+  # → .github/workflows/e2e-full.yml
   # ------------------------------------------------------------
-  e2e:
-    name: e2e (playwright)
+  smoke:
+    name: smoke
     runs-on: ubuntu-latest
-    # workers=4 で 4 並列化したが 328 tests の余裕枠として 45 分を確保 (旧 30 分 → 45 分)。
-    timeout-minutes: 45
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -138,6 +151,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
       - run: pnpm db:reset
+
       # `prisma migrate reset --force` は prisma.config.ts の seed コマンドを起動するが、
       # CI 環境では稀に seed が走らないケースがあるため、明示的に seed.ts を再実行する
       # (冪等: seed.ts は既存ユーザーがあれば upsert する)。
@@ -154,104 +168,23 @@ jobs:
       - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
         run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
 
-      # Playwright ブラウザ + system deps (chromium のみ)
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
-      # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
-      # Nx 移行後 spec は apps/web-e2e/ 配下に存在する。
-      # pnpm exec は workspace root を cwd と見なすため、--config に絶対パスを渡す。
-      - name: Run Playwright tests
-        working-directory: apps/web-e2e
-        run: pnpm exec playwright test --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts"
-
-      - name: Upload Playwright report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: apps/web-e2e/playwright-report
-          retention-days: 14
-
-  # ------------------------------------------------------------
-  # a11y — axe-core 自動検査 (critical / serious が出たら fail)
-  #
-  # 対象 spec:
-  #   - e2e/a11y-pages.spec.ts          : 主要 10 ページ
-  #   - e2e/components-a11y.spec.ts     : /components ショーケース
-  #   - e2e/a11y-pages-mobile.spec.ts   : モバイル viewport
-  #   - e2e/a11y-dark.spec.ts           : ダークモード
-  #   - e2e/high-contrast.spec.ts       : ハイコントラスト
-  #
-  # 出力:
-  #   - screenshots/**/_axe*.json を artifact 保存 (差分追跡用)
-  #   - critical/serious 違反があれば spec 側で fail (= job fail)
-  # ------------------------------------------------------------
-  a11y:
-    name: a11y (axe-core)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with: { version: 9 }
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
-      - run: pnpm db:reset
-      # `prisma migrate reset --force` は prisma.config.ts の seed コマンドを起動するが、
-      # CI 環境では稀に seed が走らないケースがあるため、明示的に seed.ts を再実行する
-      # (冪等: seed.ts は既存ユーザーがあれば upsert する)。
-      - name: Seed fixture data (apps/web cwd)
-        working-directory: apps/web
-        run: |
-          pnpm exec tsx prisma/seed.ts || true
-          pnpm exec tsx prisma/seed-test-user.ts
-          pnpm exec tsx scripts/init-fts.ts || true
-          pnpm exec tsx scripts/recalc-counters.ts || true
-
-      - name: Link dev.db into apps/web-e2e (process.cwd 参照のため)
-        run: ln -sf "$GITHUB_WORKSPACE/apps/web/dev.db" "$GITHUB_WORKSPACE/apps/web-e2e/dev.db"
-
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      # 明示的に a11y 系 spec のみを実行 (critical/serious → spec 側で fail)
-      # Nx 移行後 e2e spec は apps/web-e2e/src/ 配下。
-      # pnpm exec は workspace root を cwd と見なすため、--config に絶対パスを渡す。
-      - name: Run axe-core a11y suite
+      # smoke 抽出: --grep @smoke で smoke.spec.ts 内の `@smoke` タグ test のみ実行
+      # workers は smoke.spec.ts の test 数 (~21) を考慮し 4 並列のまま。
+      - name: Run Playwright smoke (--grep @smoke)
         working-directory: apps/web-e2e
         run: |
           pnpm exec playwright test \
             --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
             --project=chromium-desktop \
-            src/a11y-pages.spec.ts \
-            src/components-a11y.spec.ts \
-            src/a11y-dark.spec.ts \
-            src/high-contrast.spec.ts
-          pnpm exec playwright test \
-            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
-            --project=chromium-mobile \
-            src/a11y-pages-mobile.spec.ts
+            --grep @smoke
 
-      - name: Upload axe-core JSON reports
+      - name: Upload Playwright smoke report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: axe-reports
-          path: |
-            apps/web/screenshots/**/_axe*.json
-            screenshots/**/_axe*.json
-          retention-days: 14
-          if-no-files-found: ignore
-
-      - name: Upload Playwright a11y report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-a11y-report
+          name: playwright-smoke-report
           path: apps/web-e2e/playwright-report
           retention-days: 14
