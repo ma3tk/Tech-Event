@@ -14,7 +14,10 @@ const meta: Meta<typeof EventCard> = {
     },
   },
   argTypes: {
-    variant: { control: "inline-radio", options: ["list", "grid"] },
+    variant: {
+      control: "inline-radio",
+      options: ["list", "grid", "luma"],
+    },
   },
 };
 
@@ -100,6 +103,72 @@ export const NoThumbnail: Story = {
 
 export const NoLimit: Story = {
   args: { event: { ...baseEvent, limit: null } },
+};
+
+/**
+ * Luma 風 variant — 大判 cover image + 余白多め + glassmorphism。
+ * トップページの「人気のカレンダー」/「フィーチャー枠」で利用する想定。
+ */
+export const LumaDefault: Story = {
+  args: {
+    event: {
+      ...baseEvent,
+      thumbnailUrl:
+        "https://placehold.co/640x360/9333ea/ffffff?text=Luma+Cover",
+    },
+    variant: "luma",
+  },
+  render: (args) => (
+    <div className="w-[420px]">
+      <EventCard {...args} />
+    </div>
+  ),
+};
+
+export const LumaWithTint: Story = {
+  args: {
+    event: {
+      ...baseEvent,
+      thumbnailUrl:
+        "https://placehold.co/640x360/ec4899/ffffff?text=Tinted+Cover",
+    },
+    variant: "luma",
+    tintColor: "#ec4899",
+    hosts: [
+      { name: "山田 太郎" },
+      { name: "佐藤 花子" },
+      { name: "鈴木 一郎" },
+    ],
+  },
+  render: (args) => (
+    <div className="w-[420px]">
+      <EventCard {...args} />
+    </div>
+  ),
+};
+
+export const LumaGallery: Story = {
+  render: () => {
+    const tints = ["#9333ea", "#ec4899", "#f97316", "#06b6d4"];
+    return (
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {tints.map((tint, i) => (
+          <EventCard
+            key={tint}
+            variant="luma"
+            tintColor={tint}
+            event={{
+              ...baseEvent,
+              id: `luma-${i}`,
+              title: `Luma 風 カード ${i + 1}`,
+              thumbnailUrl: `https://placehold.co/640x360/${tint.slice(1)}/ffffff?text=Cover+${i + 1}`,
+            }}
+            hosts={[{ name: "山田 太郎" }, { name: "佐藤 花子" }]}
+          />
+        ))}
+      </div>
+    );
+  },
 };
 
 export const GridGallery: Story = {

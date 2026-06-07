@@ -84,6 +84,18 @@
   --status-ongoing-bg: #ffffff;
   --status-ongoing-fg: #7c2607;     /* dark orange,AAA: 10.0:1 */
 
+  /* ---------- Accent — Luma 風 (HC モード) ----------
+   * 高コントラストモードでは accent も AAA (7:1+) を満たす濃色で固定。
+   *   purple #4c1d95 (purple-900 系) — 12.0:1 vs #fff
+   *   pink   #831843 (pink-900)     — 10.8:1 vs #fff
+   */
+  --accent-purple: #4c1d95;          /* AAA: 12.0:1 vs #fff */
+  --accent-purple-soft: #ffffff;
+  --accent-purple-strong: #2e1065;   /* AAA: 16.7:1 vs #fff */
+  --accent-pink: #831843;            /* AAA: 10.8:1 vs #fff */
+  --accent-pink-soft: #ffffff;
+  --accent-pink-strong: #500724;     /* AAA: 14.8:1 vs #fff */
+
   /* ---------- Elevation (高コントラストでは shadow 不要) ----------
    * 影に頼らず border で elevation を表現する。
    * shadow を消す代わりに、各カードは border: 2px solid #000 で囲う設計。
@@ -92,6 +104,8 @@
   --elevation-popover: 0 0 0 transparent;
   --elevation-modal: 0 0 0 transparent;
   --elevation-overlay: 0 0 0 transparent;
+  --elevation-soft: 0 0 0 transparent;
+  --elevation-soft-strong: 0 0 0 transparent;
 }
 
 /*
@@ -149,6 +163,15 @@
     --elevation-popover: 0 0 0 transparent;
     --elevation-modal: 0 0 0 transparent;
     --elevation-overlay: 0 0 0 transparent;
+    --elevation-soft: 0 0 0 transparent;
+    --elevation-soft-strong: 0 0 0 transparent;
+
+    --accent-purple: #4c1d95;
+    --accent-purple-soft: #ffffff;
+    --accent-purple-strong: #2e1065;
+    --accent-pink: #831843;
+    --accent-pink-soft: #ffffff;
+    --accent-pink-strong: #500724;
   }
 }
 
