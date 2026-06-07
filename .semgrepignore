@@ -1,0 +1,48 @@
+# ============================================================
+# Semgrep ignore patterns (tech-event)
+# ------------------------------------------------------------
+# 走査対象を application code (apps/, libs/) に絞ることで:
+#   - false positive を削減
+#   - スキャン時間を短縮 (15min timeout 内に収める)
+# generated / vendor / build artifact / lock / snapshot は除外
+# ============================================================
+
+node_modules/
+.next/
+.nx/
+dist/
+build/
+storybook-static/
+playwright-report/
+test-results/
+screenshots/
+
+# Prisma / 自動生成
+apps/web/src/generated/
+libs/shared/data-access-prisma/src/generated/
+prisma/migrations/
+
+# テストスナップショット / fixture
+*.snap
+*.snapshot
+**/__snapshots__/
+**/*.spec.ts-snapshots/
+
+# lock ファイル
+*.lock
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# env (secrets は commit しないが念のため)
+apps/web/.env*
+.env
+.env.*
+!.env.example
+
+# docs / research (ドキュメントは Semgrep 対象外)
+research/
+docs/
+
+# debug 出力
+debug-storybook.log

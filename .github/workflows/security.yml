@@ -1,0 +1,181 @@
+# ============================================================
+# tech-event Security CI — Semgrep (SAST) + gitleaks (secrets)
+#
+# 二段構えで LLM 生成コードの secrets hardcode / 脆弱パターンを防御する。
+#
+# トリガマトリクス:
+#   - pull_request: PR 差分のみ (高速、SEMGREP_BASELINE_REF 差分 + gitleaks log-opts 差分)
+#   - push (main): 全コードを full scan
+#   - schedule: UTC 18:00 / JST 03:00 nightly — full history scan
+#   - workflow_dispatch: 手動 full scan
+#
+# 結果:
+#   - SARIF を GitHub Code Scanning にアップロードして Issue / Alert 集約
+#   - violation があれば fail → ブランチ保護で merge をブロック (設定は手動)
+#
+# 設定ファイル:
+#   - .gitleaks.toml   (allowlist + custom rules)
+#   - .semgrepignore   (走査除外パス)
+# ============================================================
+name: security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # 毎日 UTC 18:00 = JST 03:00 (nightly full history scan)
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+# 同 PR 内の連続 push では古い run をキャンセル
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write   # SARIF upload (Code Scanning) のため
+  pull-requests: read
+
+jobs:
+  # ------------------------------------------------------------
+  # semgrep — SAST (OWASP / Next.js / React / TS / secrets / 等)
+  #
+  # PR     : differential (SEMGREP_BASELINE_REF=base.sha) で新規違反のみ検出
+  # main 等: full scan
+  # ------------------------------------------------------------
+  semgrep:
+    name: semgrep (SAST)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Docker Hub からの pull は GHA から timeout しやすいため、
+    # container 指定ではなく pip install で semgrep を導入する (公式推奨の代替)。
+    # fork PR (head_repository != base_repository) は SARIF upload 不可
+    # → ベース動作だけ実行 (job 自体は走らせる)
+    if: (github.actor != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # baseline diff のため少し深めに fetch (PR の base..head 確実取得)
+          fetch-depth: ${{ github.event_name == 'pull_request' && 100 || 1 }}
+
+      - name: Set up Python (for semgrep)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Semgrep (via pip)
+        run: pip install --no-cache-dir semgrep
+
+      - name: Semgrep scan (PR differential)
+        if: github.event_name == 'pull_request'
+        run: |
+          set +e
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/typescript \
+            --config p/nextjs \
+            --config p/react \
+            --config p/secrets \
+            --config p/javascript \
+            --config p/jwt \
+            --config p/sql-injection \
+            --config p/xss \
+            --config p/insecure-transport \
+            --config p/security-audit \
+            --baseline-commit "${SEMGREP_BASELINE_REF}" \
+            --sarif --output=semgrep.sarif \
+            --error \
+            --metrics=off
+          EXIT=$?
+          set -e
+          # SARIF を生成した上で job exit を反映 (Upload step は !cancelled() で必ず走る)
+          exit ${EXIT}
+        env:
+          SEMGREP_BASELINE_REF: ${{ github.event.pull_request.base.sha }}
+          SEMGREP_RULES_CACHE_DIR: /tmp/semgrep-cache
+
+      - name: Semgrep scan (full)
+        if: github.event_name != 'pull_request'
+        run: |
+          set +e
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/typescript \
+            --config p/nextjs \
+            --config p/react \
+            --config p/secrets \
+            --config p/javascript \
+            --config p/jwt \
+            --config p/sql-injection \
+            --config p/xss \
+            --config p/insecure-transport \
+            --config p/security-audit \
+            --sarif --output=semgrep.sarif \
+            --error \
+            --metrics=off
+          EXIT=$?
+          set -e
+          exit ${EXIT}
+        env:
+          SEMGREP_RULES_CACHE_DIR: /tmp/semgrep-cache
+
+      - name: Upload SARIF to Code Scanning
+        if: ${{ !cancelled() }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      - name: Upload Semgrep SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          retention-days: 14
+
+  # ------------------------------------------------------------
+  # gitleaks — secrets / API key hardcode 検出
+  #
+  # PR     : base..head の差分のみ (高速)
+  # main / nightly / dispatch : full history scan
+  # ------------------------------------------------------------
+  gitleaks:
+    name: gitleaks (secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # full history が必要 (PR 差分も base..head のため base sha を fetch する必要あり)
+          fetch-depth: 0
+
+      - name: gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          # action 内部で git log --no-merges {base}..{head} の差分検査になる
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: ${{ github.workspace }}/.gitleaks.toml
+          # finding があれば @actor を mention
+          GITLEAKS_NOTIFY_USER_LIST: "@${{ github.actor }}"
+          GITLEAKS_ENABLE_SUMMARY: "true"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
+          # 公開 OSS の場合は license 不要 (本リポは public 想定)
+          # 私的利用には GITLEAKS_LICENSE が必要
+
+      - name: Upload gitleaks SARIF artifact
+        if: ${{ !cancelled() && hashFiles('results.sarif') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-sarif
+          path: results.sarif
+          retention-days: 14
+
+      - name: Upload SARIF to Code Scanning
+        if: ${{ !cancelled() && hashFiles('results.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: gitleaks

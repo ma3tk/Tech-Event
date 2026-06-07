@@ -501,6 +501,32 @@ pnpm vitest                            # or `pnpm vitest run`
 
 詳細は `e2e/global-setup.ts` / `e2e/global-teardown.ts` のヘッダコメント参照。
 
+#### セキュリティスキャン (Semgrep + gitleaks)
+
+LLM 生成コードの secrets hardcode / 脆弱パターン混入を防ぐため、CI で **二段構え** のスキャンを実行 (`.github/workflows/security.yml`)。
+
+- **Semgrep (SAST)**: `p/owasp-top-ten` + `p/typescript` + `p/nextjs` + `p/react` + `p/secrets` + `p/jwt` + `p/sql-injection` + `p/xss` + `p/insecure-transport` + `p/security-audit` をルールセットとして適用
+- **gitleaks (secrets)**: PR 差分 + nightly / push main の full history で hardcoded secret / API key を検出
+- 結果は GitHub **Code Scanning** に SARIF で集約 (Issues タブ → Security)
+- トリガ: PR / push main / nightly (UTC 18:00 = JST 03:00) / workflow_dispatch
+
+ローカル実行例:
+
+```bash
+# Semgrep (Docker 推奨、OCI image)
+docker run --rm -v "$PWD:/src" semgrep/semgrep semgrep \
+  --config p/owasp-top-ten --config p/typescript --config p/nextjs /src
+
+# gitleaks (Homebrew / GitHub Release で導入)
+gitleaks detect --config .gitleaks.toml --source . --no-git -v       # working tree
+gitleaks detect --config .gitleaks.toml --source . --redact -v       # full history
+```
+
+設定ファイル:
+
+- `.gitleaks.toml` — allowlist (dev placeholder のみ) + custom rules
+- `.semgrepignore` — 走査除外 (generated / lock / docs 等)
+
 ### 5.5 docker-compose (本番想定スタック)
 
 ```bash

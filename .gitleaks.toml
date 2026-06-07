@@ -1,0 +1,71 @@
+title = "tech-event gitleaks config"
+
+# ============================================================
+# tech-event gitleaks 設定
+# ------------------------------------------------------------
+# 目的:
+#   - LLM が生成したコード / commit に hardcode された secrets / API key を検出
+#   - PR 差分 (`--log-opts=...{base}..{head}`) と main / nightly の full history を二段で守る
+#
+# 戦略:
+#   - useDefault = true で gitleaks の組み込みルール (Stripe / AWS / GitHub PAT 等) を全て有効
+#   - allowlist は dev 環境用の placeholder のみ許可 (実 secret は一切混入させない方針)
+#   - false positive が多いパス (docs / examples / lock / generated) は paths で除外
+# ============================================================
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "tech-event allowlist"
+
+# false positive が出やすいパス (docs / lock / generated)
+paths = [
+  '''\.example$''',          # .env.example のサンプル値
+  '''README\.md$''',          # ドキュメント中のサンプル
+  '''CHANGELOG\.md$''',
+  '''CLAUDE\.md$''',
+  '''Design\.md$''',
+  '''Personas\.md$''',
+  '''docs/.*\.md$''',
+  '''research/.*\.md$''',
+  '''\.claude/skills/.*''',   # 公式 skills 中のサンプル
+  '''\.claude/.*\.md$''',
+  '''node_modules/''',
+  '''\.next/''',
+  '''dist/''',
+  '''storybook-static/''',
+  '''playwright-report/''',
+  '''test-results/''',
+  '''pnpm-lock\.yaml$''',
+  '''apps/web/src/generated/''',
+  '''libs/shared/data-access-prisma/src/generated/''',
+]
+
+# match (一致した文字列) ベースで除外
+regexTarget = "match"
+regexes = [
+  '''dev-public-api-key-please-change''',  # 既知 dev placeholder (CI env / E2E hardcode)
+  '''dev-cron-secret''',                    # CRON_SECRET の dev 値
+  '''ci-cron-secret''',                     # CI workflow の placeholder
+  '''ci-placeholder-auth-secret-32chars-min-length-ok''',  # CI 用 AUTH_SECRET placeholder
+  '''sk-test-placeholder''',
+  '''rk_test_placeholder''',
+  '''placeholder-secret''',
+  '''dev-secret''',
+  '''test-secret''',
+]
+
+# stopwords: 検出文字列にこれらが含まれていれば finding を抑制
+stopwords = [
+  "PLACEHOLDER",
+  "EXAMPLE",
+  "SAMPLE",
+  "DUMMY",
+  "FAKE",
+  "TEST_",
+  "test-",
+  "placeholder",
+  "example",
+  "sample",
+]
