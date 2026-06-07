@@ -7,6 +7,11 @@
 
 > 「全員向け」は実質「誰のためでもない」。必ず 1–2 ペルソナを優先する。
 
+> 各 ペルソナの「関連コンポーネント」リンクは `docs/catalog/*.md` (テキスト source of truth) を指す。
+> 実物 live preview は Storybook (`pnpm storybook` → http://localhost:6006) の各 component の "Docs" タブで確認できる
+> (例: `UI/Button > Docs`、`Components/EventCard > Docs`)。<br/>
+> 4 媒体の使い分けは [`docs/catalog/00-overview.md` §0](./docs/catalog/00-overview.md#0-4-媒体役割分担マトリクス-最重要) 参照。
+
 ---
 
 ## 目次
