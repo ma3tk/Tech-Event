@@ -183,7 +183,15 @@ async function fetchUpcomingEventDates(): Promise<Set<string>> {
   return set;
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ hero?: string }>;
+}) {
+  // CLAUDE.md §1.1: 既存ヒーローを ?hero=classic で保持。デフォルトは Luma 寄り。
+  const params = (await searchParams) ?? {};
+  const heroMode: "luma" | "classic" = params.hero === "classic" ? "classic" : "luma";
+
   const [
     recent,
     groups,
@@ -219,25 +227,72 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(HOME_JSON_LD) }}
       />
-      {/* ============ Hero (圧縮版: 1段、見出し28px相当) ============ */}
-      <section className="bg-gradient-to-b from-brand-orange-soft to-background">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-5 sm:py-6">
-          <h1 className="text-center text-[22px] font-bold leading-tight tracking-tight text-foreground sm:text-[26px] md:text-[28px]">
-            エンジニアをつなぐ IT勉強会支援プラットフォーム
-          </h1>
-          <p className="text-center text-xs text-muted-foreground sm:text-sm">
-            勉強会・カンファレンスを探して、ワンクリックで申し込み。
-          </p>
-          <div className="w-full max-w-2xl">
-            <SearchBox
-              variant="header"
-              action="/explore"
-              placeholder="キーワードでイベントを検索"
-              className="!max-w-none"
-            />
+      {/* ============ Hero (Luma 寄り or classic 圧縮版) ============
+       *
+       * デフォルトは Luma 風 (purple-50 -> orange-50 -> pink-50 グラデ、
+       * 見出し 36-44px、検索ボックス大きめ rounded-2xl + shadow-soft)。
+       * `?hero=classic` で従来の圧縮ヒーローにフォールバック。
+       */}
+      {heroMode === "classic" ? (
+        <section
+          data-testid="home-hero"
+          data-hero-variant="classic"
+          className="bg-gradient-to-b from-brand-orange-soft to-background"
+        >
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-5 sm:py-6">
+            <h1 className="text-center text-[22px] font-bold leading-tight tracking-tight text-foreground sm:text-[26px] md:text-[28px]">
+              エンジニアをつなぐ IT勉強会支援プラットフォーム
+            </h1>
+            <p className="text-center text-xs text-muted-foreground sm:text-sm">
+              勉強会・カンファレンスを探して、ワンクリックで申し込み。
+            </p>
+            <div className="w-full max-w-2xl">
+              <SearchBox
+                variant="header"
+                action="/explore"
+                placeholder="キーワードでイベントを検索"
+                className="!max-w-none"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section
+          data-testid="home-hero"
+          data-hero-variant="luma"
+          // Luma 風 上下グラデ: purple-50 → orange-50 → pink-50。
+          // accent-purple-soft / brand-orange-soft / accent-pink-soft は
+          // 各 theme で AA 互換の淡色にマッピング済み。
+          className="relative overflow-hidden bg-gradient-to-b from-accent-purple-soft via-brand-orange-soft to-accent-pink-soft"
+        >
+          <div className="mx-auto flex max-w-5xl flex-col items-center gap-5 px-4 py-10 sm:py-14 md:py-16">
+            <h1 className="text-center text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-[40px] md:text-[44px]">
+              エンジニアをつなぐ
+              <br className="sm:hidden" />
+              IT勉強会支援プラットフォーム
+            </h1>
+            <p className="max-w-xl text-center text-sm text-muted-foreground sm:text-base">
+              勉強会・カンファレンスを探して、ワンクリックで申し込み。
+              <br className="hidden sm:block" />
+              主催者は数分でイベント募集ページを公開できます。
+            </p>
+            {/* Luma 風 検索ボックス: rounded-2xl + shadow-soft + 余裕のあるパディング */}
+            <div className="w-full max-w-2xl rounded-2xl bg-surface p-2 shadow-soft-lg ring-1 ring-border">
+              <SearchBox
+                variant="header"
+                action="/explore"
+                placeholder="キーワード / グループ / タグでイベントを検索"
+                className="!max-w-none"
+              />
+            </div>
+            {popularCalendars.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                人気のカレンダーを下にスクロール ↓
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ============ Discover への CTA バナー ============
        * Luma 風の「興味から発見する」エクスペリエンスへの導線。
@@ -366,25 +421,30 @@ export default async function HomePage() {
                 </div>
                 <ul
                   data-testid="home-popular-calendars"
-                  className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+                  // Luma 風: 大判 cover (16:9) + rounded-2xl + shadow-soft。
+                  // classic モードでも互換: 4 列まで自動で詰まる。
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
                   {popularCalendars.map((c) => (
                     <li key={c.id}>
                       <Link
                         href={`/calendar/${c.slug}`}
-                        className="flex h-full flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors hover:border-brand-orange"
+                        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-soft-md transition-[transform,box-shadow] duration-normal ease-out hover:-translate-y-1 hover:shadow-soft-lg"
                       >
                         <div
-                          className="flex h-16 items-center justify-center text-2xl font-bold text-white"
+                          // 大判 cover (Luma 風): aspect 16:9 + gradient で柔らかさ
+                          className="relative flex aspect-video items-center justify-center text-3xl font-bold text-white"
                           style={{
-                            backgroundColor: c.tintColor ?? "#5b21b6",
+                            background: `linear-gradient(135deg, ${c.tintColor ?? "#5b21b6"} 0%, ${c.tintColor ?? "#5b21b6"}cc 100%)`,
                           }}
                           aria-hidden="true"
                         >
-                          {c.name.slice(0, 1)}
+                          <span className="drop-shadow-sm transition-transform duration-normal ease-out group-hover:scale-110">
+                            {c.name.slice(0, 1)}
+                          </span>
                         </div>
-                        <div className="flex flex-1 flex-col p-3">
-                          <span className="line-clamp-2 text-sm font-semibold text-foreground">
+                        <div className="flex flex-1 flex-col p-4">
+                          <span className="line-clamp-2 text-sm font-semibold text-foreground sm:text-base">
                             {c.name}
                           </span>
                           <span className="mt-auto pt-2 text-[11px] text-muted-foreground">
