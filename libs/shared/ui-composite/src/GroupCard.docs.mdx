@@ -1,0 +1,84 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as GroupCardStories from "./GroupCard.stories";
+
+<Meta of={GroupCardStories} name="Docs" />
+
+<Title />
+<Subtitle>グループを **カード形式** で表示。standard / sidebar / compact の 3 variant。参加ボタン付き。</Subtitle>
+
+> 一次資料: `docs/catalog/components/group-card.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={GroupCardStories.Standard} />
+
+<Canvas of={GroupCardStories.StandardJoined} />
+
+<Canvas of={GroupCardStories.StandardNoLogo} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+グループを **カード形式** で表示。`standard` / `sidebar` / `compact` の 3 variant。参加ボタン付き。
+
+## 2. いつ使うか
+- グループ一覧 (`/groups`)
+- ユーザープロフィールの「所属グループ」
+- イベント詳細サイドバーの「主催グループ」 (sidebar variant)
+- 関連グループのコンパクト表示 (compact)
+
+## 3. いつ使わないか
+- グループ単独のヘッダー → 専用 hero
+- 1 行のリスト → 別 component
+
+## 4. バリアント
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+| variant | 用途 |
+|---|---|
+| `standard` | 一覧グリッド |
+| `sidebar` | サイドバーの強調カード |
+| `compact` | 関連グループの小カード |
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 5. アクセシビリティ
+
+- カード全体は `<Link>` でラップ
+- 参加ボタンは外側 (別 tab stop)
+
+## 6. 使用例
+
+```tsx
+import { GroupCard } from "@tech-event/shared-ui-composite";
+
+<GroupCard group={group} variant="standard" />
+```
+
+## 7. 関連
+
+- [Card](../ui/card.md)
+- [EventCard](./event-card.md)
+- [blocks/cards.md](../blocks/cards.md)
+
+## 8. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース、3 variant
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

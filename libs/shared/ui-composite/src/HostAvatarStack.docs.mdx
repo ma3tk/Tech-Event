@@ -1,0 +1,74 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as HostAvatarStackStories from "./HostAvatarStack.stories";
+
+<Meta of={HostAvatarStackStories} name="Docs" />
+
+<Title />
+<Subtitle>**共催 (co-host) アバターの重ね表示**。maxVisible 超は "+N" にまとめ、aria-label で氏名を集約 (SR 対応)。</Subtitle>
+
+> 一次資料: `docs/catalog/components/host-avatar-stack.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={HostAvatarStackStories.Pair} />
+
+<Canvas of={HostAvatarStackStories.Trio} />
+
+<Canvas of={HostAvatarStackStories.Overflow} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+**共催 (co-host) アバターの重ね表示**。`maxVisible` 超は "+N" にまとめ、`aria-label` で氏名を集約 (SR 対応)。
+
+## 2. いつ使うか
+- イベント詳細の主催者表示
+- カードの「主催」表示
+- 共催が複数あるイベント
+
+## 3. バリアント / サイズ
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+- size: `sm` / `md` / `lg`
+- maxVisible: default 3
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 4. アクセシビリティ
+
+- `aria-label="主催: 山田, 鈴木, 田中 ほか 2 名"`
+- Tooltip で個別氏名表示 (hover)
+
+## 5. 使用例
+
+```tsx
+<HostAvatarStack hosts={hosts} size="md" maxVisible={3} />
+```
+
+## 6. 関連
+
+- [Avatar](../ui/avatar.md)
+- [Tooltip](../ui/tooltip.md)
+- [ParticipantBadge](./participant-badge.md)
+
+## 7. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース、aria-label 氏名集約対応
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />
