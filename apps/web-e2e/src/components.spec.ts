@@ -94,10 +94,25 @@ for (const section of SECTIONS) {
     await expect(locator).toBeVisible({ timeout: 15_000 });
     await page.evaluate(() => document.fonts.ready);
     await locator.scrollIntoViewIfNeeded().catch(() => undefined);
-    await locator.screenshot({
-      path: path.join(SCREENSHOT_DIR, `${section}.png`),
-      animations: "disabled",
-    });
+    // CI で稀に "Element is not attached to the DOM" が出る (theme init script による
+    // hydration 後の再 mount race)。最大 3 回まで retry し、毎回 locator を resolve し直す。
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const fresh = page.getByTestId(`section-${section}`);
+        await fresh.waitFor({ state: "attached", timeout: 5_000 });
+        await fresh.screenshot({
+          path: path.join(SCREENSHOT_DIR, `${section}.png`),
+          animations: "disabled",
+        });
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        await page.waitForTimeout(300);
+      }
+    }
+    if (lastErr) throw lastErr;
   });
 }
 

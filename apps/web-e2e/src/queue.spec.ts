@@ -27,8 +27,21 @@ test.describe("queue: /api/jobs/:id", () => {
   }) => {
     await devLogin(page, "fast_moon_169");
 
-    // セッションは page.context が保持しているので request も同 context から
-    const res = await page.request.get("/api/jobs/join:1:99:99");
+    // セッションは page.context が保持しているので request も同 context から。
+    // CI で稀に ECONNRESET (next dev のターボパック compile race) が出るため最大 3 回 retry。
+    let res: Awaited<ReturnType<typeof page.request.get>> | null = null;
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        res = await page.request.get("/api/jobs/join:1:99:99");
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        await page.waitForTimeout(500);
+      }
+    }
+    if (!res) throw lastErr ?? new Error("request failed");
     expect(res.status()).toBeLessThan(500);
 
     const body = await res.json();

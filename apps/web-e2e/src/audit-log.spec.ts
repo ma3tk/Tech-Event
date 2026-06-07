@@ -142,28 +142,42 @@ test.describe("AuditLog", () => {
   });
 
   test("ログイン失敗時にも audit_logs に login.failed が記録される", async ({
-    request,
+    page,
   }) => {
     const baseId = maxAuditId();
 
     // 存在しないメールでログイン試行 → 401
-    const res = await request.post("/api/auth/login", {
+    // page.request を使うことで mobile project (iPhone 14 UA) でも同一 context から発行する。
+    const res = await page.request.post("/api/auth/login", {
       data: { email: "audit-nonexistent@example.com", password: "wrong" },
       headers: { "Content-Type": "application/json" },
     });
     expect(res.status()).toBe(401);
 
+    // recordAudit は fire-and-forget (void) で発行されるため、書き込み完了を少し待つ。
+    // dev-login → logout テストでも同じパターン (waitForTimeout 300ms)。
+    // mobile project はネットワーク・CPU が relatively slow になりがちで、500ms 程度確保する。
+    await page.waitForTimeout(500);
+
     // login.failed が記録されているか確認 (actorUserId なし = null)
-    const db = new Database(DB_PATH, { readonly: true });
-    try {
-      const row = db
-        .prepare(
-          `SELECT COUNT(*) as c FROM audit_logs WHERE id > ? AND action = 'login.failed'`,
-        )
-        .get(baseId) as CountRow | undefined;
-      expect(row?.c ?? 0).toBeGreaterThanOrEqual(1);
-    } finally {
-      db.close();
+    // CI で fire-and-forget の audit log がまだ flush されていないケースに対応するため、
+    // 最大 5 秒 (200ms 間隔) まで polling して 1 件以上見つかったら成功とする。
+    let found = 0;
+    for (let attempt = 0; attempt < 25; attempt += 1) {
+      const db = new Database(DB_PATH, { readonly: true });
+      try {
+        const row = db
+          .prepare(
+            `SELECT COUNT(*) as c FROM audit_logs WHERE id > ? AND action = 'login.failed'`,
+          )
+          .get(baseId) as CountRow | undefined;
+        found = row?.c ?? 0;
+      } finally {
+        db.close();
+      }
+      if (found >= 1) break;
+      await page.waitForTimeout(200);
     }
+    expect(found).toBeGreaterThanOrEqual(1);
   });
 });

@@ -12,6 +12,8 @@
  * 注: 主催者は seed の `fast_moon_169` (id=1) で、events[0] (id=1) の owner。
  * test_user は seed-test-user.ts で投入される独立アカウント。
  */
+import path from "node:path";
+import Database from "better-sqlite3";
 import { test, expect } from "@playwright/test";
 import { devLoginLegacy as devLogin } from "./_helpers/auth";
 
@@ -21,9 +23,39 @@ const APPLICANT_USER = "test_user";
 // 申込可能 + 空き枠あり。他の participate.spec.ts (id=11/22) と分離するため id=17 を使う。
 const EVENT_ID = "17";
 
+// dev.db への直接 reset 用パス (audit-log.spec.ts と同様の解決)。
+const DB_PATH = path.resolve(__dirname, "../../web/dev.db");
+
+/**
+ * 本 spec はリトライ時の state contamination (前回 run で applicant が approved 済み)
+ * で flake するため、各テスト開始前に APPLICANT_USER の EVENT_ID 上の Participant を
+ * 削除しておく (= 「未申込」状態に戻す)。
+ *
+ * baseline DB に approved/pending な Participant が無いことが前提なので、
+ * 削除のみで idempotent。
+ */
+function resetApplicantParticipation(): void {
+  const db = new Database(DB_PATH);
+  try {
+    db.prepare(
+      `DELETE FROM participants
+       WHERE eventId = ?
+         AND userId = (SELECT id FROM users WHERE nickname = ?)`,
+    ).run(Number(EVENT_ID), APPLICANT_USER);
+  } finally {
+    db.close();
+  }
+}
+
 test.describe("Approval Required 申込フロー", () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
+    // 前回 run の残骸 (approved Participant) で「承認待ち」が出ないケースを防ぐ。
+    try {
+      resetApplicantParticipation();
+    } catch (e) {
+      console.warn(`[approval-flow] resetApplicantParticipation failed: ${e}`);
+    }
   });
   // approval-flow UI は mobile で button label の表示が分岐する。
   // 本スイートは desktop UI 検証として書かれているため mobile は対象外。

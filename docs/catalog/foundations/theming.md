@@ -2,7 +2,7 @@
 status: stable
 figma: TODO
 storybook: TODO (Storybook MDX: src/stories/design-system/theming.mdx)
-last_reviewed: 2026-06-06
+last_reviewed: 2026-06-07
 personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
 ---
 
@@ -51,8 +51,27 @@ src/styles/themes/high-contrast.css  ← AAA mapping
 
 ## 5. SSR Hydration mismatch を避ける
 
-- `<html data-theme>` を初期 HTML に inline script で書き込む (FOUC 回避)
-- `ThemeProvider` 内で localStorage 読みと sync
+設計原則:
+
+1. **SSR で `<html>` に `data-theme` / `data-contrast` を出さない**
+   - サーバ HTML とクライアント DOM の文字列差分が出ない状態にする
+2. **`<html suppressHydrationWarning>` を付ける**
+   - inline script が React の管轄外で `<html>` 属性を書き換える契約を
+     React に伝える。`<html>` 自身の属性差分のみ許容され、body 配下の
+     React tree のミスマッチ検知は通常通り行われる
+3. **head 先頭の inline script (`THEME_INIT_SCRIPT`) が hydration 前に
+   `data-theme` / `data-contrast` を確定する**
+   - localStorage `tech-event:theme` / `tech-event:contrast` を同期で読む
+   - 未設定なら `prefers-color-scheme` から resolve
+   - 失敗時 (private mode 等) は何もせず、CSS 側のシステムフォールバック
+     (`dark.css` の `@media (prefers-color-scheme: dark)` ルール) に委ねる
+4. **`ThemeProvider` (Client) は mount 後の state 同期のみ**
+   - useEffect で localStorage を読み、resolved theme を state に反映
+   - `applyTheme` は冪等な属性 set なので二重書きしても無害
+
+この 4 点で「server "light" → client localStorage "dark" → mismatch」
+パターンが構造的に発生しなくなる。
+詳細実装は `apps/web/src/app/layout.tsx` の `THEME_INIT_SCRIPT` を参照。
 
 ## 6. アンチパターン
 
