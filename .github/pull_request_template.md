@@ -13,6 +13,8 @@
 
 - [ ] CI 全 job ✅ (`gh pr checks` で確認、`--admin` バイパス禁止 — [`CLAUDE.md §1.0`](../CLAUDE.md))
 - [ ] smoke CI 緑 (PR default check: smoke + lint + typecheck + build)
+- [ ] Semgrep CI 緑 (新規 SAST 違反なし、`.github/workflows/security.yml`)
+- [ ] gitleaks CI 緑 (secrets hardcode なし、`.github/workflows/security.yml`)
 - [ ] UI / DB 大改修なら `e2e:full` ラベル付けてフル E2E 緑も確認
 - [ ] `pnpm nx run-many -t typecheck`
 - [ ] `pnpm nx run web:build`

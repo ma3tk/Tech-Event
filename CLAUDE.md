@@ -212,6 +212,17 @@ src/stories/design-system/ — Storybook MDX (21 ページ)
 - 公開 API キーは `crypto.timingSafeEqual` で比較
 - 開発エンドポイント (`/api/auth/dev-login`, `/api/test/*`) は `ENABLE_DEV_LOGIN` / `ENABLE_TEST_ENDPOINTS` で明示有効化
 
+### 7.5 CI セキュリティ二段構え (Semgrep + gitleaks)
+- **Semgrep (SAST)**: PR + nightly + push (main) + workflow_dispatch で `p/owasp-top-ten` + `p/typescript` + `p/nextjs` + `p/react` + `p/secrets` + `p/javascript` + `p/jwt` + `p/sql-injection` + `p/xss` + `p/insecure-transport` + `p/security-audit` を走査。findings は SARIF で GitHub Code Scanning に統合
+- **gitleaks (secrets)**: PR の `base..head` 差分 + nightly / push main の full history で secrets / API key hardcode を検出。SARIF を Code Scanning に統合
+- **LLM 生成コードへの警戒**: AI assistant (Claude / Copilot 等) が secrets を hardcode することがあるため、両者を **required check** に含める方針 (ブランチ保護で設定)
+- 設定ファイル: `.gitleaks.toml` (allowlist + custom rules)、`.semgrepignore` (走査除外)
+- allowlist は `.gitleaks.toml` の `regexes` で **dev placeholder のみ** 許可 (`dev-public-api-key-please-change` / `ci-cron-secret` 等)。本物の secret を allowlist 化することは禁止
+- 違反検出時の対応:
+  1. **該当 secret を即時 rotate** (本番影響あれば最優先)
+  2. コミット履歴から除去 (`git filter-repo --replace-text` または BFG Repo-Cleaner)
+  3. 修正 PR を切って Code Scanning alert を resolve
+
 ---
 
 ## 8. 開発フロー

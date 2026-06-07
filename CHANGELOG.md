@@ -8,7 +8,23 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
-## [Unreleased] — 2026-06-07 — CI A 案 (タイプ別パイプライン)
+## [Unreleased] — 2026-06-07 — CI A 案 (タイプ別パイプライン) + Security 二段構え
+
+### Added
+- **`.github/workflows/security.yml`** — Semgrep (SAST) + gitleaks (secrets) の二段構え。
+  LLM 生成コードが secrets を hardcode するリスクに備え、PR 差分 / push main / nightly (UTC 18:00) /
+  workflow_dispatch で走査。findings は SARIF で GitHub Code Scanning に統合。
+  Semgrep は `p/owasp-top-ten` + `p/typescript` + `p/nextjs` + `p/react` + `p/secrets` 等 11 ルールセット、
+  gitleaks は PR 差分 + nightly full history で hardcoded secret を検出。
+- **`.gitleaks.toml`** — useDefault 組み込みルール + dev placeholder allowlist
+  (`dev-public-api-key-please-change` / `ci-cron-secret` / `ci-placeholder-auth-secret-*` 等のみ許可)。
+- **`.semgrepignore`** — `node_modules` / `.next` / `dist` / `storybook-static` / `apps/web/src/generated` /
+  `prisma/migrations` / `pnpm-lock.yaml` / `.env*` 等を除外し走査時間を 15min 以内に。
+- **`.github/workflows/e2e-full.yml`** — フル E2E + a11y-full + VRT。
+  発火条件: PR label `e2e:full` / `[full-e2e]` コミット / push main / nightly cron
+  (JST 03:00) / `workflow_dispatch`。
+- **`.github/workflows/lighthouse.yml`** — nightly Lighthouse 計測 (JST 04:00)。
+  artifact 出力のみ (commit はしない)。
 
 ### Changed
 - **`.github/workflows/ci.yml`** — A 案 (タイプ別運用) に組み換え。PR / push main では
@@ -17,17 +33,11 @@ tech-event の主要マイルストーン履歴。
 - **`apps/web-e2e/src/smoke.spec.ts`** — 全 test に `@smoke` タグ付与し、`--grep @smoke`
   で抽出可能に。主要 8 ページ SSR / dev-login + イベント申込 / SSE / axe critical=0 を集約。
 
-### Added
-- **`.github/workflows/e2e-full.yml`** — フル E2E + a11y-full + VRT。
-  発火条件: PR label `e2e:full` / `[full-e2e]` コミット / push main / nightly cron
-  (JST 03:00) / `workflow_dispatch`。
-- **`.github/workflows/lighthouse.yml`** — nightly Lighthouse 計測 (JST 04:00)。
-  artifact 出力のみ (commit はしない)。
-
 ### Docs
 - `CLAUDE.md` §1.0 / §3.1 に A 案ルールを追記。
-- `.github/pull_request_template.md` に smoke / フル E2E label の checkbox を追加。
-- `README.md` テストセクションに CI トリガマトリクスを追記。
+- `CLAUDE.md` §7.5 に CI セキュリティ二段構え (Semgrep + gitleaks) のポリシーを追記。
+- `.github/pull_request_template.md` に smoke / フル E2E label / Semgrep / gitleaks の checkbox を追加。
+- `README.md` テストセクションに CI トリガマトリクス + セキュリティスキャンセクションを追記。
 
 ---
 
