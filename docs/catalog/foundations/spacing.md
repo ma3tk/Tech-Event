@@ -49,7 +49,22 @@ personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
 - ❌ `m-0.5` のような微小余白 → ✅ 統一感のため避ける
 - ❌ セクション間が狭すぎ (`mt-2`) → ✅ `mt-8` 以上
 
-## 5. 関連
+## 5. Radius (角丸)
+
+| トークン | px | Tailwind | 用途 |
+|---|---|---|---|
+| `--radius-sm` | 2 | `rounded-sm` | focus ring, micro chip |
+| `--radius-md` | 4 | `rounded-md` | button / input (`--radius-control`) |
+| `--radius-lg` | 8 | `rounded-lg` | カード (`--radius-card`) |
+| `--radius-xl` | 12 | `rounded-xl` | modal (`--radius-modal`) |
+| `--radius-2xl` | 16 | `rounded-2xl` | **Luma 寄りカード** / hero foreground card |
+| `--radius-3xl` | 24 | `rounded-3xl` | **Luma 寄り 大判 hero glass card** / 大規模パネル |
+| `--radius-full` | 9999 | `rounded-full` | badge (`--radius-badge`) / avatar |
+
+Luma 寄りビジュアル (EventCard variant=luma / event-detail glass hero / 検索ボックスヒーロー)
+では `rounded-2xl` を標準とし、最外殻の特大コンテナのみ `rounded-3xl` を使う。
+
+## 6. 関連
 
 - [Design.md §5.2](../../../Design.md)
 - [docs/design-system.md §4](../../design-system.md)

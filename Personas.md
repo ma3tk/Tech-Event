@@ -91,13 +91,14 @@
 ### 関連コンポーネント
 - 重要: [`EventListRow`](docs/catalog/components/event-list-row.md)、[`EventStickyCTA`](docs/catalog/components/event-sticky-cta.md)、[`MiniCalendar`](docs/catalog/components/mini-calendar.md)
 - 通知系: [`Toast`](docs/catalog/ui/toast.md)、[`BookmarkButton`](docs/catalog/ui/bookmark-button.md)
-- パターン: [`EventCard`](docs/catalog/blocks/event-card.md)
+- パターン: [`EventCard`](docs/catalog/blocks/event-card.md) — モバイルでは `variant=grid` または `variant=luma` (大判 cover、rounded-2xl) でタップターゲットを広く確保
 
 ### 反パターン (このペルソナに向かない設計)
 - 申込までに 3 ステップ以上要するフロー (フォーム入力過多)
 - デスクトップ前提のホバー操作で情報を出すパターン
 - 過剰な企業ロゴ強調 (本人はコミュニティ参加目的)
 - 「キャンセルすると主催者に通知が行きます」等の罪悪感を煽る文言
+- モバイルで `variant=list` を 1 列で並べる (Luma の `variant=luma` の大判 cover が片手スクロールに最適)
 
 ---
 
@@ -409,12 +410,16 @@
 ### 関連コンポーネント
 - 重要: [`AnalyticsDashboard`](docs/catalog/components/analytics-dashboard.md)、[`CheckinKiosk`](docs/catalog/components/checkin-kiosk.md)、[`EventSeriesEditor`](docs/catalog/components/event-series-editor.md)
 - パターン: [`OrganizerDashboard`](docs/catalog/blocks/organizer-dashboard.md)、[`EnterpriseInvoice`](docs/catalog/blocks/enterprise-invoice.md)
+- ブランディング: [`EventCard`](docs/catalog/components/event-card.md) `variant=luma` — 大判 cover + tintColor で
+  企業カラーを反映した告知カードを生成 (DevRel として「自社ブランドを引き立てる見せ方」が必須)。
+  [`/calendar/[slug]`](docs/catalog/components/calendar-detail.md) の Luma 風 hero と組み合わせて運用。
 
 ### 反パターン
 - 個人主催者と同じシンプル画面に押し込める (情報不足)
 - 招待コードが 1 個ずつしか発行できない
 - 当日のオペレーションがモバイル前提 (大型イベントでは PC + プリンタ前提)
 - 経費精算系の項目が無く、エンタープライズ要件を満たさない
+- 主催イベントを `variant=list` (情報密度型) のみで掲示 (ブランド表現には `variant=luma` を選べるようにする)
 
 ---
 
