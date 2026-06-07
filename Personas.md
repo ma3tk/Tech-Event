@@ -412,7 +412,7 @@
 - パターン: [`OrganizerDashboard`](docs/catalog/blocks/organizer-dashboard.md)、[`EnterpriseInvoice`](docs/catalog/blocks/enterprise-invoice.md)
 - ブランディング: [`EventCard`](docs/catalog/components/event-card.md) `variant=luma` — 大判 cover + tintColor で
   企業カラーを反映した告知カードを生成 (DevRel として「自社ブランドを引き立てる見せ方」が必須)。
-  [`/calendar/[slug]`](docs/catalog/components/calendar-detail.md) の Luma 風 hero と組み合わせて運用。
+  `/calendar/[slug]` ページの Luma 風 hero と組み合わせて運用。
 
 ### 反パターン
 - 個人主催者と同じシンプル画面に押し込める (情報不足)
