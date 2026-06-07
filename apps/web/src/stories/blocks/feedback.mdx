@@ -1,0 +1,54 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as ToastStories from "../../../../../libs/shared/ui/src/toast.stories";
+import * as EmptyStateStories from "../../../../../libs/shared/ui/src/empty-state.stories";
+import * as ErrorStateStories from "../../../../../libs/shared/ui/src/error-state.stories";
+import * as LoadingStateStories from "../../../../../libs/shared/ui/src/loading-state.stories";
+import * as SkeletonStories from "../../../../../libs/shared/ui/src/skeleton.stories";
+
+<Meta title="Blocks/Feedback" />
+
+<Title>Feedback</Title>
+<Subtitle>ユーザーへの状態通知パターン。Toast (一時) / Empty / Error / Loading / Skeleton を統一文言・色で運用する。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/feedback.md`。
+
+## Toast (Success / Error / Warning / Info / WithAction)
+
+<Canvas of={ToastStories.Success} />
+
+<Canvas of={ToastStories.ErrorVariant} />
+
+<Canvas of={ToastStories.Warning} />
+
+<Canvas of={ToastStories.Info} />
+
+<Canvas of={ToastStories.WithAction} />
+
+## EmptyState (with action)
+
+<Canvas of={EmptyStateStories.WithAction} />
+
+<Canvas of={EmptyStateStories.SearchResultEmpty} />
+
+## ErrorState (with retry)
+
+<Canvas of={ErrorStateStories.WithRetry} />
+
+## LoadingState (spinner / dots)
+
+<Canvas of={LoadingStateStories.Spinner} />
+
+<Canvas of={LoadingStateStories.Dots} />
+
+## Skeleton (event card)
+
+<Canvas of={SkeletonStories.EventCard} />
+
+<Canvas of={SkeletonStories.ProfileCard} />
+
+## アンチパターン
+
+- ❌ エラーメッセージに stacktrace をそのまま見せる → ✅ 原因と次のアクションを言語化
+- ❌ Empty に「データなし」だけ表示 → ✅ 「なぜ空か / 何ができるか」を必ず添える
+- ❌ Loading で背景を全画面ブロック → ✅ skeleton で意図を伝える (CLS 防止)
+- ❌ Toast を 4 秒で出して 1 秒で消える → ✅ 5 秒以上、エラーは 8 秒

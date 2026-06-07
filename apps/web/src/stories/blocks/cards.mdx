@@ -1,0 +1,53 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as EventCardStories from "../../../../../libs/shared/ui-composite/src/EventCard.stories";
+import * as GroupCardStories from "../../../../../libs/shared/ui-composite/src/GroupCard.stories";
+import * as CardStories from "../../../../../libs/shared/ui/src/card.stories";
+
+<Meta title="Blocks/Cards" />
+
+<Title>Cards</Title>
+<Subtitle>カード系コンポーネント (Card / EventCard / GroupCard) の構成パターン。情報をまとまり単位で見せ、grid / list の 2 表示モードを統一する。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/cards.md`。
+
+## 基本 Card (foundation)
+
+<Canvas of={CardStories.Basic} />
+
+## EventCard list (default)
+
+イベント 1 件をリスト形式で表示。検索結果 / 関連イベント / フィードに使う。
+
+<Canvas of={EventCardStories.ListDefault} />
+
+## EventCard grid (luma)
+
+注目イベント / ヒーロー領域では grid / luma variant。
+
+<Canvas of={EventCardStories.LumaWithTint} />
+
+## EventCard ステータス別 (Online / Hybrid / Full / Waitlist / Cancelled / Ended)
+
+<Canvas of={EventCardStories.Online} />
+
+<Canvas of={EventCardStories.Hybrid} />
+
+<Canvas of={EventCardStories.Full} />
+
+<Canvas of={EventCardStories.Waitlist} />
+
+<Canvas of={EventCardStories.Cancelled} />
+
+<Canvas of={EventCardStories.Ended} />
+
+## GroupCard standard / sidebar
+
+<Canvas of={GroupCardStories.Standard} />
+
+<Canvas of={GroupCardStories.Sidebar} />
+
+## アンチパターン
+
+- ❌ Card にだけ装飾 (グラデ背景・派手影) を入れる → ✅ tokens 経由でサーフェス統一
+- ❌ list / grid の切替で情報量を変える → ✅ 表示密度は変えていいが「何が分かるか」は同じ
+- ❌ 16:9 サムネに任意比率の画像を入れる → ✅ aspect-video で固定

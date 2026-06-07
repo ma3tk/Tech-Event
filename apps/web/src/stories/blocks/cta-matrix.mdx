@@ -1,0 +1,45 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as ButtonStories from "../../../../../libs/shared/ui/src/button.stories";
+
+<Meta title="Blocks/CTA Matrix" />
+
+<Title>CTA Matrix</Title>
+<Subtitle>「参加申込」「補欠登録」「抽選に申し込む」「参加リクエストを送信」の 4 種統一 CTA を、status × variant で組み合わせるマトリクス。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/cta-matrix.md`。
+
+## 4 種統一 CTA (Design.md §10.2)
+
+| 日本語 | English | variant | size |
+|---|---|---|---|
+| 参加申込 | Register | default | md / lg / luma |
+| 補欠登録 | Join Waitlist | secondary | md |
+| 抽選に申し込む | Apply for Lottery | secondary | md |
+| 参加リクエストを送信 | Request to Join | secondary | md |
+
+混在禁止 (「参加する」「申込む」「エントリー」等を独自に増やさない)。
+
+## 全 variant 比較
+
+<Canvas of={ButtonStories.AllVariants} />
+
+## 全 size 比較 (xs / sm / md / lg / icon / luma)
+
+<Canvas of={ButtonStories.AllSizes} />
+
+## Luma 風 (rounded-2xl + shadow-soft-md + font-semibold)
+
+主要 CTA (申込ボックス / Discover バナー) で利用。
+
+<Canvas of={ButtonStories.LumaSize} />
+
+## アイコン付き CTA
+
+<Canvas of={ButtonStories.WithIcon} />
+
+## アンチパターン
+
+- ❌ CTA ラベルに「参加」のような動詞 1 単語だけ → ✅ 「参加申込」「補欠登録」のように動詞 + 名詞
+- ❌ プライマリ CTA を 1 画面に 3 つ以上 → ✅ 主要 CTA は 1 画面 1 つに絞る
+- ❌ destructive を CTA に使う → ✅ 破壊的でなければ default / secondary
+- ❌ disabled で説明なし → ✅ tooltip で「○○の理由で操作できません」を補う

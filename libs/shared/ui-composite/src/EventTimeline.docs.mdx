@@ -1,0 +1,81 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as EventTimelineStories from "./EventTimeline.stories";
+
+<Meta of={EventTimelineStories} name="Docs" />
+
+<Title />
+<Subtitle>Luma 風の **月見出し自動グルーピング タイムライン**。内部で EventListRow compact 表示を使い、stickyTopPx で月見出しの上端調整が可能。</Subtitle>
+
+> 一次資料: `docs/catalog/components/event-timeline.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={EventTimelineStories.Default} />
+
+<Canvas of={EventTimelineStories.WithGap} />
+
+<Canvas of={EventTimelineStories.Empty} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+Luma 風の **月見出し自動グルーピング タイムライン**。内部で [EventListRow](./event-list-row.md) compact 表示を使い、`stickyTopPx` で月見出しの上端調整が可能。
+
+## 2. いつ使うか
+- グループページの「過去のイベント」
+- カレンダーページ (`/calendar/[slug]`)
+- ユーザープロフィールの「主催履歴」「参加履歴」
+
+## 3. いつ使わないか
+- グリッド表示 → [EventCard](./event-card.md) grid
+- 検索結果 (関連順) → [EventListRow](./event-list-row.md) 単独
+- 1 件のみ表示 → カードで十分
+
+## 4. 構造
+
+```
+2026 年 6 月       ← 月見出し (sticky)
+├ EventListRow    
+├ EventListRow    
+└ EventListRow    
+2026 年 5 月       ← 月見出し
+├ EventListRow    
+└ EventListRow    
+```
+
+## 5. アクセシビリティ
+
+- 月見出しは `h2`
+- sticky 表示時もコントラスト維持
+- リストは `<ul role="list">`
+
+## 6. 使用例
+
+```tsx
+<EventTimeline events={events} stickyTopPx={64} />
+```
+
+## 7. 関連
+
+- [EventListRow](./event-list-row.md)
+- [blocks/lists-and-tables.md](../blocks/lists-and-tables.md)
+
+## 8. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース、月見出し自動グルーピング
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

@@ -1,0 +1,55 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as FormStories from "../../../../../libs/shared/ui/src/form.stories";
+import * as InputStories from "../../../../../libs/shared/ui/src/input.stories";
+import * as TextareaStories from "../../../../../libs/shared/ui/src/textarea.stories";
+import * as CheckboxStories from "../../../../../libs/shared/ui/src/checkbox.stories";
+import * as RadioGroupStories from "../../../../../libs/shared/ui/src/radio-group.stories";
+import * as SelectStories from "../../../../../libs/shared/ui/src/select.stories";
+import * as SwitchStories from "../../../../../libs/shared/ui/src/switch.stories";
+
+<Meta title="Blocks/Forms" />
+
+<Title>Forms</Title>
+<Subtitle>フォーム入力の標準パターン。Form + Input / Textarea / Select / Checkbox / RadioGroup / Switch を Zod バリデーションと組み合わせる。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/forms.md`。
+
+## Form (Zod バリデーション付き)
+
+<Canvas of={FormStories.WithValidation} />
+
+## Input default / with icon / invalid
+
+<Canvas of={InputStories.Default} />
+
+<Canvas of={InputStories.InGroupWithIcon} />
+
+<Canvas of={InputStories.Invalid} />
+
+## Textarea default / with label / invalid
+
+<Canvas of={TextareaStories.Default} />
+
+<Canvas of={TextareaStories.WithLabel} />
+
+<Canvas of={TextareaStories.Invalid} />
+
+## Select default / grouped
+
+<Canvas of={SelectStories.Default} />
+
+<Canvas of={SelectStories.Grouped} />
+
+## Checkbox / RadioGroup / Switch
+
+<Canvas of={CheckboxStories.Group} />
+
+<Canvas of={RadioGroupStories.Default} />
+
+<Canvas of={SwitchStories.SettingsList} />
+
+## アンチパターン
+
+- ❌ サーバ側バリデーションを省く → ✅ クライアント + サーバの二重バリデ
+- ❌ エラーメッセージを field の外に集約 → ✅ field 直下に specific な説明
+- ❌ submit button を disabled で隠す → ✅ 押せるが警告 (aria-invalid 連動)

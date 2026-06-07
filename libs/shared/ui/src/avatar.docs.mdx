@@ -1,0 +1,105 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as AvatarStories from "./avatar.stories";
+
+<Meta of={AvatarStories} name="Docs" />
+
+<Title />
+<Subtitle>ユーザー / グループの **アバター画像** を表示。画像読み込み失敗時は **イニシャル** にフォールバック。Radix UI ベース。</Subtitle>
+
+> 一次資料: `docs/catalog/ui/avatar.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={AvatarStories.WithImage} />
+
+<Canvas of={AvatarStories.Fallback} />
+
+<Canvas of={AvatarStories.Sizes} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+ユーザー / グループの **アバター画像** を表示。画像読み込み失敗時は **イニシャル** にフォールバック。Radix UI ベース。
+
+## 2. いつ使うか
+- ユーザーアイコン (ヘッダー / コメント / 参加者リスト)
+- グループのロゴ
+- 主催者表示
+- アバターと名前のセット ([ParticipantBadge](../components/participant-badge.md))
+
+## 3. いつ使わないか
+- 画像のみの装飾 → `<Image>` を直接
+- ロゴ単独 → 別コンポーネント (テキストロゴ)
+
+## 4. 構造
+
+```
+○ ← 画像 or イニシャル fallback (例: "JS")
+```
+
+## 5. バリアント / サイズ
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+| サイズ | 用途 | px |
+|---|---|---|
+| sm | リスト行 / コメント | 24 |
+| md | 標準 | 32 |
+| lg | ヘッダー / プロフィール | 48 |
+| xl | プロフィールヘッダー | 64+ |
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 6. 状態
+
+loading (画像読み込み中) / loaded / fallback (失敗)。
+
+## 7. アクセシビリティ
+
+- `alt` で意味を持つ画像は記述 (主催者「山田太郎のアバター」等)
+- イニシャルフォールバックは装飾扱い (`aria-hidden`)
+- 周辺テキストで意味を担保
+
+## 8. 使用例
+
+```tsx
+import { Avatar, AvatarImage, AvatarFallback } from "@tech-event/shared-ui";
+
+<Avatar className="size-8">
+  <AvatarImage src={user.image} alt={`${user.name} のアバター`} />
+  <AvatarFallback aria-hidden>
+    {user.name.slice(0, 2)}
+  </AvatarFallback>
+</Avatar>
+```
+
+## 9. アンチパターン
+
+- ❌ alt 抜け → ✅ 意味があるなら必須
+- ❌ 角丸を `rounded-md` 等で → ✅ `rounded-full` 厳守
+
+## 10. 関連
+
+- [ParticipantBadge](../components/participant-badge.md)
+- [HostAvatarStack](../components/host-avatar-stack.md)
+
+## 11. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

@@ -1,0 +1,87 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as PaginationStories from "./Pagination.stories";
+
+<Meta of={PaginationStories} name="Docs" />
+
+<Title />
+<Subtitle>**数値ベース** のページネーション (1 / 2 / 3 / … / N)。computePages ヘルパーで省略表示の計算を内包。Link ベースで JS なしでも動作。</Subtitle>
+
+> 一次資料: `docs/catalog/components/pagination.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={PaginationStories.Default} />
+
+<Canvas of={PaginationStories.FirstPage} />
+
+<Canvas of={PaginationStories.LastPage} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+**数値ベース** のページネーション (1 / 2 / 3 / … / N)。`computePages` ヘルパーで省略表示の計算を内包。`<Link>` ベースで JS なしでも動作。
+
+## 2. いつ使うか
+- 検索結果 / 一覧 / ランキングなど、1 ページに収まらない場合
+- 件数表示と組合せる
+
+## 3. いつ使わないか
+- 無限スクロール (タイムライン) → 別 UI
+- 1 ページのみ → 出さない
+- ステップ UI → Stepper (将来)
+
+## 4. 構造
+
+```
+[<前] [1] [2] [3] … [10] [次>]
+```
+
+## 5. アクセシビリティ
+
+- `<nav aria-label="pagination">`
+- 現在ページは `aria-current="page"`
+- 前 / 次は `aria-label="前のページ"` / 「次のページ」
+- disabled は `aria-disabled` + 視覚的に灰色
+
+## 6. 使用例
+
+```tsx
+import { Pagination } from "@tech-event/shared-ui-composite";
+
+<Pagination
+  current={page}
+  total={totalPages}
+  buildHref={(p) => `/search?q=${q}&page=${p}`}
+/>
+```
+
+## 7. アンチパターン
+
+- ❌ JS イベントで遷移 → ✅ `<Link>` ベース
+- ❌ disabled な `<a>` に aria-label → ✅ `<button disabled>` か `<span aria-hidden>` で
+- ❌ 件数表示なし → ✅ 「全 N 件中 X-Y 件」を併記
+
+## 8. 関連
+
+- [Button](../ui/button.md)
+- [blocks/lists-and-tables.md](../blocks/lists-and-tables.md)
+
+## 9. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

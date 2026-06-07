@@ -160,6 +160,7 @@ shadcn/ui 公式 (https://ui.shadcn.com/) の分類に倣う。ui = Radix primit
 ### 6.2 設計原則
 - **propsの公開APIは変えない** (refactor 時) — 互換性で破壊しない
 - 全コンポーネントに対応する **Storybook story** (variant + state 100% カバー)
+- 全コンポーネントに対応する **Storybook MDX (`{name}.docs.mdx`)** — `docs/catalog/*.md` の言語化 + 実物 `<Canvas>` を 1 ページに統合 (shadcn/ui スタイル)。生成は `node scripts/gen-catalog-mdx.mjs --force`
 - 内部実装は **Radix UI primitive + CVA** で variant 管理
 - カスタムCSSは禁止 (Tailwind utility で完結)
 - `data-testid` を主要要素に付与 (CamelCase でなく kebab-case)

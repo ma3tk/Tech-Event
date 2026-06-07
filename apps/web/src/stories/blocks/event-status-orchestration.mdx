@@ -1,0 +1,55 @@
+import { Meta, Title, Subtitle, Canvas, Source } from "@storybook/addon-docs/blocks";
+import * as EventStatusBadgeStories from "../../../../../libs/shared/ui-composite/src/EventStatusBadge.stories";
+import * as ButtonStories from "../../../../../libs/shared/ui/src/button.stories";
+import * as EventCardStories from "../../../../../libs/shared/ui-composite/src/EventCard.stories";
+
+<Meta title="Blocks/Event Status Orchestration" />
+
+<Title>Event Status Orchestration</Title>
+<Subtitle>イベント 8 状態を全コンポーネント (Badge / Button / Card / Sticky CTA / Toast) で一貫表現するパターン。`docs/catalog/blocks/event-status-orchestration.md` source of truth。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/event-status-orchestration.md`。
+> 本 MDX は同内容の **実物プレビュー** ページ。
+
+## 8 ステータスのバッジ (全状態)
+
+イベントは時間経過と申込数の関数で 8 状態を遷移する。色だけでなく必ずテキストを併記する (Design.md §10.1)。
+
+<Canvas of={EventStatusBadgeStories.AllStatuses} />
+
+## variant 別比較 (subtle / solid / outline / dot)
+
+<Canvas of={EventStatusBadgeStories.AllVariants} />
+
+## status × CTA Button の対応
+
+8 状態それぞれに対応する Button variant が決まっている (catalog 「2. UI 表現の一貫性」表)。
+
+- `upcoming` → `disabled` "公開前"
+- `open` → `default` "参加申込"
+- `full` → `disabled` "満員"
+- `waitlist` → `secondary` "補欠登録"
+- `closed` → `disabled` "申込終了"
+- `ongoing` → `link` "会場へ"
+- `ended` → `ghost` "アーカイブを見る"
+- `cancelled` → `disabled` "中止"
+
+<Canvas of={ButtonStories.AllVariants} />
+
+## EventCard 上での見え方
+
+<Canvas of={EventCardStories.ListDefault} />
+
+## アンチパターン
+
+- 色だけで status を伝える (色覚特性に配慮しない) → 必ずテキスト併記
+- `full` 状態で primary CTA を出したまま `disabled` にしない → 押しても何も起きないボタンは UX 悪化
+- `waitlist` で `default` variant を使う → 補欠は補助操作なので `secondary`
+- status 遷移時に Toast を出さない → P1 のような「予定確定派」は通知に依存する
+
+## 関連
+
+- `docs/catalog/blocks/event-status-orchestration.md` — 全テキスト source of truth
+- `docs/catalog/components/event-status-badge.md` — Badge 単体仕様
+- `docs/catalog/blocks/cta-matrix.md` — CTA ラベルの状態別使い分け
+- `docs/catalog/blocks/host-vs-participant-ui.md` — 主催者 / 参加者で見せ方が変わる

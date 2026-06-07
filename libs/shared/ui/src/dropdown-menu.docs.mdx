@@ -1,0 +1,123 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as DropdownMenuStories from "./dropdown-menu.stories";
+
+<Meta of={DropdownMenuStories} name="Docs" />
+
+<Title />
+<Subtitle>ボタンクリックで開く **メニュー** (Item / Separator / Sub / Radio / Check)。Radix UI ベースでキーボード操作完備。</Subtitle>
+
+> 一次資料: `docs/catalog/ui/dropdown-menu.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={DropdownMenuStories.Default} />
+
+<Canvas of={DropdownMenuStories.WithCheckboxAndRadio} />
+
+<Canvas of={DropdownMenuStories.WithSubmenu} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+ボタンクリックで開く **メニュー** (Item / Separator / Sub / Radio / Check)。Radix UI ベースでキーボード操作完備。
+
+## 2. いつ使うか
+- ユーザーメニュー (ヘッダー右上アバタークリック)
+- 行のアクションメニュー (「⋯」 → 編集 / 削除 / シェア)
+- ソート / フィルタの選択
+- 「もっと見る」系のオプション集約
+
+## 3. いつ使わないか
+- タブ切替 → [Tabs](./tabs.md)
+- フォーム選択 → [Select](./select.md)
+- モーダル開く → [Dialog](./dialog.md) を直接
+- ホバー解説 → [Tooltip](./tooltip.md)
+
+## 4. 構造
+
+```
+[⋯]  ← Trigger
+  ▼
+┌──────────────────┐
+│ Item 1           │
+│ Item 2     ⌘E   │ ← shortcut
+│ ──────────────── │
+│ Item 3     ⊳    │ ← submenu
+└──────────────────┘
+```
+
+## 5. バリアント
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+- Item / CheckboxItem / RadioItem / Separator / Sub / Label / Group
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 6. 状態
+
+closed / open / focused-item / disabled-item。
+
+## 7. アクセシビリティ
+
+- キーボード ↑↓ / Enter / Escape / ← (submenu close) / → (submenu open)
+- `role="menu"` + `role="menuitem"`
+- Trigger に `aria-haspopup="menu"` + `aria-expanded`
+
+## 8. 使用例
+
+```tsx
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuSeparator,
+} from "@tech-event/shared-ui";
+
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost" size="icon" aria-label="メニュー">
+      <MoreHorizontal />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem onSelect={handleEdit}>編集</DropdownMenuItem>
+    <DropdownMenuItem onSelect={handleShare}>シェア</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem onSelect={handleDelete} className="text-destructive">
+      削除
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+## 9. アンチパターン
+
+- ❌ 大量の Item (10+) → ✅ Sub menu でグループ化、または別 UI
+- ❌ 重要 CTA を Menu に隠す → ✅ 明示的な Button で出す
+- ❌ destructive を上に置く → ✅ Separator で下に分離
+
+## 10. 関連
+
+- [UserMenuDropdown](../components/user-menu-dropdown.md)
+- [Tabs](./tabs.md)
+- [Select](./select.md)
+
+## 11. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

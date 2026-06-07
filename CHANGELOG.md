@@ -8,7 +8,47 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
-## [Unreleased] — 2026-06-07 — CI A 案 (タイプ別パイプライン) + Security 二段構え
+## [Unreleased] — 2026-06-07 — Catalog を Storybook MDX に統合 (言語化 + 実物 Live Preview)
+
+### Added
+- **`libs/shared/ui/src/{name}.docs.mdx` (24)** — UI primitive 全 24 個の Storybook MDX。
+  `docs/catalog/ui/{name}.md` の言語化テキストを全文移植し、対応する Story を `<Canvas of={...}>`
+  で live preview 化。`<Primary>` + `<Controls>` で props API を表示、末尾に `<Stories>`
+  で全 variant 一覧。shadcn/ui スタイルの "Docs + Canvas + API" を 1 ページ統合。
+- **`libs/shared/ui-composite/src/{Name}.docs.mdx` (14)** — Composite 14 個 (stories 持ち) の
+  MDX。EventCard / Header / EventStatusBadge / ShareModal 等。
+- **`apps/web/src/stories/blocks/*.mdx` (7)** — Block パターン MDX。
+  - `event-status-orchestration.mdx` — 8 状態 × 全コンポーネントのオーケストレーション
+  - `cta-matrix.mdx` — 4 種統一 CTA × variant × size
+  - `cards.mdx` / `lists-and-tables.mdx` / `navigation.mdx` / `forms.mdx` / `feedback.mdx`
+- **`apps/web/src/stories/foundations/*.mdx` (3)** — Foundation MDX (既存の design-system
+  ディレクトリ未カバー分: states / responsive / voice-and-tone)
+- **`scripts/gen-catalog-mdx.mjs`** — `docs/catalog/*.md` から `{name}.docs.mdx` を生成。
+  YAML front-matter 除去 / h1 除去 / MDX 3 unsafe char (`<`, `>`, `{`, `}`) escape。
+  `--force` で上書き、`--dry` で表示のみ。
+- **`scripts/sync-catalog-mdx.mjs`** — MD と MDX の見出し乖離を検知。`--fix` で再生成。
+
+### Changed
+- **`apps/web/.storybook/preview.tsx`** — sidebar `storySort.order` を更新。
+  各 component の `"Docs"` を最上位に固定し、続いて Default → variants → All*。
+  Blocks / Foundations を追加。
+- **`docs/catalog/00-overview.md` §0** — 4 媒体役割分担マトリクスを再定義。
+  catalog MD = テキスト source of truth、Storybook MDX = catalog テキスト + 実物統合の視覚層、
+  という新マトリクスを明文化。同期スクリプトの呼び方を追記。
+- **`docs/catalog/README.md`** — MD と MDX の関係を明示 (catalog MD を編集すれば
+  Storybook MDX に反映される)。
+- **`CLAUDE.md` §4.3** — `{name}.docs.mdx` 追加義務を明示。
+- **`Design.md` §6.2** — Storybook MDX (docs.mdx) を全コンポーネントに要求と明記。
+
+### Stats
+- 作成 MDX 数: 38 (UI 24 + Composite 14) + Blocks 7 + Foundations 3 = **48 MDX**
+- Storybook 総 Docs entries: 21 → **59** (Welcome + Design System 20 + UI 24 + Composite 14)
+- Storybook build: success (5.61s, blocks chunk 733kB)
+- VRT 影響: 新 Docs ページが追加されるが、stories 数自体は不変 (207) のため既存 VRT baseline は影響なし
+
+---
+
+## [Released previously] — 2026-06-07 — CI A 案 (タイプ別パイプライン) + Security 二段構え
 
 ### Added
 - **`.github/workflows/security.yml`** — Semgrep (SAST) + gitleaks (secrets) の二段構え。

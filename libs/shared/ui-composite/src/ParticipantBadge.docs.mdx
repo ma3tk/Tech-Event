@@ -1,0 +1,72 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as ParticipantBadgeStories from "./ParticipantBadge.stories";
+
+<Meta of={ParticipantBadgeStories} name="Docs" />
+
+<Title />
+<Subtitle>**参加者のアバター + ニックネーム** を表示する composite component。user オブジェクト or 直接プロパティで指定可能。</Subtitle>
+
+> 一次資料: `docs/catalog/components/participant-badge.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={ParticipantBadgeStories.Default} />
+
+<Canvas of={ParticipantBadgeStories.WithAvatar} />
+
+<Canvas of={ParticipantBadgeStories.WithUserObject} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+**参加者のアバター + ニックネーム** を表示する composite component。`user` オブジェクト or 直接プロパティで指定可能。
+
+## 2. いつ使うか
+- 参加者一覧
+- 主催者表示 (単体)
+- コメントのユーザー名
+- イベント詳細の「参加予定」セクション
+
+## 3. いつ使わないか
+- 多人数の重ね表示 → [HostAvatarStack](./host-avatar-stack.md)
+- アバターのみ → [Avatar](../ui/avatar.md)
+
+## 4. 使用例
+
+```tsx
+import { ParticipantBadge } from "@tech-event/shared-ui-composite";
+
+<ParticipantBadge user={user} />
+// or
+<ParticipantBadge nickname="taro_y" avatarUrl="/u/taro.png" />
+```
+
+## 5. アクセシビリティ
+
+- リンク化されている場合は `<Link>` でラップ
+- アバター画像に alt
+
+## 6. 関連
+
+- [Avatar](../ui/avatar.md)
+- [HostAvatarStack](./host-avatar-stack.md)
+
+## 7. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

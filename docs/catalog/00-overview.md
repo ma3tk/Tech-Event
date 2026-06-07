@@ -8,28 +8,37 @@
 
 ## 0. 4 媒体役割分担マトリクス (最重要)
 
-> このマトリクスを冒頭に置く理由: tech-event のデザイン情報は 4 媒体に分散しているため、何をどこに書くかをルール化しないと **半年で同じ情報が 4 箇所に重複し、ズレた状態で放置される** ことが catalog review (`research/catalog-review.md`) で指摘された。新規ドキュメント追加・既存更新は **必ずこの表に照らして「どの媒体に書くべきか」を判断する**。
+> 2026-06-07 更新: catalog の MD (テキスト) と Storybook MDX (実物プレビュー込み) を **同一情報源** として明確に区別。MDX は MD を読み込んで Canvas embed を加えた **視覚層**、MD は **言語化の source of truth**。
 
 | 媒体 | 役割 (1 行) | 何を書くか | 例 |
 | --- | --- | --- | --- |
-| `docs/design-system.md` (規範本体 / What) | トークン仕様・全コンポーネントの正典 | トークン値・命名規約・全 props 表・全 variant 表 (機械的事実) | "EventStatusBadge の status は 8 種"、"`--color-brand-orange: #c2410c`" |
-| `docs/catalog/*.md` (判断基準 / When) | 言語化された使い分けガイド | いつ使う / いつ使わない / Do's & Don'ts / 関連コンポーネント / 対象ペルソナ | "open は 募集中、full は補欠登録に誘導する"、"破壊的アクションは destructive variant" |
-| Storybook MDX (視覚化 / Why visually) | コンセプト・初心者ガイド | DS 全体図・トークン使い方の視覚資料・ガイド文 | "DS 全体図"、"トークンの使い方マップ" |
-| Storybook Story (実物 / How) | 全 variant × state の生きた実例 | argTypes・interaction・全 variant の同時表示 | "Button × 6 variants × 5 sizes" の matrix story |
+| `docs/design-system.md` (規範・正典 / What) | トークン仕様・全コンポーネントの正典 | トークン値・命名規約・全 props 表・全 variant 表 (機械的事実) | "EventStatusBadge の status は 8 種"、"`--color-brand-orange: #c2410c`" |
+| **`docs/catalog/*.md` (テキスト source of truth / When)** | 言語化された使い分けガイド (Markdown ソース) | いつ使う / いつ使わない / Do's & Don'ts / 関連 / 対象ペルソナ。**ここを編集すれば catalog 全体が更新される** | "open は 募集中、full は補欠登録に誘導する"、"破壊的アクションは destructive variant" |
+| **Storybook MDX (catalog テキスト + 実物統合 / Why visually + Live preview)** | catalog MD の言語化テキスト + 実物 component の Canvas を 1 ページに統合した shadcn/ui スタイルの視覚層 | `<Meta of={Stories} name="Docs" />` + `<Canvas of={...}>` + Controls + 元 MD 全文 | `libs/shared/ui/src/button.docs.mdx` が `docs/catalog/ui/button.md` を取り込み、Button の全 variant を live render |
+| Storybook Story (variant 単体 / How) | 各 variant × state の生きた最小実例 | argTypes・interaction・1 variant 1 story | "Button × Default"、"Button × Destructive" 単体 |
 
-### ルール
+### ルール (2026-06-07 改訂)
 
-1. **コードサンプルは Story が唯一の出典** — catalog MD には埋め込まず Story link のみ (重複ゼロ)
-2. **トークン値は `docs/design-system.md` が唯一の出典** — catalog MD には値を書かず参照 link のみ
-3. **Props 表 / Variant 表は TS 型・cva 設定から自動生成** — 手書き禁止 (将来 `react-docgen` 連携。現状は手書きだが `<!-- AUTO-GENERATED START/END -->` で区画化済み)
-4. **判断基準 (いつ使う / 使わない / Don'ts) は catalog MD が唯一の出典** — Storybook MDX / Story には書かない
-5. **ペルソナ (`Personas.md` の P1–P9) 参照は catalog blocks/components が一次** — 各コンポーネントは「対象ペルソナ」セクションで明示
+1. **言語化テキストの編集は `docs/catalog/{ui,components,blocks,foundations}/{name}.md` のみ**。MDX は自動同期される視覚層
+2. **MDX (`{name}.docs.mdx`) の編集は Canvas 追加 / Controls 配置の変更のみ**。テキストは MD 由来
+3. **コードサンプルは Story が唯一の出典** — catalog MD には埋め込まず Story link のみ
+4. **トークン値は `docs/design-system.md` が唯一の出典** — catalog MD には値を書かず参照 link のみ
+5. **Props 表 / Variant 表は TS 型・cva 設定から自動生成** (将来) — 現状は手書き、`<!-- AUTO-GENERATED START/END -->` で区画化済み
+6. **判断基準 (いつ使う / 使わない / Don'ts) は catalog MD が唯一の出典** — Storybook MDX は同内容を Live Preview 付きで見せるだけ
+7. **ペルソナ (`Personas.md` の P1–P9) 参照は catalog blocks/components が一次** — 各コンポーネントは「対象ペルソナ」セクションで明示
+
+### 同期スクリプト
+
+- `scripts/gen-catalog-mdx.mjs` — `.md` 内容を取り込んで `.docs.mdx` を生成 / 更新
+- `scripts/sync-catalog-mdx.mjs` — MD と MDX の見出し乖離をチェック (CI で警告)
+  - `--fix` で MDX を MD に追従させて再生成
 
 ### 守らないとどうなるか
 
 - DS リファクタ時に同じ情報を 4 箇所更新する羽目になる
 - ドキュメント間で値がズレた状態が放置される (半年で必ず発生)
 - 「どこを信じればいいか」が新規メンバーに伝わらず、catalog 自体の信頼が落ちる
+- MDX で実物 preview がない → 言語化と実装の乖離検知が遅れる
 
 ---
 

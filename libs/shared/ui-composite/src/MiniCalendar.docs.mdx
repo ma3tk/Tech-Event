@@ -1,0 +1,69 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as MiniCalendarStories from "./MiniCalendar.stories";
+
+<Meta of={MiniCalendarStories} name="Docs" />
+
+<Title />
+<Subtitle>サイドバー用の **ミニカレンダー**。開催日にドット表示でイベント有無を示す。date-fns ベース。</Subtitle>
+
+> 一次資料: `docs/catalog/components/mini-calendar.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={MiniCalendarStories.NoEvents} />
+
+<Canvas of={MiniCalendarStories.ManyEvents} />
+
+<Canvas of={MiniCalendarStories.SpecificMonth} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+サイドバー用の **ミニカレンダー**。開催日にドット表示でイベント有無を示す。`date-fns` ベース。
+
+## 2. いつ使うか
+- グループページのサイドバー
+- ユーザープロフィールのサイドバー
+- カレンダーページのナビ
+
+## 3. いつ使わないか
+- 大きなカレンダー UI → 別 component
+- 日付選択 → Calendar (将来 atom 化予定)
+
+## 4. アクセシビリティ
+
+- `<table role="grid">` (date-fns 慣用)
+- 開催日には `aria-label` を補強
+
+## 5. 使用例
+
+```tsx
+<MiniCalendar
+  eventDates={dates}
+  onSelectDate={(d) => router.push(`/calendar?date=${d}`)}
+/>
+```
+
+## 6. 関連
+
+- [Card](../ui/card.md) (サイドバー枠)
+
+## 7. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

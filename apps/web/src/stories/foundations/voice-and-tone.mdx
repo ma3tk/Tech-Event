@@ -1,0 +1,51 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as ButtonStories from "../../../../../libs/shared/ui/src/button.stories";
+import * as ToastStories from "../../../../../libs/shared/ui/src/toast.stories";
+import * as EmptyStateStories from "../../../../../libs/shared/ui/src/empty-state.stories";
+
+<Meta title="Foundations/Voice and Tone" />
+
+<Title>Voice & Tone</Title>
+<Subtitle>tech-event の文章は「親しみやすく / 端正 / 信頼感」。ja は「です・ます」、en は friendly + concise を基本とする。</Subtitle>
+
+> 一次資料: `docs/catalog/foundations/voice-and-tone.md`。
+
+## 4 種統一 CTA ラベル (Design.md §10.2)
+
+| ja | en |
+|---|---|
+| 参加申込 | Register |
+| 補欠登録 | Join Waitlist |
+| 抽選に申し込む | Apply for Lottery |
+| 参加リクエストを送信 | Request to Join |
+
+混在禁止 (「参加する」「申込む」「エントリー」等を独自に増やさない)。
+
+<Canvas of={ButtonStories.LumaSize} />
+
+## Toast 文言例
+
+成功 / エラー / 警告 / 情報の 4 種で動詞 + 名詞のシンプル文を採用。
+
+<Canvas of={ToastStories.Success} />
+
+<Canvas of={ToastStories.ErrorVariant} />
+
+<Canvas of={ToastStories.Warning} />
+
+## EmptyState の文言例
+
+「データなし」だけでなく、理由 + 次のアクションを必ず添える。
+
+<Canvas of={EmptyStateStories.WithAction} />
+
+<Canvas of={EmptyStateStories.SearchResultEmpty} />
+
+## アンチパターン
+
+- ❌ 「エラーが発生しました」だけ → ✅ 「ネットワークが不安定です。再試行してください」
+- ❌ 「申込めません」だけ → ✅ 「定員に達しました。補欠登録に進めます」
+- ❌ 過剰に丁寧 (「お申し込みいただきまして誠にありがとうございます」) → ✅ 「申込完了しました」
+- ❌ 親しみすぎ (「やった！登録できたよ」) → ✅ 信頼感を保つ
+
+詳細は `docs/catalog/foundations/voice-and-tone.md`。

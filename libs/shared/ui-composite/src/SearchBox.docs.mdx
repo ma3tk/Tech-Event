@@ -1,0 +1,75 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as SearchBoxStories from "./SearchBox.stories";
+
+<Meta of={SearchBoxStories} name="Docs" />
+
+<Title />
+<Subtitle>**ヘッダー / ヒーロー用の検索ボックス**。form method="get" で JS なしでも動作する。Input + 検索ボタン + 検索ヒント (オプション)。</Subtitle>
+
+> 一次資料: `docs/catalog/components/search-box.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={SearchBoxStories.Header} />
+
+<Canvas of={SearchBoxStories.Hero} />
+
+<Canvas of={SearchBoxStories.WithDefaultValue} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+**ヘッダー / ヒーロー用の検索ボックス**。`<form method="get">` で JS なしでも動作する。Input + 検索ボタン + 検索ヒント (オプション)。
+
+## 2. いつ使うか
+- ヘッダー (常設)
+- ランディングのヒーロー
+- 検索ページの上部
+
+## 3. いつ使わないか
+- フィルタ専用 → 専用 UI
+- リアルタイム検索 (debounce + fetch) → 別 component
+
+## 4. アクセシビリティ
+
+- `<form>` 内に `<input type="search">`
+- `aria-label="イベントを検索"`
+- 検索ヒントは Popover で
+
+## 5. 使用例
+
+```tsx
+import { SearchBox } from "@tech-event/shared-ui-composite";
+
+<SearchBox action="/search" placeholder="イベント名 / キーワード" />
+```
+
+## 6. アンチパターン
+
+- ❌ JS submit のみ → ✅ form action で JS なしでも動作
+- ❌ Label なし → ✅ aria-label 必須
+
+## 7. 関連
+
+- [Input](../ui/input.md)
+- [blocks/forms.md](../blocks/forms.md)
+
+## 8. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

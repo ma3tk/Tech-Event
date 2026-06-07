@@ -1,0 +1,72 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as FooterStories from "./Footer.stories";
+
+<Meta of={FooterStories} name="Docs" />
+
+<Title />
+<Subtitle>グローバルフッター。リンク群 + SNS + コピーライト。</Subtitle>
+
+> 一次資料: `docs/catalog/components/footer.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={FooterStories.Default} />
+
+<Canvas of={FooterStories.CustomGroups} />
+
+<Canvas of={FooterStories.CustomCopyright} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+グローバルフッター。リンク群 + SNS + コピーライト。
+
+## 2. いつ使うか
+- 全ページ (auth flow / iframe 除く)
+
+## 3. 構造
+
+```
+┌──────────────────────────────────────────┐
+│ サービス    主催者向け    会社情報        │
+│ - リンク     - リンク       - リンク       │
+│                                            │
+│ [SNS アイコン]   © 2026 tech-event         │
+└──────────────────────────────────────────┘
+```
+
+## 4. アクセシビリティ
+
+- `<footer role="contentinfo">`
+- SNS アイコンに `aria-label`
+- 各列に `<h2 className="sr-only">`
+
+## 5. アンチパターン
+
+- ❌ リンク 30+ → ✅ 重要 10-15 個に絞る
+- ❌ SNS だけアイコン → ✅ テキストも (`<span className="sr-only">`)
+
+## 6. 関連
+
+- [Separator](../ui/separator.md)
+- [blocks/navigation.md](../blocks/navigation.md)
+
+## 7. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />
