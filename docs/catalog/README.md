@@ -1,11 +1,18 @@
 # tech-event デザインシステムカタログ
 
-> Design.md + Personas.md 準拠 | Storybook (視覚) と相互補完する **言語化された使い分けガイド**
+> Design.md + Personas.md 準拠 | **Storybook MDX で実物 Live Preview 込み** に視覚化される **言語化された使い分けガイド**
 
 このカタログは、Storybook (live visual) と並んで「**いつ何を、どう使うか**」を言語化した一次資料です。
-コンポーネント実装の細部は `libs/shared/ui/*.tsx` / `libs/shared/ui-composite/*.tsx` を、視覚は Storybook (`pnpm storybook` → http://localhost:6006) を、本カタログは **設計意図・使い分け・アンチパターン** を担当します。
+コンポーネント実装の細部は `libs/shared/ui/*.tsx` / `libs/shared/ui-composite/*.tsx` を、本カタログ MD は **設計意図・使い分け・アンチパターン (テキスト source of truth)** を担当し、各 MD の内容は対応する Storybook MDX (`{name}.docs.mdx`) で **言語化テキスト + 実物 Canvas + Controls** として 1 ページに統合されます。
 
 > **重要**: ドキュメント追加・更新時は必ず [`00-overview.md` §0 「4 媒体役割分担マトリクス」](./00-overview.md#0-4-媒体役割分担マトリクス-最重要) を読むこと。**何をどこに書くか** が固定されています (半年で重複事故しないために)。
+
+### MD と MDX の関係 (2026-06-07 改訂)
+
+- `docs/catalog/ui/button.md` — **テキスト source of truth** (このファイルを編集する)
+- `libs/shared/ui/src/button.docs.mdx` — 上記 MD を取り込み、`<Canvas of={ButtonStories.Default}>` 等で実物プレビューを追加した Storybook ページ
+- 生成 / 同期: `node scripts/gen-catalog-mdx.mjs --force`、ズレ検知: `node scripts/sync-catalog-mdx.mjs`
+- ローカルで Storybook 起動: `pnpm storybook` → http://localhost:6006 → 各 component の「Docs」タブ
 
 ---
 

@@ -115,7 +115,10 @@ src/app/globals.css         ← @theme inline で Tailwind v4 bridge
 - 既存 Tailwind ユーティリティクラス名は **互換性維持** (refactor 負担最小化)
 - 新規コンポーネントは ui/ primitives の上に組む
 - 全コンポーネントに Storybook story + variant 100% カバー
-- MDX docs を `src/stories/design-system/` に追加
+- **コンポーネントごとの `{name}.docs.mdx`** を `libs/shared/ui{,-composite}/src/` に追加 (catalog MD を取り込み、`<Canvas of={Stories.Default}>` で実物 live preview 込み。shadcn/ui スタイル)
+- 横断 MDX docs (Colors / Motion / Icons 等) は `src/stories/design-system/` に追加
+- Block / Foundation のパターン MDX は `apps/web/src/stories/{blocks,foundations}/` に追加
+- 言語化テキストの編集は `docs/catalog/*.md` のみ。MDX は `node scripts/gen-catalog-mdx.mjs --force` で再生成
 - アイコンは lucide-react、ストロークウェイト 1.5、サイズ 14/16/20/24 px
 
 ### 4.4 トークン同期
