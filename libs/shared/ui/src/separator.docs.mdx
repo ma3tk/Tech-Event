@@ -1,0 +1,90 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as SeparatorStories from "./separator.stories";
+
+<Meta of={SeparatorStories} name="Docs" />
+
+<Title />
+<Subtitle>セクションを **視覚的に分割** する横/縦の罫線。Radix UI Separator ベース。</Subtitle>
+
+> 一次資料: `docs/catalog/ui/separator.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={SeparatorStories.Horizontal} />
+
+<Canvas of={SeparatorStories.Vertical} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+セクションを **視覚的に分割** する横/縦の罫線。Radix UI Separator ベース。
+
+## 2. いつ使うか
+- カード内のセクション区切り
+- メニュー内のグループ区切り (DropdownMenu)
+- フッターの列間 (縦線)
+
+## 3. いつ使わないか
+- 純装飾の太い border → `border-t` 直接で十分
+- ページ大セクション → 余白 + 見出しで分離 (Separator は line)
+
+## 4. バリアント
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+- `horizontal` (default)
+- `vertical`
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 5. 状態
+
+静的のみ。`decorative` (default true) で aria-hidden が付く。
+
+## 6. アクセシビリティ
+
+- 純飾りなら `decorative={true}` (default) で `aria-hidden`
+- 意味的な区切りなら `decorative={false}` + `role="separator"`
+
+## 7. 使用例
+
+```tsx
+import { Separator } from "@tech-event/shared-ui";
+
+<div>
+  <p>section A</p>
+  <Separator className="my-4" />
+  <p>section B</p>
+</div>
+```
+
+## 8. アンチパターン
+
+- ❌ 装飾なのに `decorative={false}` → ✅ 意味があるかで判断
+- ❌ `bg-zinc-200` ハードコード → ✅ `bg-border` (Separator が自動で対応)
+
+## 9. 関連
+
+- [Card](./card.md)
+- [DropdownMenu](./dropdown-menu.md)
+
+## 10. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

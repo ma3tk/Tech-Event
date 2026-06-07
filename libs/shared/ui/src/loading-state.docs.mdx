@@ -1,0 +1,102 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as LoadingStateStories from "./loading-state.stories";
+
+<Meta of={LoadingStateStories} name="Docs" />
+
+<Title />
+<Subtitle>**インタラクション後の短い待機** を中央スピナー + テキストで明示する UI。Skeleton と違い、内容のレイアウトを示さず "読み込んでいる" だけを伝える。</Subtitle>
+
+> 一次資料: `docs/catalog/ui/loading-state.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={LoadingStateStories.Spinner} />
+
+<Canvas of={LoadingStateStories.SpinnerLarge} />
+
+<Canvas of={LoadingStateStories.Dots} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+**インタラクション後の短い待機** を中央スピナー + テキストで明示する UI。Skeleton と違い、内容のレイアウトを示さず "読み込んでいる" だけを伝える。
+
+## 2. いつ使うか
+- ボタン押下後の通信待ち (フォーム送信)
+- Server Action の long task
+- ルート遷移中 (`loading.tsx`)
+
+## 3. いつ使わないか
+- 一覧のロード → [Skeleton](./skeleton.md) (レイアウト示す)
+- 100ms 以下の短い処理 → 何も出さない (UI ノイズ回避)
+
+## 4. 構造
+
+```
+       ◌
+   読み込み中…
+```
+
+## 5. バリアント
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+- `inline` — テキスト横に小さくスピナー
+- `block` — ブロック中央 (default)
+- `fullscreen` — 画面全体オーバーレイ
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 6. アクセシビリティ
+
+- `role="status"` + `aria-live="polite"`
+- `aria-label="読み込み中"`
+- `prefers-reduced-motion` でスピナーを静止画に
+
+## 7. 使用例
+
+```tsx
+import { LoadingState } from "@tech-event/shared-ui";
+
+<LoadingState variant="block" message="読み込み中" />
+
+// または inline
+<Button disabled aria-busy>
+  <Loader2 className="animate-spin" />
+  送信中…
+</Button>
+```
+
+## 8. アンチパターン
+
+- ❌ 100ms 以下にも出す → ✅ skip
+- ❌ メッセージなし → ✅ 「読み込み中」「送信中」など状態を明示
+- ❌ ループアニメ過剰 → ✅ 単一スピナーに
+
+## 9. 関連
+
+- [Skeleton](./skeleton.md)
+- [EmptyState](./empty-state.md)
+- [ErrorState](./error-state.md)
+- [blocks/feedback.md](../blocks/feedback.md)
+
+## 10. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />

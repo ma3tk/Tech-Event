@@ -1,0 +1,115 @@
+import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
+import * as TextareaStories from "./textarea.stories";
+
+<Meta of={TextareaStories} name="Docs" />
+
+<Title />
+<Subtitle>複数行のテキスト入力。コメント / 短い説明文 / メモなどに使う。</Subtitle>
+
+> 一次資料: `docs/catalog/ui/textarea.md`。
+> ここは **言語化テキスト + 実物 Live Preview** を 1 ページに統合した shadcn/ui スタイルの docs。
+> 元の `.md` ファイルが source of truth、本 MDX は同内容を Storybook 上でレンダリングする視覚層。
+
+## ライブプレビュー (Canvas)
+
+<Canvas of={TextareaStories.Default} />
+
+<Canvas of={TextareaStories.WithLabel} />
+
+<Canvas of={TextareaStories.Disabled} />
+
+## Primary
+
+<Primary />
+
+## Props (API)
+
+<Controls />
+
+---
+
+## 1. 目的
+複数行のテキスト入力。コメント / 短い説明文 / メモなどに使う。
+
+## 2. いつ使うか
+- コメント入力
+- イベントの簡易説明 (3-5 行)
+- フィードバック / お問い合わせ
+- メモ欄
+
+## 3. いつ使わないか
+- 1 行 → [Input](./input.md)
+- Markdown 編集 → [MarkdownEditor](../components/markdown-editor.md)
+- 大量の構造化入力 → 別ページのフォームに
+
+## 4. 構造
+
+```
+┌────────────────────────────────┐
+│ プレースホルダ / 値             │
+│                                │
+│                                │
+└────────────────────────────────┘
+                          [字数 0/500]
+```
+
+## 5. バリアント
+
+&lt;!-- AUTO-GENERATED START: variants --&gt;
+&lt;!-- 将来は cva variants 設定 / TS Props 型から自動抽出。現状は手書き。乖離検出は CI で。 --&gt;
+- `default`
+- `error` (`aria-invalid` 連動で auto)
+
+
+&lt;!-- AUTO-GENERATED END: variants --&gt;
+
+## 6. サイズ
+
+- `rows` prop で高さ制御 (default 3-4)
+- `min-h-[100px]` 推奨
+
+## 7. 状態
+
+default / hover / focus-visible / disabled / error。`<Input>` と同じパターン。
+
+## 8. アクセシビリティ
+
+- Label 必須
+- `maxLength` 設定時は字数カウントに `aria-live="polite"`
+- `aria-describedby` でカウント領域を参照
+
+## 9. 使用例
+
+```tsx
+<div className="space-y-2">
+  <Label htmlFor="comment">コメント</Label>
+  <Textarea
+    id="comment"
+    rows={4}
+    maxLength={500}
+    placeholder="感想を共有"
+  />
+</div>
+```
+
+## 10. アンチパターン
+
+- ❌ `resize-none` を強制 → ✅ ユーザーに任せる
+- ❌ Label なし → ✅ 必須
+- ❌ Markdown を Textarea で → ✅ MarkdownEditor
+
+## 11. 関連
+
+- [Input](./input.md)
+- [MarkdownEditor](../components/markdown-editor.md)
+- [Form](./form.md)
+
+## 12. 変更履歴
+
+- v1.0.0 (2026-06-05): 初回リリース
+
+---
+
+## 全 Stories
+
+<Stories includePrimary={false} />
