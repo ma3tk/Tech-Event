@@ -1,0 +1,54 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as ButtonStories from "../../../../../libs/shared/ui/src/button.stories";
+import * as InputStories from "../../../../../libs/shared/ui/src/input.stories";
+import * as EmptyStateStories from "../../../../../libs/shared/ui/src/empty-state.stories";
+import * as ErrorStateStories from "../../../../../libs/shared/ui/src/error-state.stories";
+import * as LoadingStateStories from "../../../../../libs/shared/ui/src/loading-state.stories";
+import * as SkeletonStories from "../../../../../libs/shared/ui/src/skeleton.stories";
+
+<Meta title="Foundations/States" />
+
+<Title>States</Title>
+<Subtitle>全コンポーネントが取り得る 9 状態 (default / hover / focus / active / disabled / loading / empty / error / selected) を実物で示す。</Subtitle>
+
+> 一次資料: `docs/catalog/foundations/states.md`。
+
+## default / disabled / loading (Button で代表)
+
+<Canvas of={ButtonStories.Default} />
+
+<Canvas of={ButtonStories.Disabled} />
+
+<Canvas of={ButtonStories.Loading} />
+
+## error (aria-invalid 連動の Input)
+
+<Canvas of={InputStories.Invalid} />
+
+## empty (EmptyState)
+
+<Canvas of={EmptyStateStories.Default} />
+
+<Canvas of={EmptyStateStories.WithAction} />
+
+## error (ErrorState)
+
+<Canvas of={ErrorStateStories.Default} />
+
+<Canvas of={ErrorStateStories.WithRetry} />
+
+## loading (LoadingState / Skeleton)
+
+<Canvas of={LoadingStateStories.Spinner} />
+
+<Canvas of={SkeletonStories.EventCard} />
+
+## 規約
+
+- `:focus-visible` で常時可視のフォーカスリング (`outline 2px brand-orange offset 2px`)
+- `disabled` は `opacity-50 pointer-events-none` + `aria-disabled="true"` 併記
+- `loading` は spinner + `aria-busy="true"`、中身は不可視化せず CLS 防止
+- `empty` は理由 + 次のアクションを必ず添える
+- `error` は原因 + 対処 (retry など) を添える
+
+詳細は `docs/catalog/foundations/states.md`。

@@ -1,0 +1,55 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as EventListRowStories from "../../../../../libs/shared/ui-composite/src/EventListRow.stories";
+import * as EventTimelineStories from "../../../../../libs/shared/ui-composite/src/EventTimeline.stories";
+import * as PaginationStories from "../../../../../libs/shared/ui-composite/src/Pagination.stories";
+
+<Meta title="Blocks/Lists and Tables" />
+
+<Title>Lists & Tables</Title>
+<Subtitle>イベント / グループの一覧表示。EventListRow による 1 行 88-96px の高密度フォーマット、月見出しグルーピング、ランキング、ページネーションを統合する。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/lists-and-tables.md`。
+
+## EventListRow default (compact 1 行)
+
+<Canvas of={EventListRowStories.Default} />
+
+## EventListRow with thumbnail
+
+<Canvas of={EventListRowStories.WithThumbnail} />
+
+## EventListRow ランキング (top 3 強調)
+
+<Canvas of={EventListRowStories.Ranking} />
+
+## EventListRow rank=1 / rank=2 / rank=3 個別
+
+<Canvas of={EventListRowStories.Rank1} />
+
+<Canvas of={EventListRowStories.Rank2} />
+
+<Canvas of={EventListRowStories.Rank3} />
+
+## ListOfRows (連続表示)
+
+<Canvas of={EventListRowStories.ListOfRows} />
+
+## EventTimeline (Luma 風 月見出し自動グルーピング)
+
+<Canvas of={EventTimelineStories.Default} />
+
+## Pagination (Default / First / Last / ManyPages)
+
+<Canvas of={PaginationStories.Default} />
+
+<Canvas of={PaginationStories.FirstPage} />
+
+<Canvas of={PaginationStories.LastPage} />
+
+<Canvas of={PaginationStories.ManyPages} />
+
+## アンチパターン
+
+- ❌ 行高を 64px 未満にする → ✅ タッチ領域 (44×44) を確保しつつ密度を保つ
+- ❌ 1 行に 10+ 項目を並べる → ✅ タイトル / 日時 / 会場 / 参加者の 4 要素に絞る (connpass 寄り)
+- ❌ ページャを Sticky にしない → ✅ 大画面では Sticky で操作距離を短くしてもよい (オプション)

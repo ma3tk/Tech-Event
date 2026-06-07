@@ -31,9 +31,15 @@ const preview: Preview = {
     //   1. Welcome (top, landing page)
     //   2. Design System (Introduction → Tokens → Colors → ...)
     //   3. UI (primitives, alphabetical) — libs/shared/ui/
+    //         各 component で Docs (MDX) を最上位、続いて Default / Variants / All*。
     //   4. Components (composite, alphabetical) — libs/shared/ui-composite/
-    //   5. Blocks (構成パターン)
+    //   5. Blocks (構成パターン) — apps/web/src/stories/blocks/*.mdx
+    //   6. Foundations (states / responsive / voice-and-tone) — apps/web/src/stories/foundations/*.mdx
     //   *. それ以外 (= 末尾)
+    //
+    // Per-component story order: "Docs" を最上位に固定し、続いて Default →
+    // 代表的 variant → All* → 残り。これにより MDX を開けば言語化 + Canvas
+    // を 1 ページで読める。
     options: {
       storySort: {
         order: [
@@ -64,8 +70,11 @@ const preview: Preview = {
             ],
           ],
           "UI",
+          ["*", ["Docs", "Default", "Secondary", "Destructive", "Outline", "Ghost", "Link", "AllVariants", "AllSizes", "*"]],
           "Components",
+          ["*", ["Docs", "Default", "AllStatuses", "AllVariants", "AllSizes", "*"]],
           "Blocks",
+          "Foundations",
           "*",
         ],
       },

@@ -1,0 +1,56 @@
+import { Meta, Title, Subtitle, Canvas } from "@storybook/addon-docs/blocks";
+import * as HeaderStories from "../../../../../libs/shared/ui-composite/src/Header.stories";
+import * as BreadcrumbStories from "../../../../../libs/shared/ui-composite/src/Breadcrumb.stories";
+import * as FooterStories from "../../../../../libs/shared/ui-composite/src/Footer.stories";
+import * as SearchBoxStories from "../../../../../libs/shared/ui-composite/src/SearchBox.stories";
+
+<Meta title="Blocks/Navigation" />
+
+<Title>Navigation</Title>
+<Subtitle>ヘッダー / フッター / パンくず / 検索を組み合わせるグローバルナビゲーションパターン。logged-in / logged-out で見せ方を切替。</Subtitle>
+
+> 一次資料: `docs/catalog/blocks/navigation.md`。
+
+## Header (LoggedOut)
+
+未ログイン時。検索 + ログイン CTA。
+
+<Canvas of={HeaderStories.LoggedOut} />
+
+## Header (LoggedIn)
+
+ログイン時。検索 + 通知 + アバター。
+
+<Canvas of={HeaderStories.LoggedIn} />
+
+## Header with notifications
+
+<Canvas of={HeaderStories.LoggedInWithNotifications} />
+
+## Header with avatar
+
+<Canvas of={HeaderStories.LoggedInWithAvatar} />
+
+## Breadcrumb (default)
+
+<Canvas of={BreadcrumbStories.Default} />
+
+## Breadcrumb (many levels)
+
+<Canvas of={BreadcrumbStories.ManyLevels} />
+
+## SearchBox header / hero
+
+<Canvas of={SearchBoxStories.Header} />
+
+<Canvas of={SearchBoxStories.Hero} />
+
+## Footer
+
+<Canvas of={FooterStories.Default} />
+
+## アンチパターン
+
+- ❌ Header をページごとに別実装 → ✅ 共通 composite を 1 つに集約
+- ❌ Breadcrumb を 1 階層しか出さない → ✅ 階層が浅くても現在地は明示する
+- ❌ Footer のリンクをアプリ内で違える → ✅ 全ページで同じリンク群を維持
