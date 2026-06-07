@@ -27,6 +27,12 @@ test.describe("Header dark mode toggle", () => {
     page,
   }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
+    // React hydration が完了し Radix DropdownMenu の click ハンドラが
+    // wire-up されるまで待つ。CI の Turbopack dev server で hydration が
+    // 遅れると「ボタンは見えるが click しても open しない」flake になる。
+    // networkidle まで待つことで _next/static/chunks の遅延ロードと
+    // hydration の race を吸収する。
+    await page.waitForLoadState("networkidle");
 
     const toggle = page.getByTestId("header-theme-toggle");
     await expect(toggle).toBeVisible();
@@ -47,6 +53,12 @@ test.describe("Header dark mode toggle", () => {
 
   test("ライト選択で html[data-theme=light] に戻る", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
+    // React hydration が完了し Radix DropdownMenu の click ハンドラが
+    // wire-up されるまで待つ。CI の Turbopack dev server で hydration が
+    // 遅れると「ボタンは見えるが click しても open しない」flake になる。
+    // networkidle まで待つことで _next/static/chunks の遅延ロードと
+    // hydration の race を吸収する。
+    await page.waitForLoadState("networkidle");
     await page.getByTestId("header-theme-toggle").click();
     // Radix DropdownMenu の open animation 後に click (CI flake 対策)
     const darkItem = page.getByTestId("theme-dark");
@@ -77,6 +89,12 @@ test.describe("Header dark mode toggle", () => {
     });
     const page = await ctx.newPage();
     await page.goto("/", { waitUntil: "domcontentloaded" });
+    // React hydration が完了し Radix DropdownMenu の click ハンドラが
+    // wire-up されるまで待つ。CI の Turbopack dev server で hydration が
+    // 遅れると「ボタンは見えるが click しても open しない」flake になる。
+    // networkidle まで待つことで _next/static/chunks の遅延ロードと
+    // hydration の race を吸収する。
+    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("header-theme-toggle").click();
     const systemItem = page.getByTestId("theme-system");
@@ -104,6 +122,12 @@ test.describe("Header dark mode toggle", () => {
     });
     const page = await ctx.newPage();
     await page.goto("/", { waitUntil: "domcontentloaded" });
+    // React hydration が完了し Radix DropdownMenu の click ハンドラが
+    // wire-up されるまで待つ。CI の Turbopack dev server で hydration が
+    // 遅れると「ボタンは見えるが click しても open しない」flake になる。
+    // networkidle まで待つことで _next/static/chunks の遅延ロードと
+    // hydration の race を吸収する。
+    await page.waitForLoadState("networkidle");
 
     await page.getByTestId("header-theme-toggle").click();
     const darkItem = page.getByTestId("theme-dark");

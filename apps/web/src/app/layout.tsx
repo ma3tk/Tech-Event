@@ -18,14 +18,22 @@ import { getLocale, loadDict, t as translate } from "@/lib/i18n";
 import "./globals.css";
 
 /**
- * FOUC 防止用のテーマ先行設定スクリプト。
- * `<html>` の `data-theme` を hydration 前に localStorage / matchMedia から
- * 同期決定することで、初回描画で light → dark の点滅 (FOUC) を防ぐ。
+ * FOUC + hydration mismatch 防止用のテーマ先行設定スクリプト。
  *
- * 失敗時 (private mode 等) は何もしないので、ThemeProvider 側の既存ロジックが
- * mount 後に正しい値を当て直す。
+ * 設計:
+ *   - `<html>` には SSR 側で `data-theme` / `data-contrast` を「出さない」。
+ *     代わりにこの inline script が **React hydration 開始前** に同期で
+ *     localStorage / matchMedia を読み、`<html>` に属性を確定する。
+ *   - `<html suppressHydrationWarning>` と組み合わせることで、React は
+ *     クライアント DOM 属性の差分を許容する (`data-theme` を React の
+ *     管轄外で書き換える契約)。
+ *   - 結果として "Hydration failed because the server rendered text didn't
+ *     match the client" を構造的に発生させない。
+ *
+ * 失敗時 (private mode で localStorage 例外等) も `<html>` の属性は何も
+ * 書かないままにする。ThemeProvider の useEffect が mount 後に整える。
  */
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('tech-event:theme');var c=localStorage.getItem('tech-event:contrast');var t=s==='light'||s==='dark'?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-contrast',c==='more'?'more':'normal');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement;var s=localStorage.getItem('tech-event:theme');var c=localStorage.getItem('tech-event:contrast');var t=s==='light'||s==='dark'?s:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');d.setAttribute('data-theme',t);d.setAttribute('data-contrast',c==='more'?'more':'normal');}catch(e){}})();`;
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -117,13 +125,20 @@ export default async function RootLayout({
   const { dict } = await loadDict(locale);
   const htmlLang = locale === "en" ? "en-US" : "ja-JP";
   return (
+    // data-theme / data-contrast は head 内 inline script (THEME_INIT_SCRIPT)
+    // が hydration 前に確定する。SSR では出さないことで、サーバ HTML と
+    // クライアント DOM の文字列差分を消す。
+    // `suppressHydrationWarning` は `<html>` 自身の属性差分のみを許容する
+    // ので、body 配下の React tree のミスマッチ検知は通常通り行われる。
     <html
       lang={htmlLang}
-      data-theme="light"
       className={`${notoSansJP.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
-        {/* テーマ FOUC 防止: hydration 前に data-theme を当てる。 */}
+        {/* FOUC + hydration mismatch 防止: React hydration 開始前に
+            data-theme / data-contrast を同期決定する。`beforeInteractive`
+            相当の動作にするため head 先頭で inline script として出す。 */}
         <script
           dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
         />

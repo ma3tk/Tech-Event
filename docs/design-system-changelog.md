@@ -1,6 +1,6 @@
 # tech-event Design System Changelog
 
-最終更新: 2026-06-05
+最終更新: 2026-06-07
 
 本ドキュメントは **デザインシステム単体** のバージョン履歴である。アプリ側 (`CHANGELOG.md`) とは別に、
 DS の **API / トークン / ドキュメント** 変更だけを追跡する。
@@ -10,6 +10,22 @@ DS の **API / トークン / ドキュメント** 変更だけを追跡する�
 
 形式は [Keep a Changelog](https://keepachangelog.com/) に準拠。
 バージョニングは Semantic Versioning (DS の major は API 破壊変更を意味する)。
+
+---
+
+## [1.0.1] — 2026-06-07 — Theming SSR hydration fix
+
+### Fixed
+
+- **Theme 初期化の hydration mismatch を解消** — `apps/web/src/app/layout.tsx`
+  の `<html data-theme="light">` 固定 SSR が、`THEME_INIT_SCRIPT` の inline
+  書き換えと干渉して "Hydration failed because the server rendered text
+  didn't match the client" を CI で量産していた問題を修正。
+  - SSR 側で `data-theme` / `data-contrast` を出さない
+  - `<html suppressHydrationWarning>` を付与 (`<html>` の属性差分のみ許容)
+  - inline script は head 先頭で hydration 前に同期実行され、属性を確定
+  - `dark.css` の `prefers-color-scheme: dark` フォールバックは維持
+  - `docs/catalog/foundations/theming.md` §5 を実装と整合させて更新
 
 ---
 
