@@ -85,12 +85,28 @@
   --status-ongoing-fg: var(--color-orange-700);
 
   /* ------------------------------------------------------------
+   * Accent — Luma 風 (purple / pink)
+   *
+   * EventCard variant=luma の subtle gradient overlay、ヒーローのグラデ
+   * 背景、Discover バナー等で利用。WCAG: 通常テキストでは accent-* fg を
+   * 必ず濃い段階 (purple-700 / pink-700 以上) で使う。
+   * ------------------------------------------------------------ */
+  --accent-purple: var(--color-purple-600);          /* AA 通常: 5.7:1 vs #fff */
+  --accent-purple-soft: var(--color-purple-50);      /* 装飾用淡背景 */
+  --accent-purple-strong: var(--color-purple-700);   /* AAA 通常: 7.4:1 vs #fff */
+  --accent-pink: var(--color-pink-600);              /* AA 通常: 4.8:1 vs #fff */
+  --accent-pink-soft: var(--color-pink-50);          /* 装飾用淡背景 */
+  --accent-pink-strong: var(--color-pink-700);       /* AA+: 6.5:1 vs #fff */
+
+  /* ------------------------------------------------------------
    * Elevation (semantic shadow aliases)
    * ------------------------------------------------------------ */
   --elevation-card: var(--shadow-sm);
   --elevation-popover: var(--shadow-md);
   --elevation-modal: var(--shadow-lg);
   --elevation-overlay: var(--shadow-xl);
+  --elevation-soft: var(--shadow-soft-md);           /* Luma 風 card 浮遊 */
+  --elevation-soft-strong: var(--shadow-soft-lg);    /* hover / sticky CTA */
 
   /* ------------------------------------------------------------
    * Data viz palette — 色覚多様性配慮 (ColorBrewer / Okabe-Ito 系列)

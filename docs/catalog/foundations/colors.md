@@ -21,6 +21,12 @@ personas: [P1, P2, P3, P4, P5, P6, P7, P8, P9]
 | `--brand-red-hover` | `#b82c2c` | `hover:bg-brand-red-hover` | hover state |
 | `--link` | `#005d8c` | `text-link` | テキスト中のリンク |
 | `--link-hover` | `#004161` | `hover:text-link-hover` | hover state |
+| `--accent-purple` | `#9333ea` (light) / `#c084fc` (dark) | `text-accent-purple` `bg-accent-purple` | Luma 寄り accent (hero グラデ / Discover) |
+| `--accent-purple-soft` | `#faf5ff` / `rgba(168,85,247,.15)` | `bg-accent-purple-soft` | 装飾用淡背景 |
+| `--accent-purple-strong` | `#7e22ce` / `#d8b4fe` | `text-accent-purple-strong` | 強調 (AAA 7:1+) |
+| `--accent-pink` | `#db2777` / `#f472b6` | `text-accent-pink` `bg-accent-pink` | Luma 寄り accent (hero グラデ) |
+| `--accent-pink-soft` | `#fdf2f8` / `rgba(236,72,153,.15)` | `bg-accent-pink-soft` | 装飾用淡背景 |
+| `--accent-pink-strong` | `#be185d` / `#f9a8d4` | `text-accent-pink-strong` | 強調 |
 
 ### スウォッチ (概念図)
 
@@ -31,6 +37,36 @@ brand-orange     #c2410c  ████  (4.93:1 vs #fff, AA)
 brand-red        #d23a3a  ████  (CTA レッド)
 link             #005d8c  ████  (テキストリンク)
 ```
+
+### 1.1 Purple / Pink スケール (Luma 寄りアクセント)
+
+| トークン | hex (light) | コントラスト vs #fff |
+|---|---|---|
+| `--color-purple-50` | `#faf5ff` | 装飾用 |
+| `--color-purple-100` | `#f3e8ff` | 装飾用 |
+| `--color-purple-200` | `#e9d5ff` | 装飾用 |
+| `--color-purple-300` | `#d8b4fe` | 装飾用 |
+| `--color-purple-400` | `#c084fc` | 3.0:1 (AA Large) |
+| `--color-purple-500` | `#a855f7` | 3.9:1 (AA Large) |
+| `--color-purple-600` | `#9333ea` | 5.7:1 (AA) |
+| `--color-purple-700` | `#7e22ce` | 7.4:1 (AAA) |
+| `--color-purple-800` | `#6b21a8` | 9.3:1 (AAA) |
+| `--color-purple-900` | `#581c87` | 12.0:1 (AAA) |
+
+| トークン | hex (light) | コントラスト vs #fff |
+|---|---|---|
+| `--color-pink-50` | `#fdf2f8` | 装飾用 |
+| `--color-pink-100` | `#fce7f3` | 装飾用 |
+| `--color-pink-200` | `#fbcfe8` | 装飾用 |
+| `--color-pink-300` | `#f9a8d4` | 2.4:1 |
+| `--color-pink-400` | `#f472b6` | 2.7:1 |
+| `--color-pink-500` | `#ec4899` | 3.7:1 (AA Large) |
+| `--color-pink-600` | `#db2777` | 4.8:1 (AA) |
+| `--color-pink-700` | `#be185d` | 6.5:1 (AA+) |
+| `--color-pink-800` | `#9d174d` | 8.5:1 (AAA) |
+| `--color-pink-900` | `#831843` | 10.8:1 (AAA) |
+
+通常テキストには purple-600 / pink-600 以上を用いる。装飾的な背景以外で 50-300 段階は使わない。
 
 ## 2. セマンティック
 

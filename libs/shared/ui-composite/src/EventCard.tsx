@@ -49,7 +49,7 @@ export type EventCardData = {
   href?: string;
 };
 
-export type EventCardVariant = "list" | "grid";
+export type EventCardVariant = "list" | "grid" | "luma";
 
 export type EventCardProps = {
   event: EventCardData;
@@ -57,8 +57,19 @@ export type EventCardProps = {
    * カードのレイアウト。
    * - `list` (デフォルト): サムネイル左 + 本文右の横長レイアウト
    * - `grid`: サムネイル上 + 本文下の縦型レイアウト (3-4 カラムグリッド用)
+   * - `luma`: 大判 cover image (16:9) + 余白多め + glassmorphism。
+   *   rounded-2xl + shadow-soft-md (Luma 風カード)。
    */
   variant?: EventCardVariant;
+  /**
+   * オプションの tint color (HEX)。`luma` variant では subtle gradient overlay と
+   * 左ボーダーに反映される。設定がない場合はデフォルトの brand-orange-soft。
+   */
+  tintColor?: string;
+  /**
+   * 主催者アバター列 (luma variant のみ表示)。Luma 風カードでは右下にスタックを重ねる。
+   */
+  hosts?: { name: string; avatarUrl?: string | null }[];
   className?: string;
 };
 
@@ -85,6 +96,8 @@ export type EventCardProps = {
 export default function EventCard({
   event,
   variant = "list",
+  tintColor,
+  hosts,
   className,
 }: EventCardProps) {
   const href = event.href ?? `/event/${event.id}`;
@@ -92,6 +105,129 @@ export default function EventCard({
   const accepted = event.accepted;
   const limit = event.limit ?? null;
   const groupIcon = event.group.iconUrl;
+
+  // ----- luma variant (Luma 風 大判 cover + glassmorphism) -----
+  if (variant === "luma") {
+    // tint があれば左ボーダーに反映 + subtle gradient overlay。
+    // 無ければ brand-orange-soft デフォルト。
+    const tint = tintColor ?? null;
+    const tintStyle: React.CSSProperties | undefined = tint
+      ? { borderInlineStartColor: tint, borderInlineStartWidth: 4 }
+      : undefined;
+
+    return (
+      <Card
+        role="article"
+        aria-labelledby={titleId}
+        // Luma 風: rounded-2xl + shadow-soft-md、hover で shadow-soft-lg + lift。
+        // border-l-4 は tint 反映用 (tint 無い時は border-l-transparent)。
+        className={cn(
+          "group relative flex h-full flex-col overflow-hidden",
+          "rounded-2xl shadow-soft-md",
+          tint ? "border-l-4" : "",
+          "transition-[transform,box-shadow] duration-normal ease-out",
+          "hover:shadow-soft-lg hover:-translate-y-1",
+          className,
+        )}
+        style={tintStyle}
+      >
+        <LumaCover
+          src={event.thumbnailUrl}
+          startedAt={event.startedAt}
+          tint={tint}
+        />
+        <div className="flex flex-1 flex-col gap-3 p-5">
+          <div className="flex items-center gap-2">
+            <EventStatusBadge status={event.status} size="sm" />
+            <span className="text-xs text-muted-foreground">
+              <FormattedDate iso={event.startedAt} />
+            </span>
+          </div>
+
+          <h3
+            id={titleId}
+            className="text-lg font-bold leading-snug text-foreground line-clamp-2 group-hover:text-brand-orange transition-colors duration-fast ease-out sm:text-xl"
+          >
+            <Link
+              href={href}
+              className="before:absolute before:inset-0 before:content-[''] before:rounded-2xl focus-visible:outline-none"
+            >
+              {event.title}
+            </Link>
+          </h3>
+
+          {event.catchPhrase && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {event.catchPhrase}
+            </p>
+          )}
+
+          <ul className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <li className="inline-flex items-center gap-1.5">
+              <LocationIcon location={event.location} />
+              <LocationText location={event.location} />
+            </li>
+            <li
+              className="inline-flex items-center gap-1.5"
+              aria-label={formatParticipantsLabel(accepted, limit)}
+            >
+              <Users aria-hidden="true" className="h-4 w-4" />
+              <span>
+                {accepted}
+                {limit != null ? `/${limit}` : ""}人
+              </span>
+            </li>
+          </ul>
+
+          <div className="mt-auto flex items-center justify-between pt-2">
+            <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground truncate min-w-0">
+              {groupIcon && (
+                <Image
+                  src={groupIcon}
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="h-[18px] w-[18px] rounded object-cover"
+                  unoptimized={groupIcon.startsWith("/")}
+                />
+              )}
+              <span className="truncate">{event.group.name}</span>
+            </p>
+
+            {hosts && hosts.length > 0 && (
+              <ul
+                className="relative z-10 flex items-center"
+                aria-label="主催者"
+              >
+                {hosts.slice(0, 3).map((h, idx) => (
+                  <li
+                    key={`${h.name}-${idx}`}
+                    className={cn(
+                      idx > 0 && "-ml-2",
+                      "inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-brand-orange-soft text-xs font-semibold text-brand-orange ring-2 ring-surface shadow-soft-md",
+                    )}
+                    title={h.name}
+                  >
+                    {h.avatarUrl ? (
+                      <Image
+                        src={h.avatarUrl}
+                        alt=""
+                        width={28}
+                        height={28}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span aria-hidden="true">{h.name.slice(0, 1)}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   if (variant === "grid") {
     return (
@@ -268,6 +404,51 @@ export default function EventCard({
  * 内部ヘルパー
  * ============================================================ */
 
+/**
+ * Luma 風 大判 cover (16:9)。tint がある場合は cover image の上に
+ * subtle gradient overlay を載せて主題色を反映する。サムネが無い場合は
+ * brand-orange-soft + Calendar アイコンフォールバック。
+ */
+function LumaCover({
+  src,
+  startedAt,
+  tint,
+}: {
+  src: string | undefined;
+  startedAt: string;
+  tint: string | null;
+}) {
+  return (
+    <div className="relative aspect-video w-full overflow-hidden bg-brand-orange-soft">
+      {src ? (
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          className="object-cover transition-transform duration-normal ease-out group-hover:scale-[1.03]"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-brand-orange">
+          <Calendar aria-hidden="true" className="h-12 w-12 opacity-40" />
+        </div>
+      )}
+      {tint && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `linear-gradient(135deg, ${tint}26 0%, transparent 60%)`,
+          }}
+        />
+      )}
+      <div className="absolute left-3 top-3">
+        <DateBadge dateIso={startedAt} />
+      </div>
+    </div>
+  );
+}
+
 function Thumbnail({
   src,
   startedAt,
@@ -275,7 +456,7 @@ function Thumbnail({
 }: {
   src: string | undefined;
   startedAt: string;
-  variant: EventCardVariant;
+  variant: Exclude<EventCardVariant, "luma">;
 }) {
   const wrapperCls =
     variant === "list"

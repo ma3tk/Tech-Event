@@ -172,7 +172,8 @@ function AvatarChip({
     <Avatar
       className={cn(
         sizeClass,
-        "ring-2 ring-surface",
+        // Luma 風: shadow-soft で「浮く感」を追加 (周囲との分離強化)
+        "ring-2 ring-surface shadow-soft-md",
       )}
     >
       {host.avatarUrl ? (
@@ -193,7 +194,8 @@ function AvatarChip({
       href={host.profileUrl}
       title={tooltipLabel}
       aria-label={tooltipLabel}
-      className="inline-block transition-transform hover:z-10 hover:scale-110 focus:z-10 focus:scale-110 focus:outline-none"
+      // Luma 風: hover で zoom-in (1.15x) + spring easing で「触れる感」
+      className="inline-block transition-transform duration-fast ease-spring hover:z-10 hover:scale-[1.15] focus:z-10 focus:scale-[1.15] focus:outline-none"
     >
       {avatar}
     </Link>
@@ -202,7 +204,7 @@ function AvatarChip({
       title={tooltipLabel}
       aria-label={tooltipLabel}
       role="img"
-      className="inline-block"
+      className="inline-block transition-transform duration-fast ease-spring hover:scale-[1.1]"
     >
       {avatar}
     </span>

@@ -89,17 +89,31 @@
   --color-status-ongoing-bg: var(--status-ongoing-bg);
   --color-status-ongoing-fg: var(--status-ongoing-fg);
 
-  /* ---------- Radius (semantic) ---------- */
+  /* ---------- Accent (Luma 風) ---------- */
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-soft: var(--accent-purple-soft);
+  --color-accent-purple-strong: var(--accent-purple-strong);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-pink-soft: var(--accent-pink-soft);
+  --color-accent-pink-strong: var(--accent-pink-strong);
+
+  /* ---------- Radius (semantic + Luma 拡張) ---------- */
   --radius-control: var(--radius-control);
   --radius-card: var(--radius-card);
   --radius-modal: var(--radius-modal);
   --radius-badge: var(--radius-badge);
+  /* Luma 風 大きめ角丸 (rounded-2xl / rounded-3xl) を primitive と一致させる */
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
 
-  /* ---------- Shadow (semantic elevation) ---------- */
+  /* ---------- Shadow (semantic elevation + Luma 風 soft) ---------- */
   --shadow-elevation-card: var(--elevation-card);
   --shadow-elevation-popover: var(--elevation-popover);
   --shadow-elevation-modal: var(--elevation-modal);
   --shadow-elevation-overlay: var(--elevation-overlay);
+  /* shadow-soft-md / shadow-soft-lg ユーティリティを生成 */
+  --shadow-soft-md: var(--shadow-soft-md);
+  --shadow-soft-lg: var(--shadow-soft-lg);
 
   /* ---------- Z-index ---------- */
   --z-index-dropdown: var(--z-dropdown);

@@ -509,18 +509,27 @@ export default async function EventDetailPage({
             fill
             priority
             sizes="100vw"
-            className="pointer-events-none scale-110 object-cover opacity-30 blur-sm"
+            // Luma 風: より強くぼかして foreground card を引き立てる
+            className="pointer-events-none scale-110 object-cover opacity-40 [filter:blur(40px)_brightness(0.5)]"
           />
         ) : null}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background: tintColor
-              ? "linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.45))"
+              ? // tint がある場合は tint -> 黒へのグラデで「主題色を効かせつつ可読性確保」
+                `linear-gradient(135deg, ${tintColor}66 0%, rgba(0,0,0,0.55) 100%)`
               : "linear-gradient(to bottom, rgba(31,60,102,0.7), rgba(19,40,74,0.85))",
           }}
         />
-        <div className="relative mx-auto w-full max-w-6xl px-4 py-8 md:py-10">
+        {/*
+         * Luma 風 glassmorphism foreground card。
+         *   - rounded-3xl + backdrop-blur(20px) + bg-white/10 (dark hero 内)
+         *   - 既存の h1#event-title / EventStatusBadge / 共催スタック等の
+         *     DOM 階層・selector を破壊しないよう、ラッパ <div> を追加するのみ。
+         */}
+        <div className="relative mx-auto w-full max-w-6xl px-4 py-8 md:py-12">
+          <div className="rounded-3xl border border-white/15 bg-white/5 p-5 shadow-soft-lg backdrop-blur-md md:p-8">
           <div className="flex items-center gap-2">
             <EventStatusBadge status={uiStatus} />
             <Link
@@ -557,7 +566,7 @@ export default async function EventDetailPage({
           <ul
             role="list"
             aria-label="イベント概要"
-            className="mt-5 grid list-none grid-cols-2 gap-3 rounded-md border border-white/20 bg-white/10 p-3 text-sm backdrop-blur-sm md:grid-cols-4"
+            className="mt-5 grid list-none grid-cols-2 gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 text-sm backdrop-blur-sm md:grid-cols-4"
           >
             <HeroMeta
               icon={<Calendar aria-hidden="true" className="h-4 w-4" />}
@@ -619,6 +628,7 @@ export default async function EventDetailPage({
               />
             </div>
           )}
+          </div>
         </div>
       </section>
 

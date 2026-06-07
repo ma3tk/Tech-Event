@@ -83,6 +83,20 @@
   --status-ongoing-fg: var(--color-orange-300);
 
   /* ------------------------------------------------------------
+   * Accent — Luma 風 (purple / pink) — 暗背景版
+   *
+   * 暗背景上で 4.5:1+ を得るため、purple-400 / pink-400 を採用。
+   *   purple-400 (#c084fc) vs gray-950: 9.0:1 (AAA)
+   *   pink-400   (#f472b6) vs gray-950: 9.6:1 (AAA)
+   * ------------------------------------------------------------ */
+  --accent-purple: var(--color-purple-400);
+  --accent-purple-soft: rgba(168, 85, 247, 0.15);    /* purple-500 @ 15% */
+  --accent-purple-strong: var(--color-purple-300);
+  --accent-pink: var(--color-pink-400);
+  --accent-pink-soft: rgba(236, 72, 153, 0.15);      /* pink-500 @ 15% */
+  --accent-pink-strong: var(--color-pink-300);
+
+  /* ------------------------------------------------------------
    * Elevation
    *
    * dark mode では shadow の代わりに「より明るい border」で奥行きを出す
@@ -97,6 +111,8 @@
     0 12px 24px -4px rgba(0, 0, 0, 0.6),
     0 4px 8px -4px rgba(0, 0, 0, 0.4);
   --elevation-overlay: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  --elevation-soft: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+  --elevation-soft-strong: 0 20px 48px -12px rgba(0, 0, 0, 0.65);
 
   /* ------------------------------------------------------------
    * Data viz palette — dark mode (各色を 1〜2 段明るく)
@@ -175,6 +191,15 @@
       0 12px 24px -4px rgba(0, 0, 0, 0.6),
       0 4px 8px -4px rgba(0, 0, 0, 0.4);
     --elevation-overlay: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    --elevation-soft: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+    --elevation-soft-strong: 0 20px 48px -12px rgba(0, 0, 0, 0.65);
+
+    --accent-purple: var(--color-purple-400);
+    --accent-purple-soft: rgba(168, 85, 247, 0.15);
+    --accent-purple-strong: var(--color-purple-300);
+    --accent-pink: var(--color-pink-400);
+    --accent-pink-soft: rgba(236, 72, 153, 0.15);
+    --accent-pink-strong: var(--color-pink-300);
 
     --chart-1: #3aa0e6;
     --chart-2: #f5b53e;

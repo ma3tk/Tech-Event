@@ -13,10 +13,13 @@
 各画面・コンポーネント設計は「どのペルソナのどのジャーニーで使われるか」を明確にしたうえで意思決定する。
 「全員向け」は実質「誰のためでもない」となる — 必ず 1-2 ペルソナを優先する。
 
-### 1.1 「connpass + Luma の中間」
+### 1.1 「connpass + Luma の中間」(Luma 寄りトラジェクトリ採用)
 - **情報密度は connpass 寄り**: 1 行に必要十分な情報を載せる (タイトル / グループ / 日時 / 会場 / 参加者数)
 - **質感は Luma 寄り**: フラット過ぎず、ガラス感・グラデ・微細アニメーションで「触れる感」を残す
 - ただし **派手なデコレーションは禁止**: tintColor は 1 色まで、グラデは max 2 stop、影は subtle
+- **Luma 寄りトラジェクトリ**: トップヒーロー / EventCard variant=luma / event detail glass hero / sticky CTA は
+  `rounded-2xl` / `rounded-3xl` + `shadow-soft-md` / `shadow-soft-lg` + backdrop-blur で
+  「カード型・写真ベース・大胆な余白」を採用する。一覧ページ (EventListRow) は connpass 寄りに留める。
 
 ### 1.2 機能 > 装飾
 - ユーザーが「何を、いつ、どこで、誰と」を 1 秒で把握できることが最優先
@@ -84,6 +87,10 @@ JSON 出力: `tokens/*.json` (Figma Tokens Studio 互換)。`pnpm tokens` で CS
 | 強調 CTA (登録系) | `bg-brand-red hover:bg-brand-red-hover` |
 | リンク | `text-link hover:text-link-hover hover:underline` |
 | ステータス open | `bg-status-open-bg text-status-open-fg` (他に full/waitlist/closed/cancelled/ended/upcoming/ongoing 計 8 種) |
+| Luma 寄り accent (purple) | `bg-accent-purple` / `text-accent-purple-strong` |
+| Luma 寄り accent (pink) | `bg-accent-pink` / `text-accent-pink-strong` |
+| Luma 寄り大角丸 | `rounded-2xl` (16px / hero foreground card / EventCard luma) / `rounded-3xl` (24px / 大判 hero) |
+| Luma 寄り柔らかい影 | `shadow-soft-md` (浮遊 default) / `shadow-soft-lg` (hover / sticky CTA) |
 
 直接 hex / 任意の Tailwind パレット (`bg-zinc-100` 等) を書かない。トークンで足りなければ追加すること。
 
@@ -142,8 +149,8 @@ shadcn/ui 公式 (https://ui.shadcn.com/) の分類に倣う。ui = Radix primit
 
 | カテゴリ | 配置 | 例 |
 |---|---|---|
-| ui | `libs/shared/ui/` | Button / Input / Dialog / Avatar / Card (Radix UI + CVA) |
-| components | `libs/shared/ui-composite/` | Header / EventListRow / ShareModal / TagPill / EventStatusBadge |
+| ui | `libs/shared/ui/` | Button (variant default/secondary/destructive/outline/ghost/link, size xs/sm/md/lg/icon/**luma**) / Input / Dialog / Avatar / Card (Radix UI + CVA) |
+| components | `libs/shared/ui-composite/` | Header / EventListRow / ShareModal / TagPill / EventStatusBadge / EventCard (variant list/grid/**luma**) |
 | blocks | `docs/catalog/blocks/` | event-status-orchestration / cta-matrix / host-vs-participant-ui |
 | foundations | `src/styles/tokens.css` 他 | colors / spacing / motion / typography / theming |
 | Page | `apps/web/src/app/**/page.tsx` | 各画面 (Server Component、データ取得 + 認可) |

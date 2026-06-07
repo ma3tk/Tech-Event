@@ -75,11 +75,41 @@ personas: [P1, P2, P6, P7]
 |---|---|---|
 | `list` | デスクトップの注目枠 / 関連枠 | 横長 1 行型 |
 | `grid` | グリッド表示 / モバイル | 縦積み 16:9 サムネ |
+| `luma` | フィーチャー枠 / ブランド強調 / DevRel 主催イベント | 大判 cover (16:9) + rounded-2xl + shadow-soft-md + glassmorphism + 主催者スタック (右下) |
 
 `grid` は内部的に `EventCardCompact` ラッパー経由でも呼べる。
 
 
 <!-- AUTO-GENERATED END: variants -->
+
+### 5.1 variant=luma の仕様
+
+| 項目 | 値 |
+|---|---|
+| Cover image | `aspect-video` (16:9) 上端いっぱい、`object-cover` |
+| Container radius | `rounded-2xl` (--radius-2xl = 16px) |
+| Shadow (default) | `shadow-soft-md` (柔らかい影、Luma 風) |
+| Shadow (hover) | `shadow-soft-lg` + `-translate-y-1` |
+| Title | 18-22px / bold / line-clamp-2 |
+| Meta (日時/場所/参加者) | 14px / muted |
+| Host avatar stack | カード右下に重ね (最大 3 名、+N 省略) |
+| tintColor | あり → 左 border (4px) + cover image 上に 135deg gradient overlay (alpha 26) |
+| Padding | `p-5` (内側 20px) |
+| 用途 | トップページのフィーチャー枠、カレンダー詳細の関連イベント、DevRel 用ブランドカード |
+
+```tsx
+import { EventCard } from "@tech-event/shared-ui-composite";
+
+<EventCard
+  variant="luma"
+  event={event}
+  tintColor="#ec4899"            // 任意の hex (calendar.tintColor / event.themeTintColor 等)
+  hosts={[
+    { name: "山田 太郎", avatarUrl: "..." },
+    { name: "佐藤 花子" },
+  ]}
+/>
+```
 
 ## 6. サイズ
 

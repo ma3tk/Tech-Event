@@ -35,7 +35,7 @@ const meta: Meta<typeof Button> = {
     },
     size: {
       control: "inline-radio",
-      options: ["xs", "sm", "md", "lg", "icon"],
+      options: ["xs", "sm", "md", "lg", "icon", "luma"],
     },
     disabled: { control: "boolean" },
     asChild: { control: "boolean" },
@@ -75,8 +75,17 @@ export const AllSizes: Story = {
       <Button size="icon" aria-label="検索">
         <Search />
       </Button>
+      <Button size="luma">Luma 風 CTA</Button>
     </div>
   ),
+};
+
+/**
+ * Luma 風 サイズ — rounded-2xl + shadow-soft-md + font-semibold。
+ * 主要 CTA (申込ボックス / Discover バナー) で利用。
+ */
+export const LumaSize: Story = {
+  args: { size: "luma", children: "参加申込" },
 };
 
 export const WithIcon: Story = {

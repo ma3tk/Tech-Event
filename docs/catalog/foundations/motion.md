@@ -44,12 +44,26 @@ className="transition-colors duration-fast ease-out"
 // Card hover
 className="transition-all duration-normal ease-out hover:-translate-y-0.5 hover:shadow-md"
 
+// Luma 風 card hover (shadow-soft transition)
+className="transition-[transform,box-shadow] duration-normal ease-out hover:shadow-soft-lg hover:-translate-y-1"
+
+// Avatar hover (host stack — spring easing で「触れる感」)
+className="transition-transform duration-fast ease-spring hover:scale-[1.15]"
+
 // Dialog open
 data-[state=open]:animate-in fade-in-0 zoom-in-95 duration-slow
 
 // Sheet slide
 data-[state=open]:slide-in-from-right duration-slow
 ```
+
+### shadow-soft transition の規約
+
+Luma 寄りビジュアル (rounded-2xl カード / 大判 hero / sticky CTA) では
+`shadow-soft-md → shadow-soft-lg` の遷移を採用する。
+- `transition-[transform,box-shadow]` を明示して合成プロパティの揺れを抑える
+- duration は `duration-normal` (200ms) 固定
+- easing は `ease-out` (入場系) 固定 — overshoot は host avatar のみ
 
 ## 5. reduced-motion 対応
 

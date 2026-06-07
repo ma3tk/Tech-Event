@@ -129,22 +129,34 @@ export default async function CalendarDetailPage({
 
   return (
     <div className="flex flex-1 flex-col bg-background">
-      {/* ============ カバーヘッダ ============ */}
+      {/* ============ カバーヘッダ (Luma 風 16:9 hero + blur overlay) ============ */}
       <header
-        className="relative w-full"
-        style={{ backgroundColor: tintColor }}
+        className="relative w-full overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${tintColor} 0%, ${tintColor}dd 100%)`,
+        }}
         data-testid="calendar-header"
       >
         {calRow.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={calRow.coverImageUrl}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-60"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={calRow.coverImageUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 [filter:blur(20px)]"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, ${tintColor}55 0%, ${tintColor}99 100%)`,
+              }}
+            />
+          </>
         ) : null}
-        <div className="relative mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-white sm:flex-row sm:items-end">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border-4 border-white bg-white text-3xl font-bold shadow-lg" style={{ color: tintColor }}>
+        <div className="relative mx-auto flex max-w-6xl flex-col gap-4 px-6 py-12 text-white sm:flex-row sm:items-end sm:py-14">
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-white text-3xl font-bold shadow-soft-lg" style={{ color: tintColor }}>
             {calRow.name.slice(0, 1)}
           </div>
           <div className="flex-1">
@@ -191,7 +203,7 @@ export default async function CalendarDetailPage({
                   <button
                     type="submit"
                     data-testid="calendar-subscribe-button"
-                    className="inline-flex items-center rounded-md bg-white px-5 py-2 text-sm font-semibold shadow hover:bg-zinc-100"
+                    className="inline-flex items-center rounded-2xl bg-white px-6 py-3 text-sm font-semibold shadow-soft-md hover:shadow-soft-lg hover:bg-surface-muted"
                     style={{ color: tintColor }}
                   >
                     Subscribe
