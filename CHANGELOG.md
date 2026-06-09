@@ -8,6 +8,24 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-09 — Storybook の無スタイル + テーブル消失バグ修正
+
+### Fixed
+- **`apps/web/src/app/globals.css`** — `@source` (Tailwind ディレクティブ) が
+  `@import "tailwindcss"` と後続の `@import` (tokens / themes / semantic) の間に
+  挟まっており、CSS 仕様「`@import` は他の全ての文より前」に違反していた。Next.js
+  本体の PostCSS パイプラインは許容するが、Storybook (Vite) は仕様通り後続 `@import`
+  を破棄するため、デザイントークン / theme / semantic が読み込まれず全コンポーネントが
+  無スタイル化 (primary ボタンが白文字×無背景で不可視)。`@source` を全 `@import` の
+  後ろへ移動して解消。
+- **`apps/web/.storybook/main.ts` + `remark-gfm@4.0.1`** — catalog `.docs.mdx` が
+  GFM パイプテーブル (`| variant | 用途 | ... |`) を生で埋め込んでいるが、MDX v3 は
+  デフォルトで GFM を解釈しないため、テーブルが生テキストのまま描画されていた。
+  `@storybook/addon-docs` に `mdxPluginOptions.mdxCompileOptions.remarkPlugins: [remarkGfm]`
+  を設定し、`<table>` として正しくレンダリングされるよう修正。
+
+---
+
 ## [Unreleased] — 2026-06-07 — Catalog を Storybook MDX に統合 (言語化 + 実物 Live Preview)
 
 ### Added

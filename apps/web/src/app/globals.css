@@ -15,6 +15,13 @@
  * ============================================================ */
 @import "tailwindcss";
 
+@import "../styles/tokens.css";
+@import "../styles/themes/light.css";
+@import "../styles/themes/dark.css";
+@import "../styles/themes/high-contrast.css";
+@import "../styles/semantic.css";
+@import "../styles/print.css";
+
 /*
  * Nx 移行で UI コンポーネント (Header / ThemeSwitcher / UserMenuDropdown など) は
  * libs/shared/ui-... 配下に切り出されている。Tailwind v4 はデフォルトで apps/web
@@ -22,16 +29,14 @@
  * クラスが生成されず DOM が常に display:none になる
  * (例: header の theme toggle が visible でなくなり E2E が落ちる)。
  * パスは globals.css からの相対 (apps/web/src/app から repo root への 4 階層遡り)。
+ *
+ * NOTE: @import より後ろに置くこと。CSS 仕様上 @import は他の全ての文より前に
+ * 来る必要があり、@source (Tailwind ディレクティブ) を @import 群の間に挟むと
+ * Vite (Storybook) の CSS パイプラインが後続の @import を破棄し、トークン /
+ * theme / semantic が読み込まれず無スタイルになる。
  */
 @source "../../../../libs/**/*.tsx";
 @source "../../../../libs/**/*.ts";
-
-@import "../styles/tokens.css";
-@import "../styles/themes/light.css";
-@import "../styles/themes/dark.css";
-@import "../styles/themes/high-contrast.css";
-@import "../styles/semantic.css";
-@import "../styles/print.css";
 
 /* ============================================================
  * Tailwind v4 へのブリッジ
