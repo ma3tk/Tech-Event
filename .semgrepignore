@@ -44,5 +44,14 @@ apps/web/.env*
 research/
 docs/
 
+# Claude Code 同梱スキル / agent 定義 (vendored third-party tooling)。
+# pptx / mcp-builder / webapp-testing 等の Python ヘルパーは tech-event の
+# アプリコードではなくツール側の同梱物。node_modules と同様に SAST 対象外とする
+# (defused-xml / subprocess-shell-true 等の指摘は上流ツールの責務)。
+# `.agents/` はローカル開発環境が `.claude/` を参照するために作る未追跡ミラー
+# (CI には存在しない) だが、ローカル scan のノイズ防止のため同様に除外する。
+.claude/
+.agents/
+
 # debug 出力
 debug-storybook.log

@@ -336,6 +336,7 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
       {/* JSON-LD: Organization */}
       <script
         type="application/ld+json"
+        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- safeJsonLd() でエスケープ済みの JSON-LD 構造化データ。ユーザー入力を含まない。
         dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }}
       />
       {/* ============ view 切替トグル ============ */}
@@ -595,7 +596,8 @@ export default async function GroupDetailPage({ params, searchParams }: PageProp
               {descriptionHtml ? (
                 <article
                   className="prose prose-zinc max-w-none rounded-md border border-border bg-surface p-6 text-sm leading-7"
-                  // 内部Markdownのみ。XSSリスクは marked のサニタイズに任せている。
+                  // descriptionHtml は renderMarkdown() (marked + isomorphic-dompurify) で sanitize 済み。
+                  // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- renderMarkdown() で DOMPurify sanitize 済みの HTML。
                   dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                 />
               ) : (

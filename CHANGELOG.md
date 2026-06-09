@@ -8,6 +8,27 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-10 — nightly Semgrep full scan の red を解消 (誤検出抑制 + vendored 除外)
+
+### Fixed
+- **nightly `security` workflow (Semgrep full scan) が 17 blocking findings で fail** していた
+  状態を解消。内訳と対応:
+  - **`.claude/skills/**` の Python ヘルパー (11 件)** — pptx / mcp-builder / webapp-testing
+    等の Claude Code 同梱スキル (vendored third-party)。`defused-xml` / `subprocess-shell-true`
+    の指摘は上流ツールの責務であり tech-event のアプリコードではないため、`.semgrepignore`
+    に `.claude/` (+ ローカルミラー `.agents/`) を追加して `node_modules` 同様に除外。
+  - **`apps/web` の誤検出/意図的実装 (6 件)** — 各サイトに理由付き `// nosemgrep` を付与:
+    - `api/auth/login/route.ts` の `DUMMY_PASSWORD_HASH` — timing 攻撃対策の
+      `bcrypt.hash("dummy", 12)` 固定ダミー値 (実認証情報ではない)。
+    - `middleware.ts` の `X-Frame-Options: DENY` — embed ページは CSP `frame-ancestors`
+      で制御する意図的分岐。
+    - `group/[subdomain]/page.tsx` / `user/[nickname]/page.tsx` の
+      `dangerouslySetInnerHTML` ×4 — `renderMarkdown()` (marked + isomorphic-dompurify で
+      sanitize 済み) と `safeJsonLd()` (エスケープ済み JSON-LD) のみ。
+  - ローカル `uvx semgrep` で CI と同一 config を実行し **0 findings** を確認済み。
+
+---
+
 ## [Unreleased] — 2026-06-09 — Storybook の無スタイル + テーブル消失バグ修正
 
 ### Fixed

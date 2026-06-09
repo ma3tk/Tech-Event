@@ -283,6 +283,7 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
       {/* JSON-LD: Person */}
       <script
         type="application/ld+json"
+        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- safeJsonLd() でエスケープ済みの JSON-LD 構造化データ。ユーザー入力を含まない。
         dangerouslySetInnerHTML={{ __html: safeJsonLd(personJsonLd) }}
       />
       <div className="mx-auto w-full max-w-6xl px-6 py-8">
@@ -353,7 +354,8 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
               {bioHtml && (
                 <article
                   className="prose prose-zinc mt-4 max-w-none text-sm leading-7"
-                  // ユーザーのBioMarkdown。
+                  // bioHtml は renderMarkdown() (marked + isomorphic-dompurify) で sanitize 済み。
+                  // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- renderMarkdown() で DOMPurify sanitize 済みの HTML。
                   dangerouslySetInnerHTML={{ __html: bioHtml }}
                 />
               )}
