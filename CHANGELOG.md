@@ -8,6 +8,25 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-10 — Footer story を Storybook で描画可能に (async/presentational 分離)
+
+### Fixed
+- **`libs/shared/ui-composite/src/Footer.tsx`** — `Footer` が `await loadDict()` を呼ぶ
+  async Server Component だったため、Storybook (クライアント環境) で
+  `An unknown Component is an async Client Component` エラーになり全 Footer story が
+  描画失敗していた。`Header` / `HeaderServer` の分離パターンに倣い、i18n 解決済みの
+  props を受け取る presentational な `FooterView` (sync) を抽出し、`Footer` (async) は
+  辞書を解決して `FooterView` に委譲する形へリファクタ。public API
+  (default export `Footer` + `FooterProps`) は維持し、`FooterView` / `FooterViewProps`
+  を追加 export (additive)。
+
+### Changed
+- **`libs/shared/ui-composite/src/Footer.stories.tsx`** — story 対象を `Footer` から
+  `FooterView` に変更し、ja 辞書のデフォルト相当値 (groups / copyright / tagline) を
+  args で渡す。story 名 (Default / CustomGroups / CustomCopyright) は維持。
+
+---
+
 ## [Unreleased] — 2026-06-09 — Storybook の無スタイル + テーブル消失バグ修正
 
 ### Fixed

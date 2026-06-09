@@ -57,7 +57,25 @@ function buildDefaultGroups(dict: Dict): FooterGroup[] {
 type Dict = Awaited<ReturnType<typeof loadDict>>["dict"];
 
 /**
- * グローバルフッター。
+ * `FooterView` の props。すべて解決済み (i18n 適用後) の値を受け取る純粋な
+ * presentational 入力。`Footer` (async Server Component) が dict から組み立てて渡す。
+ */
+export type FooterViewProps = {
+  /** 解決済みのリンクグループ。 */
+  groups: FooterGroup[];
+  /** 解決済みのコピーライト文字列。 */
+  copyright: string;
+  /** ロゴ下の一言 (tagline)。 */
+  tagline: string;
+  className?: string;
+};
+
+/**
+ * グローバルフッターの presentational 本体 (sync)。
+ *
+ * `Footer` (async Server Component) から i18n 解決済みの props を受け取って描画する。
+ * async に依存しないため、Storybook / テストから単独でレンダリングできる
+ * (cf. `Header` / `HeaderServer` の分離パターン)。
  *
  * - 4 カラム以下のリンク群 + 下段に SNS / コピーライト
  * - モバイル (<768px) では 1 カラムへ
@@ -66,16 +84,14 @@ type Dict = Awaited<ReturnType<typeof loadDict>>["dict"];
  * 下段とリンク群の境界は `ui/Separator` (= Radix Separator) を利用し、
  * `role="separator"` を明示する。装飾用なので `decorative` 既定 (true)。
  */
-export default async function Footer({
+export function FooterView({
   groups,
   copyright,
+  tagline,
   className,
-}: FooterProps) {
-  const { dict } = await loadDict();
-  const finalGroups = groups ?? buildDefaultGroups(dict);
-  const finalCopyright =
-    copyright ?? t(dict, "footer.copyright", { year: new Date().getFullYear() });
-  const tagline = t(dict, "footer.tagline");
+}: FooterViewProps) {
+  const finalGroups = groups;
+  const finalCopyright = copyright;
   return (
     <footer
       role="contentinfo"
@@ -166,6 +182,32 @@ export default async function Footer({
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * グローバルフッター (async Server Component ラッパー)。
+ *
+ * `loadDict()` で i18n 辞書を解決し、デフォルトのリンク群 / コピーライト / tagline を
+ * 組み立てて presentational な `FooterView` に委譲する。layout.tsx から呼ばれる。
+ */
+export default async function Footer({
+  groups,
+  copyright,
+  className,
+}: FooterProps) {
+  const { dict } = await loadDict();
+  const finalGroups = groups ?? buildDefaultGroups(dict);
+  const finalCopyright =
+    copyright ?? t(dict, "footer.copyright", { year: new Date().getFullYear() });
+  const tagline = t(dict, "footer.tagline");
+  return (
+    <FooterView
+      groups={finalGroups}
+      copyright={finalCopyright}
+      tagline={tagline}
+      className={className}
+    />
   );
 }
 
