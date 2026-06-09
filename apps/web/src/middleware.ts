@@ -84,8 +84,10 @@ function applySecurityHeaders(
   response.headers.set("Content-Security-Policy", csp);
 
   // ---- X-Frame-Options ----
-  // embed ページは iframe 埋め込み対象なので DENY しない
+  // embed ページは iframe 埋め込み対象なので DENY しない。非 embed は DENY、
+  // embed は上の CSP `frame-ancestors` で埋め込み元を制御する (意図的な分岐)。
   if (!isEmbed) {
+    // nosemgrep: javascript.express.security.x-frame-options-misconfiguration.x-frame-options-misconfiguration -- DENY を設定済み。embed 除外は CSP frame-ancestors で代替する意図的設計。
     response.headers.set("X-Frame-Options", "DENY");
   }
 

@@ -97,8 +97,9 @@ function buildErrorRedirect(request: NextRequest, nextPath: string): NextRespons
  *
  * user enumeration via timing 対策 (security review Medium #22)。
  */
+// これは bcrypt.hash("dummy", 12) の固定ダミー値であり実認証情報ではない (timing 攻撃対策)。
 const DUMMY_PASSWORD_HASH =
-  "$2b$12$NQ7tH9.4n.4vGgTpUcAYP.qY3jzqWXvF2/QzGZkXmgYqL9YGv0fJG";
+  "$2b$12$NQ7tH9.4n.4vGgTpUcAYP.qY3jzqWXvF2/QzGZkXmgYqL9YGv0fJG"; // nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // ---- レート制限 (IP 単位) ----
