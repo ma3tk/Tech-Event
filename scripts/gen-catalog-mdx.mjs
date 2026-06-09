@@ -6,7 +6,7 @@
  * を突き合わせて、各 primitive / composite の `{name}.docs.mdx` を生成する。
  *
  * 生成された MDX は:
- *   - `<Meta of={Stories} name="Docs" />` で対応する CSF と紐付き
+ *   - `<Meta of={Stories} />` で対応する CSF と紐付き (`name="Docs"` は autodocs と衝突するので付与しない)
  *   - 元の `docs/catalog/.../{name}.md` の本文 (h1 を除く言語化テキスト) を全文移植
  *   - 主要 Story (Default / 代表的 variant) を `<Canvas of={...}>` で live preview 化
  *   - 末尾に `<Stories />` (全 Story 一覧) と `<Controls />` (props API)
@@ -167,7 +167,7 @@ function buildMdx({
   return `import { Meta, Title, Subtitle, Description, Primary, Controls, Stories, Source, Canvas } from "@storybook/addon-docs/blocks";
 import * as ${pascalStoriesAlias} from "${storiesRel}";
 
-<Meta of={${pascalStoriesAlias}} name="Docs" />
+<Meta of={${pascalStoriesAlias}} />
 
 <Title />
 <Subtitle>${subtitle
