@@ -1,5 +1,6 @@
 import type { StorybookConfig } from "@storybook/nextjs-vite";
 import { createProjectGraphAsync } from "@nx/devkit";
+import remarkGfm from "remark-gfm";
 import path from "node:path";
 
 /**
@@ -59,7 +60,19 @@ const config: StorybookConfig = {
     "@chromatic-com/storybook",
     "@storybook/addon-vitest",
     "@storybook/addon-a11y",
-    "@storybook/addon-docs",
+    {
+      name: "@storybook/addon-docs",
+      options: {
+        // catalog .docs.mdx は GFM パイプテーブル (| variant | 用途 | ...) を生で
+        // 埋め込んでいる。MDX v3 はデフォルトで GFM を解釈しないため、remark-gfm を
+        // 明示注入しないとテーブルが生テキスト ("| variant | ... |") のまま描画される。
+        mdxPluginOptions: {
+          mdxCompileOptions: {
+            remarkPlugins: [remarkGfm],
+          },
+        },
+      },
+    },
     "@storybook/addon-mcp",
   ],
   framework: "@storybook/nextjs-vite",
