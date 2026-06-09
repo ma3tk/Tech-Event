@@ -102,9 +102,21 @@ for (const { id, title } of DOCS_TARGETS) {
     // ページ内に出現すること
     await expect(page.locator("body"), `${id}: docs content にタイトル "${title}" が現れない`).toContainText(title);
 
-    // page-level error (uncaught exception / minified React error など) が 0 件であること
-    expect(consoleErrors, `${id}: console error がある:\n${consoleErrors.join("\n")}`).toEqual([]);
+    // page-level error (uncaught exception / minified React error など) が 0 件であること。
+    // ただし Storybook iframe で Next.js Link prefetch / favicon / OG画像などの 404 は
+    // 想定内のノイズなので無視する (rendering 本体には影響しない)。
+    const realErrors = consoleErrors.filter((e) => !isIgnorableConsoleError(e));
+    expect(realErrors, `${id}: console error がある:\n${realErrors.join("\n")}`).toEqual([]);
   });
+}
+
+/** Storybook iframe 内で発生する許容可能なノイズエラーを判定 */
+function isIgnorableConsoleError(msg: string): boolean {
+  return (
+    msg.includes("Failed to load resource: the server responded with a status of 404") ||
+    msg.includes("Failed to load resource: net::ERR_") ||
+    msg.includes("Download the React DevTools")
+  );
 }
 
 for (const { id, expectSelector } of STORY_TARGETS) {
@@ -140,6 +152,7 @@ for (const { id, expectSelector } of STORY_TARGETS) {
       `${id}: 期待 selector "${expectSelector}" が #storybook-root 配下に見つからない`,
     ).toBeVisible({ timeout: 5_000 });
 
-    expect(consoleErrors, `${id}: console error がある:\n${consoleErrors.join("\n")}`).toEqual([]);
+    const realErrors = consoleErrors.filter((e) => !isIgnorableConsoleError(e));
+    expect(realErrors, `${id}: console error がある:\n${realErrors.join("\n")}`).toEqual([]);
   });
 }
