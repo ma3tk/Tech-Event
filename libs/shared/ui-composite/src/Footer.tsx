@@ -4,13 +4,13 @@ import { cn } from "@tech-event/shared-util-cn";
 import { Separator } from "@tech-event/shared-ui";
 import { loadDict, t } from "@/lib/i18n";
 
-type FooterLink = {
+export type FooterLink = {
   label: string;
   href: string;
   external?: boolean;
 };
 
-type FooterGroup = {
+export type FooterGroup = {
   title: string;
   links: FooterLink[];
 };
@@ -56,26 +56,24 @@ function buildDefaultGroups(dict: Dict): FooterGroup[] {
 // Footer.tsx は Async Server Component。dict は loadDict() で解決する。
 type Dict = Awaited<ReturnType<typeof loadDict>>["dict"];
 
+export type FooterViewProps = {
+  groups: FooterGroup[];
+  copyright: string;
+  tagline: string;
+  className?: string;
+};
+
 /**
- * グローバルフッター。
- *
- * - 4 カラム以下のリンク群 + 下段に SNS / コピーライト
- * - モバイル (<768px) では 1 カラムへ
- * - 各リンク群は `<nav aria-label="グループ名">` でラップ
- *
- * 下段とリンク群の境界は `ui/Separator` (= Radix Separator) を利用し、
- * `role="separator"` を明示する。装飾用なので `decorative` 既定 (true)。
+ * 同期版プレゼンテーション。Storybook / テストでは async loader を経由せず
+ * これを直接レンダリングできるようにする (Storybook は async コンポーネントを
+ * 直接レンダリング不可)。
  */
-export default async function Footer({
-  groups,
-  copyright,
+export function FooterView({
+  groups: finalGroups,
+  copyright: finalCopyright,
+  tagline,
   className,
-}: FooterProps) {
-  const { dict } = await loadDict();
-  const finalGroups = groups ?? buildDefaultGroups(dict);
-  const finalCopyright =
-    copyright ?? t(dict, "footer.copyright", { year: new Date().getFullYear() });
-  const tagline = t(dict, "footer.tagline");
+}: FooterViewProps) {
   return (
     <footer
       role="contentinfo"
@@ -166,6 +164,39 @@ export default async function Footer({
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * グローバルフッター (Async Server Component)。
+ *
+ * - 4 カラム以下のリンク群 + 下段に SNS / コピーライト
+ * - モバイル (<768px) では 1 カラムへ
+ * - 各リンク群は `<nav aria-label="グループ名">` でラップ
+ *
+ * 下段とリンク群の境界は `ui/Separator` (= Radix Separator) を利用し、
+ * `role="separator"` を明示する。装飾用なので `decorative` 既定 (true)。
+ *
+ * Storybook など async コンポーネントを直接レンダリングできない環境では、
+ * 同期版 `FooterView` を利用する。
+ */
+export default async function Footer({
+  groups,
+  copyright,
+  className,
+}: FooterProps) {
+  const { dict } = await loadDict();
+  const finalGroups = groups ?? buildDefaultGroups(dict);
+  const finalCopyright =
+    copyright ?? t(dict, "footer.copyright", { year: new Date().getFullYear() });
+  const tagline = t(dict, "footer.tagline");
+  return (
+    <FooterView
+      groups={finalGroups}
+      copyright={finalCopyright}
+      tagline={tagline}
+      className={className}
+    />
   );
 }
 

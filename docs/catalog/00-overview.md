@@ -14,7 +14,7 @@
 | --- | --- | --- | --- |
 | `docs/design-system.md` (規範・正典 / What) | トークン仕様・全コンポーネントの正典 | トークン値・命名規約・全 props 表・全 variant 表 (機械的事実) | "EventStatusBadge の status は 8 種"、"`--color-brand-orange: #c2410c`" |
 | **`docs/catalog/*.md` (テキスト source of truth / When)** | 言語化された使い分けガイド (Markdown ソース) | いつ使う / いつ使わない / Do's & Don'ts / 関連 / 対象ペルソナ。**ここを編集すれば catalog 全体が更新される** | "open は 募集中、full は補欠登録に誘導する"、"破壊的アクションは destructive variant" |
-| **Storybook MDX (catalog テキスト + 実物統合 / Why visually + Live preview)** | catalog MD の言語化テキスト + 実物 component の Canvas を 1 ページに統合した shadcn/ui スタイルの視覚層 | `<Meta of={Stories} name="Docs" />` + `<Canvas of={...}>` + Controls + 元 MD 全文 | `libs/shared/ui/src/button.docs.mdx` が `docs/catalog/ui/button.md` を取り込み、Button の全 variant を live render |
+| **Storybook MDX (catalog テキスト + 実物統合 / Why visually + Live preview)** | catalog MD の言語化テキスト + 実物 component の Canvas を 1 ページに統合した shadcn/ui スタイルの視覚層 | `<Meta of={Stories} />` + `<Canvas of={...}>` + Controls + 元 MD 全文 (旧 `name="Docs"` は autodocs と衝突して runtime 「No Preview」を出すため削除済) | `libs/shared/ui/src/button.docs.mdx` が `docs/catalog/ui/button.md` を取り込み、Button の全 variant を live render |
 | Storybook Story (variant 単体 / How) | 各 variant × state の生きた最小実例 | argTypes・interaction・1 variant 1 story | "Button × Default"、"Button × Destructive" 単体 |
 
 ### ルール (2026-06-07 改訂)

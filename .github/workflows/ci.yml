@@ -173,18 +173,87 @@ jobs:
 
       # smoke 抽出: --grep @smoke で smoke.spec.ts 内の `@smoke` タグ test のみ実行
       # workers は smoke.spec.ts の test 数 (~21) を考慮し 4 並列のまま。
-      - name: Run Playwright smoke (--grep @smoke)
+      # `@sb-rendering` は Storybook を要するため別 job (storybook-rendering) に隔離。
+      - name: Run Playwright smoke (--grep @smoke, exclude @sb-rendering)
         working-directory: apps/web-e2e
         run: |
           pnpm exec playwright test \
             --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
             --project=chromium-desktop \
-            --grep @smoke
+            --grep @smoke \
+            --grep-invert @sb-rendering
 
       - name: Upload Playwright smoke report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-smoke-report
+          path: apps/web-e2e/playwright-report
+          retention-days: 14
+
+  # ------------------------------------------------------------
+  # storybook-rendering — Storybook docs / story の runtime rendering 検証
+  #
+  # 目的:
+  #   - storybook-static の build が成功していても、`No Preview` や React rendering error が
+  #     iframe.html に出るケースを検出する (build/index.json だけでは検出不可)
+  #   - 詳細は apps/web-e2e/src/storybook-rendering.spec.ts (主要 9 docs + 4 stories)
+  #
+  # 構成:
+  #   1) pnpm nx run web:build-storybook で apps/web/storybook-static を生成
+  #   2) python3 -m http.server 6006 で apps/web/storybook-static を serve
+  #   3) STORYBOOK_BASE_URL=http://localhost:6006 で Playwright spec (`--grep @sb-rendering`)
+  # ------------------------------------------------------------
+  storybook-rendering:
+    name: storybook-rendering
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
+
+      - name: Build Storybook (static)
+        run: pnpm nx run web:build-storybook
+
+      - name: Serve storybook-static on :6006
+        run: |
+          (cd apps/web/storybook-static && python3 -m http.server 6006 > /tmp/sb-serve.log 2>&1 &)
+          # 6006 に index.json が到達できるまで wait (最大 30s)
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:6006/index.json > /dev/null; then
+              echo "Storybook ready on :6006"; exit 0;
+            fi
+            sleep 1
+          done
+          echo "Storybook did not become ready"; cat /tmp/sb-serve.log; exit 1
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Storybook rendering spec (--grep @sb-rendering)
+        working-directory: apps/web-e2e
+        env:
+          STORYBOOK_BASE_URL: http://localhost:6006
+          # 本 job では Next.js dev server / dev.db スナップショットは不要なため skip
+          E2E_SKIP_SERVER: "1"
+          SKIP_DB_SNAPSHOT: "1"
+        run: |
+          pnpm exec playwright test \
+            --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" \
+            --project=chromium-desktop \
+            --grep @sb-rendering
+
+      - name: Upload Playwright storybook-rendering report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-storybook-rendering-report
           path: apps/web-e2e/playwright-report
           retention-days: 14
