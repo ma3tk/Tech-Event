@@ -82,6 +82,26 @@ const config: StorybookConfig = {
     <title>tech-event Design System — Storybook</title>
     <meta name="description" content="tech-event (connpass + Luma クローン) のデザインシステム公開カタログ。21 primitives + 18 composite + 14 MDX docs + 35 stories。" />
   `,
+  // ブラウザ bundle で env 検証を skip する。
+  //
+  // 一部の component (Breadcrumb / EventCard / Footer 等) は seo ヘルパー
+  // (`@/lib/seo` の absoluteUrl / safeJsonLd) を経由して `@tech-event/shared-util-env`
+  // (@t3-oss/env-nextjs の createEnv) を transitive に読み込む。production の
+  // storybook-static build では NODE_ENV=production になり createEnv の strict 検証が
+  // 走るが、ブラウザ bundle には DATABASE_URL / NEXT_PUBLIC_BASE_URL 等が存在しないため
+  // 「Invalid environment variables」を throw し、当該 chunk を最初に評価した story が
+  // `.sb-errordisplay` で rendering 失敗する (並列ロードのため落ちる story が run ごとに変わる)。
+  //
+  // env.ts は `process.env.SKIP_ENV_VALIDATION` を build-time の escape hatch として
+  // 既にサポートしているため、Vite define でブラウザ bundle にも "1" を inline して
+  // 検証を skip する (Storybook は実行時 env を持たないので検証する意味がない)。
+  viteFinal: async (config) => {
+    config.define = {
+      ...config.define,
+      "process.env.SKIP_ENV_VALIDATION": JSON.stringify("1"),
+    };
+    return config;
+  },
 };
 
 export default config;

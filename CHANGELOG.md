@@ -8,6 +8,32 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-11 — nightly e2e-full の storybook-rendering hard fail を解消 (env 検証 skip)
+
+### Fixed
+- **nightly `e2e-full` workflow が `storybook-rendering.spec.ts` の hard fail で red** に
+  なっていた状態を解消。`build-storybook` の **production static build** では
+  `NODE_ENV=production` のため `@tech-event/shared-util-env` (@t3-oss/env-nextjs の
+  `createEnv`) の strict 検証が走るが、ブラウザ bundle には `DATABASE_URL` /
+  `NEXT_PUBLIC_BASE_URL` 等が存在しないため **「Invalid environment variables」を throw**。
+  seo ヘルパー (`@/lib/seo` の `absoluteUrl` / `safeJsonLd`) を transitive に読み込む
+  component (Breadcrumb / EventCard / Footer / Button docs 等) の story が
+  `.sb-errordisplay` で rendering 失敗していた (並列ロードのため落ちる story が run ごとに
+  変わる非決定的挙動)。
+  - `apps/web/.storybook/main.ts` に `viteFinal` を追加し、`env.ts` が既にサポートする
+    escape hatch `process.env.SKIP_ENV_VALIDATION` を Vite `define` でブラウザ bundle に
+    `"1"` として inline。Storybook は実行時 env を持たないため検証する意味がなく、
+    検証 skip で throw を解消。
+  - dev storybook では `NODE_ENV` が production でないため元々再現せず、static build 限定の
+    バグだった。再ビルド後 desktop ×3 / mobile ×2 連続で **13/13 pass (決定的 green)** を確認。
+
+### 既知の残課題 (本 PR 対象外)
+- nightly `e2e-full` には retry で pass する flaky test が残る (approval-flow:69 /
+  survey:46 / components-mobile:152 / queue:57)。job を red にはしないが、別途
+  locator-based 待機で安定化したい。
+
+---
+
 ## [Unreleased] — 2026-06-10 — nightly Semgrep full scan の red を解消 (誤検出抑制 + vendored 除外)
 
 ### Fixed
