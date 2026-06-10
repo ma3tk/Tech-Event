@@ -137,10 +137,17 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
-      # 全プロジェクト (chromium-desktop + chromium-mobile) を実行
+      # 全プロジェクト (chromium-desktop + chromium-mobile) を実行。
+      #
+      # `@sb-rendering` は Storybook (:6006) を要するが、本 job は next dev のみで
+      # Storybook を build / serve しないため beforeAll が ECONNREFUSED で throw する
+      # (= storybook-rendering.spec の全 @sb-rendering が hard fail)。
+      # @sb-rendering は専用 job (ci.yml の storybook-rendering: build-storybook →
+      # static serve → --grep @sb-rendering) が担当するため、ここでは除外する
+      # (smoke job が --grep-invert @sb-rendering で除外しているのと同じ方針)。
       - name: Run Playwright tests (full)
         working-directory: apps/web-e2e
-        run: pnpm exec playwright test --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts"
+        run: pnpm exec playwright test --config="$GITHUB_WORKSPACE/apps/web-e2e/playwright.config.ts" --grep-invert @sb-rendering
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}

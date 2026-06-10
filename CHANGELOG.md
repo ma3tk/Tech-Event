@@ -8,6 +8,27 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-11 — e2e-full job から @sb-rendering を除外 (Storybook 未 serve による ECONNREFUSED 解消)
+
+### Fixed
+- **nightly `e2e-full` job が `@sb-rendering` テストの hard fail で red** になっていた真因を解消。
+  `e2e-full` job (`.github/workflows/e2e-full.yml`) は next dev のみを起動し **Storybook を
+  build / serve しない**ため、`storybook-rendering.spec.ts` の `beforeAll` が
+  `http://localhost:6006/index.json` に `connect ECONNREFUSED` で throw し、全
+  `@sb-rendering` テストが 0ms で hard fail していた (落ちる story が並列ロード順で変わる)。
+  - `@sb-rendering` は専用 job (`ci.yml` の `storybook-rendering`: `build-storybook` →
+    static serve → `--grep @sb-rendering`) が担当するため、`e2e-full` job の playwright
+    実行に `--grep-invert @sb-rendering` を追加して除外 (smoke job と同じ方針)。
+
+### 既知の残課題 (本 PR 対象外)
+- `e2e-full` には **seed 非決定性** に起因する flaky が残る (lottery / register-states /
+  participate / survey)。`prisma/seed.ts` が固定シードなしの `Math.random()` を使うため
+  参加者の accept/waiting/pending 割り当てが run ごとに変わり、特定イベント状態を前提とする
+  テストが run ごとに別々に失敗する。根本対処は seed の決定化 (seeded PRNG) または各テストの
+  自前 fixture 化で、VRT baseline 等への波及を検証しつつ別途対応する。
+
+---
+
 ## [Unreleased] — 2026-06-11 — nightly e2e-full の storybook-rendering hard fail を解消 (env 検証 skip)
 
 ### Fixed
