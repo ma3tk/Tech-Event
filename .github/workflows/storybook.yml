@@ -17,10 +17,14 @@ name: storybook
 on:
   push:
     branches: [main]
+    # Nx 移行で storybook / app / lib は apps/web 配下・libs 配下へ移動済み。
+    # 旧 paths (`src/**` / `.storybook/**` = リポジトリルート基準) はもう一致せず
+    # storybook deploy が実質トリガされなくなっていたため、実構造に合わせて更新する。
     paths:
-      - "src/**"
+      - "apps/web/src/**"
+      - "apps/web/.storybook/**"
+      - "libs/**"
       - "tokens/**"
-      - ".storybook/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/storybook.yml"
@@ -60,7 +64,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm exec prisma generate
+        # スキーマは apps/web/prisma 配下にあり、リポジトリルートからは見つからない
+        # (他 job / e2e-full.yml と同じく明示パス指定が必要)。未指定だと
+        # "Could not find Prisma Schema" で deploy が落ちる。
+        run: pnpm exec prisma generate --schema=apps/web/prisma/schema.prisma
 
       - name: Build Storybook
         run: pnpm build-storybook
