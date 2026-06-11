@@ -72,12 +72,15 @@ jobs:
       - name: Build Storybook
         run: pnpm build-storybook
 
-      # GitHub Pages 用 gh-pages ブランチに storybook-static/ を push
+      # GitHub Pages 用 gh-pages ブランチに storybook-static/ を push。
+      # build-storybook の出力は Nx 構造では apps/web/storybook-static (リポジトリ
+      # ルートの ./storybook-static ではない)。誤パスだと deploy が
+      # "ENOENT: no such file or directory, scandir '.../storybook-static'" で落ちる。
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./storybook-static
+          publish_dir: ./apps/web/storybook-static
           publish_branch: gh-pages
           # CNAME を使う場合は cname: storybook.example.com
           user_name: github-actions[bot]

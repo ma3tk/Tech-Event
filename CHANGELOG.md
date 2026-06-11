@@ -8,6 +8,16 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-12 — Storybook deploy の publish_dir 修正 (build 出力パス)
+
+### Fixed
+- **`storybook.yml` の Deploy ステップが `ENOENT: ... scandir '.../storybook-static'` で fail**
+  していた状態を解消 (prisma スキーマ修正に続く 2 段目の deploy バグ)。`build-storybook` の
+  出力は Nx 構造では `apps/web/storybook-static` だが `publish_dir` がリポジトリルートの
+  `./storybook-static` を指していた。`./apps/web/storybook-static` に修正。
+
+---
+
 ## [Unreleased] — 2026-06-12 — Storybook deploy (GitHub Pages) の red を解消
 
 ### Fixed
