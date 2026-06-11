@@ -8,6 +8,23 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-12 — Storybook deploy (GitHub Pages) の red を解消
+
+### Fixed
+- **`storybook.yml` (Storybook → GitHub Pages デプロイ) が `Generate Prisma client` ステップで
+  `Could not find Prisma Schema` で fail** していた状態を解消。`pnpm exec prisma generate` に
+  スキーマパスが無く、リポジトリルートからスキーマ (`apps/web/prisma/schema.prisma`) を解決
+  できていなかった。他 job / `e2e-full.yml` と同様に `--schema=apps/web/prisma/schema.prisma`
+  を明示。
+
+### Changed
+- **`storybook.yml` の push paths フィルタを Nx 構造に更新** — 旧 `src/**` / `.storybook/**`
+  (リポジトリルート基準) は Nx 移行後の実体 (`apps/web/src/**` / `apps/web/.storybook/**` /
+  `libs/**`) と一致せず、storybook deploy が実質トリガされなくなっていた。実構造に合わせて
+  更新し、UI / storybook / token 変更時に Pages が再デプロイされるようにした。
+
+---
+
 ## [Unreleased] — 2026-06-11 — e2e-full job から @sb-rendering を除外 (Storybook 未 serve による ECONNREFUSED 解消)
 
 ### Fixed
