@@ -75,9 +75,16 @@ export default defineConfig({
           // 明示上書き
           ENABLE_DEV_LOGIN: process.env.ENABLE_DEV_LOGIN ?? "1",
           ENABLE_TEST_ENDPOINTS: process.env.ENABLE_TEST_ENDPOINTS ?? "1",
+          // IMPORTANT: webServer の AUTH_SECRET は _helpers/auth.ts の
+          // loginByCookie() が cookie HMAC 署名に使う secret と必ず一致させる。
+          // loginByCookie() は `process.env.AUTH_SECRET ?? "dev-auth-secret-please-change"`
+          // を使う (= libs/shared/util-auth-session の getSessionSecret() fallback と同じ)。
+          // ここで別 placeholder を渡すと、サーバ側 verify と署名が食い違い、
+          // dev-login cookie が黙って無効化されて「未ログイン状態」で描画され、
+          // 参加申込/ブックマーク系の locator が見つからず flaky になる。
+          // そのため fallback はサーバ側 default と同一文字列に固定する。
           AUTH_SECRET:
-            process.env.AUTH_SECRET ??
-            "ci-placeholder-auth-secret-32chars-min-length-ok",
+            process.env.AUTH_SECRET ?? "dev-auth-secret-please-change",
           DATABASE_URL: process.env.DATABASE_URL ?? "file:./dev.db",
           NEXT_PUBLIC_BASE_URL:
             process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",

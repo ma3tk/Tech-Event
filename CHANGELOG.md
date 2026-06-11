@@ -8,6 +8,41 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-12 — e2e-full flaky 群を安定化 (AUTH_SECRET 整合 + networkidle → web-first 待機)
+
+### Fixed
+- **e2e flaky の根本原因: dev-login cookie のサイレント失効** — `apps/web-e2e/playwright.config.ts`
+  の `webServer.env.AUTH_SECRET` の fallback (`ci-placeholder-...`) が、`_helpers/auth.ts` の
+  `loginByCookie()` が cookie HMAC 署名に使う fallback (`dev-auth-secret-please-change` =
+  `util-auth-session` の `getSessionSecret()` default) と食い違っていた。ローカルで
+  `AUTH_SECRET` 未設定時にサーバ verify と署名が不一致になり `te_session` cookie が黙って
+  無効化 → 未ログイン状態で描画 → 「参加申込」「bookmark-button」等の locator が見つからず
+  login/participation 依存の spec が flaky 化していた。fallback をサーバ default と同一文字列に
+  統一して解消 (CI は job-level `env: AUTH_SECRET` を設定済みのため影響なし)。
+- **timing race の locator 化** — 対象 8 spec から `waitForLoadState("networkidle")` を計 27 箇所
+  撲滅し、web-first assertion に置換 (dev server の HMR WebSocket で networkidle が到達せず
+  ハングする問題も回避):
+  - `toast-actions` / `participate` — 申込/キャンセル/bookmark を「申込ボタン再描画」
+    (`toBeVisible`) / `data-bookmarked` 属性確定 (`toHaveAttribute`) / `my-participation-status`
+    テキスト確定で待機。
+  - `register-states` — 各状態の `[data-testid^="register-state-"]` 出現待ち + 遷移後ボタンの
+    `toBeVisible` に置換し、脆い while ループを決定的な遷移待ちへ簡素化。
+  - `lottery` — 申込/キャンセルを web-first 待機、抽選実行は `waitForResponse(POST /event/41/admin)`、
+    後始末のキャンセルを `toBeHidden` で待機。
+  - `approval-flow` — 申請後/承認後/後始末を testid 出現・ボタン detached・`waitForURL` + バッジ消失で待機。
+  - `survey` — 質問追加を `waitForResponse(POST /event/{id}/edit)` で待機。
+  - `components-mobile` — section screenshot 前に `boundingBox` が連続一致するまで `toPass` で
+    レイアウト安定を待機 (固定 sleep なし)。
+- 検証: 対象 spec を chromium-desktop で 3 連続 + `-j 2` 並列、chromium-mobile でも 3 連続 pass。
+  `waitForTimeout` は導入ゼロ。
+
+### 既知の残課題 (本 PR 対象外)
+- `components-mobile.spec.ts` の `toHaveScreenshot` VRT (event-list-row / pagination / group-card) が
+  ローカル darwin でフォント/レイアウト差によりベースライン不一致 (CI linux ベースラインとは別)。
+  timing flake ではなく、別途 `--update-snapshots` + 視覚レビューでの baseline 再生成が必要 (§3.2)。
+
+---
+
 ## [Unreleased] — 2026-06-12 — Storybook deploy の publish_dir 修正 (build 出力パス)
 
 ### Fixed

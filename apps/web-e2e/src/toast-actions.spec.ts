@@ -22,13 +22,17 @@ const ACCEPTING_EVENT_ID = "11";
 async function resetParticipation(
   page: import("@playwright/test").Page,
 ): Promise<void> {
-  // 既に参加中ならキャンセルしておく
+  // 既に参加中ならキャンセルしておく。
+  // Server Action の revalidate 再レンダリング完了は networkidle ではなく、
+  // 「申込ボタン (= 未参加状態) が再描画される」ことを web-first assertion で待つ。
   const cancelBtn = page.getByRole("button", {
     name: /参加をキャンセル|補欠登録をキャンセル/,
   });
   if (await cancelBtn.first().isVisible().catch(() => false)) {
     await cancelBtn.first().click();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByRole("button", { name: "参加申込" }).first(),
+    ).toBeVisible({ timeout: 15_000 });
   }
 }
 
@@ -38,7 +42,13 @@ async function resetBookmark(
   const btn = page.getByTestId("bookmark-button");
   if ((await btn.getAttribute("data-bookmarked")) === "true") {
     await btn.click();
-    await page.waitForLoadState("networkidle");
+    // data-bookmarked が "false" に確定するまで待つ (networkidle は HMR WS で
+    // 永遠に待つ可能性があるため避ける)。
+    await expect(page.getByTestId("bookmark-button")).toHaveAttribute(
+      "data-bookmarked",
+      "false",
+      { timeout: 15_000 },
+    );
   }
 }
 
@@ -72,7 +82,10 @@ test.describe("Toast 通知 (Server Action ラッパ)", () => {
     const joinBtn = page.getByRole("button", { name: "参加申込" });
     if (await joinBtn.first().isVisible().catch(() => false)) {
       await joinBtn.first().click();
-      await page.waitForLoadState("networkidle");
+      // 申込確定 (= キャンセルボタンの再描画) を待ってから次の操作へ。
+      await expect(
+        page.getByRole("button", { name: "参加をキャンセル" }),
+      ).toBeVisible({ timeout: 15_000 });
     }
 
     const cancelBtn = page.getByRole("button", { name: "参加をキャンセル" });
@@ -112,7 +125,12 @@ test.describe("Toast 通知 (Server Action ラッパ)", () => {
     const offBtn = page.getByTestId("bookmark-button");
     if ((await offBtn.getAttribute("data-bookmarked")) === "false") {
       await offBtn.click();
-      await page.waitForLoadState("networkidle");
+      // data-bookmarked が "true" に確定するまで待つ。
+      await expect(page.getByTestId("bookmark-button")).toHaveAttribute(
+        "data-bookmarked",
+        "true",
+        { timeout: 15_000 },
+      );
     }
 
     const onBtn = page.getByTestId("bookmark-button");

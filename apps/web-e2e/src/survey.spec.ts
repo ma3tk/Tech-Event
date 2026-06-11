@@ -90,8 +90,16 @@ test.describe("申込時アンケート (Survey)", () => {
       .getByTestId("survey-add-input-type")
       .selectOption("text");
     await page.getByTestId("survey-add-required").check();
+    // 質問追加 (Server Action)。POST レスポンス完了を待ってから reload して
+    // DB の最新状態を読む (networkidle は HMR WS で到達しないため使わない)。
     await Promise.all([
-      page.waitForLoadState("networkidle"),
+      page.waitForResponse(
+        (r) =>
+          r.request().method() === "POST" &&
+          r.url().includes(`/event/${eventId}/edit`) &&
+          r.status() < 400,
+        { timeout: 15_000 },
+      ),
       page.getByTestId("survey-add-submit").click(),
     ]);
 

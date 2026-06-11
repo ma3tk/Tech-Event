@@ -41,7 +41,10 @@ test.describe("抽選方式の参加申込", () => {
     });
     if (await cancelBtnPre.first().isVisible().catch(() => false)) {
       await cancelBtnPre.first().click();
-      await page.waitForLoadState("networkidle");
+      // 抽選申込ボタン (= 未申込状態) が再描画されるまで待つ。
+      await expect(
+        page.getByRole("button", { name: "抽選に申し込む" }).first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
 
     // 抽選方式の表示
@@ -53,19 +56,21 @@ test.describe("抽選方式の参加申込", () => {
     await expect(applyBtn.first()).toBeVisible();
 
     await applyBtn.first().click();
-    await page.waitForLoadState("networkidle");
 
-    // 「抽選申込中」表示
+    // 「抽選申込中」表示 (Server Action の revalidate 完了を web-first assertion で待つ)
     await expect(page.getByTestId("lottery-pending-label")).toContainText(
       /抽選申込中/,
+      { timeout: 15_000 },
     );
     await expect(page.getByTestId("my-participation-status")).toContainText(
       /抽選申込中/,
     );
 
-    // 後始末 (キャンセル)
+    // 後始末 (キャンセル: 未申込状態に戻るまで待つ)
     await page.getByRole("button", { name: "申込をキャンセル" }).click();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByRole("button", { name: "抽選に申し込む" }).first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -86,16 +91,18 @@ test.describe("主催者による抽選実行", () => {
     });
     if (await cancelBtnPre.first().isVisible().catch(() => false)) {
       await cancelBtnPre.first().click();
-      await page.waitForLoadState("networkidle");
+      await expect(
+        page.getByRole("button", { name: "抽選に申し込む" }).first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
 
     const applyBtn = page.getByRole("button", { name: "抽選に申し込む" });
     await expect(applyBtn.first()).toBeVisible();
     await applyBtn.first().click();
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("lottery-pending-label")).toContainText(
       /抽選申込中/,
+      { timeout: 15_000 },
     );
 
     // 2. 主催者にログインし直して、管理画面で抽選実行
@@ -109,8 +116,19 @@ test.describe("主催者による抽選実行", () => {
     // 「今すぐ抽選を実行」ボタンが見える
     const runBtn = page.getByTestId("run-lottery-button");
     await expect(runBtn).toBeVisible();
-    await runBtn.click();
-    await page.waitForLoadState("networkidle");
+    // runLottery は Server Action (POST)。ボタン自体は実行後も enabled のままで
+    // UI 変化が乏しいため、Server Action の POST レスポンス完了を待って
+    // DB コミットを保証する (networkidle に依存しない)。
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.request().method() === "POST" &&
+          r.url().includes(`/event/${LOTTERY_EVENT_ID}/admin`) &&
+          r.status() < 400,
+        { timeout: 15_000 },
+      ),
+      runBtn.click(),
+    ]);
 
     // 3. 申込者のセッションに戻って参加状況を確認
     await page.context().clearCookies();
@@ -127,7 +145,9 @@ test.describe("主催者による抽選実行", () => {
     });
     if (await cancelBtn.first().isVisible().catch(() => false)) {
       await cancelBtn.first().click();
-      await page.waitForLoadState("networkidle");
+      // キャンセル確定 (= キャンセルボタンの消失) を web-first で待つ。
+      // networkidle は dev server の HMR WebSocket で到達しない場合がある。
+      await expect(cancelBtn.first()).toBeHidden({ timeout: 15_000 });
     }
   });
 });

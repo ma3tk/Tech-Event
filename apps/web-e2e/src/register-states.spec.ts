@@ -80,67 +80,64 @@ test.describe("Register button: 全 7 状態の網羅", () => {
 
   test("5. open: ログイン済 + 受付中 + 未参加", async ({ page }) => {
     await devLogin(page, DEV_USER, `/event/${OPEN_EVENT_ID}`);
-    await page.waitForLoadState("networkidle");
+    // register-state-* のいずれかが描画されるまで待ってから状態判定する
+    // (networkidle は HMR WS で到達しないため使わない)。
+    await page
+      .locator('[data-testid^="register-state-"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 });
     // 既に参加済みなら一度キャンセルしてから検証
     const cancelBtn = page.getByTestId("register-state-cancel-accepted");
     if (await cancelBtn.first().isVisible().catch(() => false)) {
       await cancelBtn.first().click();
-      await page.waitForLoadState("networkidle");
-      await page.waitForLoadState("domcontentloaded");
+      // 未参加状態 (= open ボタン再描画) に戻るまで web-first assertion で待つ。
+      await expect(
+        page.getByTestId("register-state-open").first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
     const open = page.getByTestId("register-state-open");
-    await expect(open.first()).toBeVisible({ timeout: 10_000 });
+    await expect(open.first()).toBeVisible({ timeout: 15_000 });
     await expect(open.first()).toContainText("参加申込");
   });
 
   test("6. cancel-accepted: ログイン済 + 既に参加確定", async ({ page }) => {
     await devLogin(page, DEV_USER, `/event/${OPEN_EVENT_ID}`);
-    await page.waitForLoadState("networkidle");
+    // register-state-* のいずれかが描画されるまで待ってから状態判定する。
+    await page
+      .locator('[data-testid^="register-state-"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 });
 
     // 順序保証: test 5 が cancel/open 状態のどちらで終わったか不明なので
     // ボタンの「現在状態」を確認してから必要な操作だけ行う。
     // - open  -> click して accepted へ遷移
     // - cancel-accepted -> 既に望ましい状態
-    // 最大 2 回まで状態遷移を許す (open -> accepted)
-    let attempts = 0;
-    while (attempts < 3) {
-      const cancelVisible = await page
-        .getByTestId("register-state-cancel-accepted")
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (cancelVisible) break;
-      const openVisible = await page
-        .getByTestId("register-state-open")
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (openVisible) {
-        await page.getByTestId("register-state-open").first().click();
-        // server action 完了まで待つ
-        await page.waitForLoadState("networkidle");
-        await page.waitForLoadState("domcontentloaded");
-      } else {
-        // 一瞬の race: 何も visible じゃないなら register-state-* のいずれかが
-        // 描画されるまで wait してから再判定する (固定 sleep より flake が少ない)
-        await page
-          .locator('[data-testid^="register-state-"]')
-          .first()
-          .waitFor({ state: "visible", timeout: 1000 })
-          .catch(() => {
-            // 出ない場合は次のループへ (attempts でリミット)
-          });
-      }
-      attempts++;
+    const cancelVisible = await page
+      .getByTestId("register-state-cancel-accepted")
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (!cancelVisible) {
+      // open のはず: click して accepted (= cancel-accepted ボタン) に遷移するのを待つ。
+      await expect(
+        page.getByTestId("register-state-open").first(),
+      ).toBeVisible({ timeout: 15_000 });
+      await page.getByTestId("register-state-open").first().click();
+      await expect(
+        page.getByTestId("register-state-cancel-accepted").first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
 
     const cancel = page.getByTestId("register-state-cancel-accepted");
-    await expect(cancel.first()).toBeVisible({ timeout: 10_000 });
+    await expect(cancel.first()).toBeVisible({ timeout: 15_000 });
     await expect(cancel.first()).toContainText("参加をキャンセル");
 
     // クリーンアップ: 後続テストへの影響を避けるためにキャンセルしておく
+    // (未参加状態 = open ボタン再描画まで待つ)。
     await cancel.first().click();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByTestId("register-state-open").first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("7. lottery: ログイン済 + 抽選方式の枠", async ({ page }, testInfo) => {
@@ -156,7 +153,10 @@ test.describe("Register button: 全 7 状態の網羅", () => {
     const pendingBtn = page.getByTestId("register-state-cancel-pending");
     if (await pendingBtn.first().isVisible().catch(() => false)) {
       await pendingBtn.first().click();
-      await page.waitForLoadState("networkidle");
+      // 抽選申込ボタン (= 未申込状態) が再描画されるまで待つ。
+      await expect(
+        page.getByTestId("register-state-lottery").first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
     const lottery = page.getByTestId("register-state-lottery");
     await expect(lottery.first()).toBeVisible();

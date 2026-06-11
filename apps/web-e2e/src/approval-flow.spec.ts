@@ -92,14 +92,19 @@ test.describe("Approval Required 申込フロー", () => {
       .getByRole("button", { name: "参加リクエストを送信" })
       .first();
     await expect(requestBtn).toBeVisible();
+    // 参加リクエスト送信 (Server Action)。送信完了は「承認待ち」状態の
+    // register button (cancel-approval-pending) が出ることで待つ。
     await requestBtn.click();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByTestId("register-state-cancel-approval-pending").first(),
+    ).toBeVisible({ timeout: 15_000 });
     // 念のため明示的にリロードして DB の最新状態を取得
     await page.goto(`/event/${EVENT_ID}`);
 
     // 承認待ち表示 (上部の自分の参加状況サマリ)
     await expect(page.getByTestId("my-participation-status")).toContainText(
       "承認待ち",
+      { timeout: 15_000 },
     );
 
     // 申請者ログアウト
@@ -115,8 +120,10 @@ test.describe("Approval Required 申込フロー", () => {
       .getByRole("button", { name: "承認" })
       .first();
     await expect(approveBtn).toBeVisible();
+    // 承認 (Server Action)。承認後はこの guest 行が approval_pending リストから
+    // 外れる (= 承認ボタンが detach される) ので、それを待って revalidate 完了とする。
     await approveBtn.click();
-    await page.waitForLoadState("networkidle");
+    await approveBtn.waitFor({ state: "detached", timeout: 15_000 });
 
     // 主催者ログアウト
     await page.context().clearCookies();
@@ -134,7 +141,11 @@ test.describe("Approval Required 申込フロー", () => {
     if (await checkbox2.isChecked()) {
       await checkbox2.uncheck();
     }
+    // 保存後は /event/{id} に遷移する。承認制バッジが消えるまで待って後始末完了とする。
     await page.getByTestId("event-edit-save").click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForURL((url) => url.pathname.endsWith(`/event/${EVENT_ID}`), {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("approval-required-badge")).toHaveCount(0);
   });
 });
