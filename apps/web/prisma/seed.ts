@@ -509,7 +509,14 @@ function planEvents(): EventPlan[] {
 
   // 10 件: 未来開催 (受付前 or 受付中)
   for (let i = 0; i < 10; i++) {
-    const daysAhead = randInt(15, 120);
+    // event id 1 (i=0) / id 5 (i=4) は register-states.spec.ts が
+    // pre-acceptance (acceptsFrom が未来 = 受付開始前) を前提にする E2E fixture。
+    // acceptsFrom は start - 30 日なので、pre-acceptance には daysAhead > 30 が必須。
+    // randInt(15,120) のままだと ~15% で daysAhead<=30 となり acceptsFrom が過去化して
+    // テストが非決定的に落ちるため、当該 2 件は daysAhead を 90 に固定する
+    // (cf. 満員固定の isE2EFullTarget = i === 1)。
+    const isPreAcceptanceFixture = i === 0 || i === 4;
+    const daysAhead = isPreAcceptanceFixture ? 90 : randInt(15, 120);
     const start = setHm(addDays(now, daysAhead), pick([13, 14, 19, 19, 20]), 0);
     plans.push({
       category: "future",
