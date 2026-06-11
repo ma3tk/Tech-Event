@@ -92,9 +92,23 @@ for (const section of SECTIONS) {
   test(`mobile section screenshot: ${section}`, async ({ page }) => {
     await page.goto("/components", { waitUntil: "domcontentloaded" });
     const locator = page.getByTestId(`section-${section}`);
+    // hydration による再 mount / 遅延ロードを待ってから可視性を確定させる。
+    await expect(locator).toBeVisible({ timeout: 15_000 });
     await locator.scrollIntoViewIfNeeded();
-    await expect(locator).toBeVisible();
+    // フォント読み込み完了を待つ (テキスト幅が確定してから撮影)。
     await page.evaluate(() => document.fonts.ready);
+    // スクロール後にバウンディングボックスが安定する (= レイアウトが落ち着く) のを
+    // 待ってからスクショを撮る。固定 sleep ではなく toPass で polling する。
+    await expect(async () => {
+      const a = await locator.boundingBox();
+      // 2 回連続で取得した box が一致したらレイアウト安定とみなす
+      // (toPass のリトライ間隔が経過の役割を果たす)。
+      const b = await locator.boundingBox();
+      expect(a).not.toBeNull();
+      expect(b).not.toBeNull();
+      expect(Math.round(a!.y)).toBe(Math.round(b!.y));
+      expect(Math.round(a!.height)).toBe(Math.round(b!.height));
+    }).toPass({ timeout: 10_000 });
     await locator.screenshot({
       path: path.join(SCREENSHOT_DIR, `${section}.png`),
       animations: "disabled",

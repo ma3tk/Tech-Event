@@ -48,28 +48,29 @@ test.describe("参加申込フロー (Server Action)", () => {
     });
     if (await cancelBtnPre.first().isVisible().catch(() => false)) {
       await cancelBtnPre.first().click();
-      await page.waitForLoadState("networkidle");
+      // 未参加状態 (= 申込ボタン再描画) に戻るまで待つ。
+      await expect(
+        page.getByRole("button", { name: "参加申込" }).first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
 
     // 申込ボタンが出ているはず
     const joinBtn = page.getByRole("button", { name: "参加申込" });
     await expect(joinBtn.first()).toBeVisible();
 
-    // 参加申込
+    // 参加申込 (Server Action の revalidate 完了は status 表示で待つ)
     await joinBtn.first().click();
-    await page.waitForLoadState("networkidle");
 
     // 参加をキャンセルボタンが出ている
     await expect(
       page.getByRole("button", { name: "参加をキャンセル" }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("my-participation-status")).toContainText(
       "参加確定中",
     );
 
     // キャンセル
     await page.getByRole("button", { name: "参加をキャンセル" }).click();
-    await page.waitForLoadState("networkidle");
 
     // 申込ボタンに戻っている
     await expect(
@@ -89,7 +90,10 @@ test.describe("参加申込フロー (Server Action)", () => {
     });
     if (await cancelBtnPre.first().isVisible().catch(() => false)) {
       await cancelBtnPre.first().click();
-      await page.waitForLoadState("networkidle");
+      // 補欠登録ボタン (= 未参加状態) が再描画されるまで待つ。
+      await expect(
+        page.getByRole("button", { name: "補欠登録する" }).first(),
+      ).toBeVisible({ timeout: 15_000 });
     }
 
     // 満員なので「補欠登録する」ボタンが出ている
@@ -97,19 +101,21 @@ test.describe("参加申込フロー (Server Action)", () => {
     await expect(waitlistBtn.first()).toBeVisible();
 
     await waitlistBtn.first().click();
-    await page.waitForLoadState("networkidle");
 
     // 補欠登録中表示
     await expect(page.getByTestId("my-participation-status")).toContainText(
       "補欠登録中",
+      { timeout: 15_000 },
     );
     await expect(
       page.getByRole("button", { name: "補欠登録をキャンセル" }),
     ).toBeVisible();
 
-    // 後始末
+    // 後始末 (未参加状態に戻るまで待つ)
     await page.getByRole("button", { name: "補欠登録をキャンセル" }).click();
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByRole("button", { name: "補欠登録する" }).first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });
 
