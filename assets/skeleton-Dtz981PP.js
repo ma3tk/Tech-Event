@@ -1,0 +1,1 @@
+import{i as e}from"./preload-helper-D2yxXLVK.js";import{t}from"./jsx-runtime-Dwpk6tgA.js";import{n,t as r}from"./src-DPzeejvG.js";function i({className:e,...t}){return(0,a.jsx)(`div`,{className:n(`animate-pulse rounded-md bg-border`,e),"aria-hidden":`true`,...t})}var a,o=e((()=>{a=t(),r(),i.__docgenInfo={description:``,methods:[],displayName:`Skeleton`}}));export{o as n,i as t};
