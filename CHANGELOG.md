@@ -8,6 +8,21 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-12 — seed の pre-acceptance fixture を確定化 (register-states flaky 解消)
+
+### Fixed
+- **`register-states.spec.ts:43` (pre-acceptance) が seed 非決定性で ~15% 落ちる** flaky を解消。
+  `prisma/seed.ts` の「future」イベントは `daysAhead = randInt(15, 120)`・`acceptsFrom = start - 30日`
+  で生成され、pre-acceptance (acceptsFrom > now) には `daysAhead > 30` が必要。event id 1 / 5 も
+  乱数だったため `daysAhead <= 30` を引くと acceptsFrom が過去化し「受付開始前」状態にならず
+  テストが非決定的に失敗していた (フル E2E で desktop/mobile 同時に落ちる)。
+  - 既存の満員固定 (`isE2EFullTarget = i === 1`) と同じ「E2E fixture をピン留め」方針で、
+    pre-acceptance を前提とする event 1 / 5 (i = 0 / 4) の `daysAhead` を 90 に固定し、
+    `acceptsFrom` が必ず未来 (約 60 日後) になるようにした。
+  - 検証: 再 seed 後 `register-states.spec.ts` を desktop 3 連続 (7/7) + mobile (6/6) で安定 pass。
+
+---
+
 ## [Unreleased] — 2026-06-12 — e2e-full flaky 群を安定化 (AUTH_SECRET 整合 + networkidle → web-first 待機)
 
 ### Fixed
