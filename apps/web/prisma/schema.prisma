@@ -55,6 +55,8 @@ model User {
   calendarSubscriptions CalendarSubscription[]
   // ============ 通知の詳細プリファレンス ============
   notificationPreferences NotificationPreference[]
+  // ============ コンポーネントフィードバック (DS 改善ループ) ============
+  componentFeedbacks ComponentFeedback[]
 
   @@map("users")
   @@index([status])
@@ -572,4 +574,36 @@ model NotificationPreference {
   @@unique([userId, kind, channel])
   @@map("notification_preferences")
   @@index([userId])
+}
+
+// ============================================================
+// ComponentFeedback — デザインシステム改善ループ用フィードバック
+//
+// Storybook (Gallery / 各 Docs) の HTML フォームから各コンポーネントへの
+// 評価 (1-5) + 任意コメントを受け付け、/admin/component-feedback で集計・
+// トリアージして改善に回す。投稿は匿名可 (userId は任意)。
+// ============================================================
+model ComponentFeedback {
+  id        BigInt  @id @default(autoincrement())
+  /// 対象コンポーネント名 (例: "Button", "EventCard")。Storybook の表示名に対応。
+  component String
+  /// 1-5 の満足度評価。
+  rating    Int
+  /// 任意の自由記述コメント (sanitize は表示側で実施)。
+  comment   String?
+  /// 投稿元 URL (Storybook の story / docs URL)。
+  sourceUrl String?
+  /// トリアージ状態: open | triaged | resolved | wontfix
+  status    String  @default("open")
+  /// 任意: ログイン中ユーザー。匿名投稿は null。
+  userId    BigInt?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("component_feedback")
+  @@index([component, createdAt])
+  @@index([status])
 }
