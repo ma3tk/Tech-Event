@@ -16,6 +16,7 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { test, expect } from "@playwright/test";
 import { devLoginLegacy as devLogin } from "./_helpers/auth";
+import { clickUntil } from "./_helpers/actions";
 
 const HOST_USER = "fast_moon_169";
 const APPLICANT_USER = "test_user";
@@ -73,15 +74,19 @@ test.describe("Approval Required 申込フロー", () => {
     await devLogin(page, HOST_USER, `/event/${EVENT_ID}/edit`);
     await expect(page.getByTestId("event-approval-required")).toBeVisible();
     const checkbox = page.getByTestId("event-approval-required");
-    // 必要なら check
+    // 必要なら check (hydration 後に操作されるよう enabled を確認)
+    await expect(checkbox).toBeEnabled();
     if (!(await checkbox.isChecked())) {
       await checkbox.check();
     }
-    await page.getByTestId("event-edit-save").click();
-    await page.waitForURL((url) =>
-      url.pathname.endsWith(`/event/${EVENT_ID}`),
-    );
-    await expect(page.getByTestId("approval-required-badge")).toBeVisible();
+    // event-edit-save は form submit。hydration race を吸収するため clickUntil で
+    // 「/event/{id} に遷移済み かつ 承認制バッジが見える」を outcome として待つ。
+    await clickUntil(page.getByTestId("event-edit-save"), async () => {
+      await expect(page).toHaveURL(
+        new RegExp(`/event/${EVENT_ID}(\\?.*)?$`),
+      );
+      await expect(page.getByTestId("approval-required-badge")).toBeVisible();
+    });
 
     // 主催者ログアウト
     await page.context().clearCookies();
@@ -92,12 +97,13 @@ test.describe("Approval Required 申込フロー", () => {
       .getByRole("button", { name: "参加リクエストを送信" })
       .first();
     await expect(requestBtn).toBeVisible();
-    // 参加リクエスト送信 (Server Action)。送信完了は「承認待ち」状態の
-    // register button (cancel-approval-pending) が出ることで待つ。
-    await requestBtn.click();
-    await expect(
-      page.getByTestId("register-state-cancel-approval-pending").first(),
-    ).toBeVisible({ timeout: 15_000 });
+    // 参加リクエスト送信 (Server Action / form submit)。hydration race を吸収するため
+    // clickUntil で「承認待ち状態の register button が出る」を outcome として待つ。
+    await clickUntil(requestBtn, async () => {
+      await expect(
+        page.getByTestId("register-state-cancel-approval-pending").first(),
+      ).toBeVisible();
+    });
     // 念のため明示的にリロードして DB の最新状態を取得
     await page.goto(`/event/${EVENT_ID}`);
 
@@ -120,10 +126,12 @@ test.describe("Approval Required 申込フロー", () => {
       .getByRole("button", { name: "承認" })
       .first();
     await expect(approveBtn).toBeVisible();
-    // 承認 (Server Action)。承認後はこの guest 行が approval_pending リストから
-    // 外れる (= 承認ボタンが detach される) ので、それを待って revalidate 完了とする。
-    await approveBtn.click();
-    await approveBtn.waitFor({ state: "detached", timeout: 15_000 });
+    // 承認 (Server Action / form submit)。承認後はこの guest 行が approval_pending
+    // リストから外れる (= 承認ボタンが detach される)。hydration race を吸収するため
+    // clickUntil で「承認ボタンが detach される」を outcome として待つ。
+    await clickUntil(approveBtn, async () => {
+      await expect(approveBtn).toHaveCount(0);
+    });
 
     // 主催者ログアウト
     await page.context().clearCookies();
@@ -138,14 +146,15 @@ test.describe("Approval Required 申込フロー", () => {
     await page.context().clearCookies();
     await devLogin(page, HOST_USER, `/event/${EVENT_ID}/edit`);
     const checkbox2 = page.getByTestId("event-approval-required");
+    await expect(checkbox2).toBeEnabled();
     if (await checkbox2.isChecked()) {
       await checkbox2.uncheck();
     }
-    // 保存後は /event/{id} に遷移する。承認制バッジが消えるまで待って後始末完了とする。
-    await page.getByTestId("event-edit-save").click();
-    await page.waitForURL((url) => url.pathname.endsWith(`/event/${EVENT_ID}`), {
-      timeout: 15_000,
+    // 保存後は /event/{id} に遷移する。hydration race を吸収するため clickUntil で
+    // 「/event/{id} に遷移済み かつ 承認制バッジが消えた」を outcome として待つ。
+    await clickUntil(page.getByTestId("event-edit-save"), async () => {
+      await expect(page).toHaveURL(new RegExp(`/event/${EVENT_ID}(\\?.*)?$`));
+      await expect(page.getByTestId("approval-required-badge")).toHaveCount(0);
     });
-    await expect(page.getByTestId("approval-required-badge")).toHaveCount(0);
   });
 });

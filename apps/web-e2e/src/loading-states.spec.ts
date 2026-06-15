@@ -44,6 +44,37 @@ async function delayResponsesFor(
   });
 }
 
+/**
+ * SSR HTML に `loading.tsx` の skeleton (data-testid=needle) が含まれることを待つ。
+ *
+ * dev サーバは on-demand compile のため、フルラン並列下では対象ルートの「初回 hit」が
+ * cold compile になり、streaming SSR が Suspense fallback (loading.tsx) を stream に
+ * flush し切る前のレスポンスを返すことがある (= needle が無く flake)。
+ * 単発の `page.request.get` ではなく `expect.poll` でフレッシュな fetch を繰り返し、
+ * compile 確定後に fallback が安定的に flush される状態を web-first に待つ
+ * (waitForTimeout は使わない)。
+ */
+async function expectSsrSkeleton(
+  page: import("@playwright/test").Page,
+  url: string,
+  needle: string,
+  headers?: Record<string, string>,
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const response = await page.request.get(
+          url,
+          headers ? { headers } : undefined,
+        );
+        if (!response.ok()) return false;
+        return (await response.text()).includes(needle);
+      },
+      { timeout: 20_000, intervals: [250, 500, 1000, 2000] },
+    )
+    .toBe(true);
+}
+
 test.describe("loading.tsx スケルトン表示", () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
@@ -52,10 +83,7 @@ test.describe("loading.tsx スケルトン表示", () => {
   test("/discover の loading.tsx skeleton が SSR で配信される", async ({
     page,
   }) => {
-    const response = await page.request.get("/discover");
-    expect(response.ok()).toBeTruthy();
-    const html = await response.text();
-    expect(html).toContain('data-testid="loading-discover"');
+    await expectSsrSkeleton(page, "/discover", 'data-testid="loading-discover"');
 
     // 遅延ロードで skeleton or 本コンテンツが見える猶予を作る
     await delayResponsesFor(page, /\/discover(\?.*)?$/, 800);
@@ -75,10 +103,7 @@ test.describe("loading.tsx スケルトン表示", () => {
   test("/explore の loading.tsx skeleton が SSR で配信される", async ({
     page,
   }) => {
-    const response = await page.request.get("/explore");
-    expect(response.ok()).toBeTruthy();
-    const html = await response.text();
-    expect(html).toContain('data-testid="loading-explore"');
+    await expectSsrSkeleton(page, "/explore", 'data-testid="loading-explore"');
 
     await delayResponsesFor(page, /\/explore(\?.*)?$/, 800);
     await page.goto("/explore", { waitUntil: "commit" });
@@ -98,18 +123,17 @@ test.describe("loading.tsx スケルトン表示", () => {
     page,
   }) => {
     await devLogin(page, DEV_USER, "/");
-    await page.waitForLoadState("networkidle");
 
     const cookies = await page.context().cookies();
     const cookieHeader = cookies
       .map((c) => `${c.name}=${c.value}`)
       .join("; ");
-    const response = await page.request.get("/dashboard", {
-      headers: { cookie: cookieHeader },
-    });
-    expect(response.ok()).toBeTruthy();
-    const html = await response.text();
-    expect(html).toContain('data-testid="loading-dashboard"');
+    await expectSsrSkeleton(
+      page,
+      "/dashboard",
+      'data-testid="loading-dashboard"',
+      { cookie: cookieHeader },
+    );
 
     await delayResponsesFor(page, /\/dashboard(\?.*)?$/, 800);
     await page.goto("/dashboard", { waitUntil: "commit" });
@@ -136,10 +160,12 @@ test.describe("loading.tsx スケルトン表示", () => {
     // /event/1 を fetch して HTML に skeleton 要素 (`loading-event-detail`)
     // が含まれていれば、loading.tsx が build & route に組み込まれていると
     // 判断する。
-    const response = await page.request.get("/event/1");
-    expect(response.ok()).toBeTruthy();
-    const html = await response.text();
-    // streaming SSR では loading.tsx の HTML が先に flush される
-    expect(html).toContain('data-testid="loading-event-detail"');
+    // streaming SSR では loading.tsx の HTML が先に flush される。
+    // cold compile での flush 漏れ flake を避けるため expectSsrSkeleton で待つ。
+    await expectSsrSkeleton(
+      page,
+      "/event/1",
+      'data-testid="loading-event-detail"',
+    );
   });
 });

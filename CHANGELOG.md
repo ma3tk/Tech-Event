@@ -8,6 +8,32 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-15 — e2e flaky 第2弾を安定化 (hydration dead-click / SSR fallback flush)
+
+### Fixed
+- **残存 flaky 4 件 (approval-flow:69 / bookmarks:75 / bookmarks:80 / loading-states:75) を解消**。
+  原因は 2 系統:
+  - **hydration 中の dead-click** (bookmarks / approval-flow) — bookmark / 参加リクエスト /
+    承認 / イベント編集保存ボタンは `ActionForm` ("use client") の `<form action={serverAction}>`
+    submit。SSR 直後 (hydration 前) はネイティブ POST、hydration 後は React の `formAction`
+    という progressive enhancement 構造のため、`domcontentloaded` 直後の click が form 差し替えの
+    瞬間に当たると握り潰され、状態変化が起きず timeout (並列フルランで発生率上昇)。
+  - **cold compile での SSR fallback flush 漏れ** (loading-states) — dev サーバの on-demand
+    compile で初回 hit が cold だと、streaming SSR が `loading.tsx` (Suspense fallback) を
+    flush し切る前のレスポンスを返し、skeleton needle が欠落。
+- 対応:
+  - 新規ヘルパー `apps/web-e2e/src/_helpers/actions.ts` の `clickUntil()` —
+    「click → outcome assert」を `expect(...).toPass()` でリトライし dead-click を吸収
+    (trigger が outcome 成立で detach するケースは再 click せず再 assert)。
+  - `bookmarks` / `approval-flow` の form submit を `clickUntil` 化、`clearAllBookmarks` の
+    timeout 握り潰し `Promise.race` を outcome ベースに是正、checkbox 操作前に `toBeEnabled()`。
+  - `loading-states` に `expectSsrSkeleton()` (`expect.poll` でフレッシュ fetch を繰り返し
+    compile 確定後の安定 flush を待つ) を導入し 4 テストを統一。残存 `networkidle` も撤去。
+  - `waitForTimeout` 新規導入ゼロ。検証: 並列フルラン再現条件含め desktop/mobile で最低 5
+    (実質 10) 連続 pass、`tsc --noEmit` クリーン。
+
+---
+
 ## [Unreleased] — 2026-06-15 — CI Actions を Node 24 対応の最新メジャーへ更新
 
 ### Changed
