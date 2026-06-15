@@ -588,13 +588,13 @@
 <header>
   <div class="wrap">
     <h1>Manifest Debugger</h1>
-    <div class="summary"><a class="filter-pill all" data-k="all" href="#filter-all">All</a><a class="filter-pill err" data-k="errors" href="#filter-errors">1/38 prop type error</a><a class="filter-pill info" data-k="infos" href="#filter-infos">25/38 infos</a><span class="filter-pill ok" aria-disabled="true">207 stories ok</span><a class="filter-pill ok" data-k="docs" href="#filter-docs">69 docs ok</a></div>
+    <div class="summary"><a class="filter-pill all" data-k="all" href="#filter-all">All</a><a class="filter-pill err" data-k="errors" href="#filter-errors">1/38 prop type error</a><a class="filter-pill info" data-k="infos" href="#filter-infos">25/38 infos</a><span class="filter-pill ok" aria-disabled="true">207 stories ok</span><a class="filter-pill ok" data-k="docs" href="#filter-docs">70 docs ok</a></div>
   </div>
 </header>
 <main>
   <div class="wrap">
     <div class="note info" style="margin-bottom: 16px;">
-            <strong>Tip:</strong> You are using <code>react-docgen</code> (the default). Generation took <strong>2.3s</strong>. For higher quality prop types, consider switching to <code>react-docgen-typescript</code> in your <code>main.ts</code>:
+            <strong>Tip:</strong> You are using <code>react-docgen</code> (the default). Generation took <strong>2.0s</strong>. For higher quality prop types, consider switching to <code>react-docgen-typescript</code> in your <code>main.ts</code>:
             <pre><code>typescript: {
   reactDocgen: 'react-docgen-typescript',
 }</code></pre>
@@ -15818,10 +15818,221 @@ variant 選定ガイド:
   aria-label="Docs">
   <div class="head">
     <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Design System/Gallery</h2>
+      <div class="badges">
+        
+        <label for="doc-19-design-system-gallery-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/stories/design-system/Gallery.mdx">design-system-gallery--docs · ./src/stories/design-system/Gallery.mdx</div>
+    
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-19-design-system-gallery-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Meta, Title, Subtitle, Canvas, Unstyled } from &quot;@storybook/addon-docs/blocks&quot;;
+
+{/* UI primitives (24) */}
+import * as AvatarStories from &quot;../../../../../libs/shared/ui/src/avatar.stories&quot;;
+import * as BadgeStories from &quot;../../../../../libs/shared/ui/src/badge.stories&quot;;
+import * as ButtonStories from &quot;../../../../../libs/shared/ui/src/button.stories&quot;;
+import * as CardStories from &quot;../../../../../libs/shared/ui/src/card.stories&quot;;
+import * as CheckboxStories from &quot;../../../../../libs/shared/ui/src/checkbox.stories&quot;;
+import * as DialogStories from &quot;../../../../../libs/shared/ui/src/dialog.stories&quot;;
+import * as DropdownMenuStories from &quot;../../../../../libs/shared/ui/src/dropdown-menu.stories&quot;;
+import * as EmptyStateStories from &quot;../../../../../libs/shared/ui/src/empty-state.stories&quot;;
+import * as ErrorStateStories from &quot;../../../../../libs/shared/ui/src/error-state.stories&quot;;
+import * as FormStories from &quot;../../../../../libs/shared/ui/src/form.stories&quot;;
+import * as InputStories from &quot;../../../../../libs/shared/ui/src/input.stories&quot;;
+import * as LabelStories from &quot;../../../../../libs/shared/ui/src/label.stories&quot;;
+import * as LoadingStateStories from &quot;../../../../../libs/shared/ui/src/loading-state.stories&quot;;
+import * as PopoverStories from &quot;../../../../../libs/shared/ui/src/popover.stories&quot;;
+import * as RadioGroupStories from &quot;../../../../../libs/shared/ui/src/radio-group.stories&quot;;
+import * as SelectStories from &quot;../../../../../libs/shared/ui/src/select.stories&quot;;
+import * as SeparatorStories from &quot;../../../../../libs/shared/ui/src/separator.stories&quot;;
+import * as SheetStories from &quot;../../../../../libs/shared/ui/src/sheet.stories&quot;;
+import * as SkeletonStories from &quot;../../../../../libs/shared/ui/src/skeleton.stories&quot;;
+import * as SwitchStories from &quot;../../../../../libs/shared/ui/src/switch.stories&quot;;
+import * as TabsStories from &quot;../../../../../libs/shared/ui/src/tabs.stories&quot;;
+import * as TextareaStories from &quot;../../../../../libs/shared/ui/src/textarea.stories&quot;;
+import * as ToastStories from &quot;../../../../../libs/shared/ui/src/toast.stories&quot;;
+import * as TooltipStories from &quot;../../../../../libs/shared/ui/src/tooltip.stories&quot;;
+
+{/* Composite components (14) */}
+import * as BreadcrumbStories from &quot;../../../../../libs/shared/ui-composite/src/Breadcrumb.stories&quot;;
+import * as EventCardStories from &quot;../../../../../libs/shared/ui-composite/src/EventCard.stories&quot;;
+import * as EventListRowStories from &quot;../../../../../libs/shared/ui-composite/src/EventListRow.stories&quot;;
+import * as EventStatusBadgeStories from &quot;../../../../../libs/shared/ui-composite/src/EventStatusBadge.stories&quot;;
+import * as EventTimelineStories from &quot;../../../../../libs/shared/ui-composite/src/EventTimeline.stories&quot;;
+import * as FooterStories from &quot;../../../../../libs/shared/ui-composite/src/Footer.stories&quot;;
+import * as GroupCardStories from &quot;../../../../../libs/shared/ui-composite/src/GroupCard.stories&quot;;
+import * as HeaderStories from &quot;../../../../../libs/shared/ui-composite/src/Header.stories&quot;;
+import * as HostAvatarStackStories from &quot;../../../../../libs/shared/ui-composite/src/HostAvatarStack.stories&quot;;
+import * as MiniCalendarStories from &quot;../../../../../libs/shared/ui-composite/src/MiniCalendar.stories&quot;;
+import * as PaginationStories from &quot;../../../../../libs/shared/ui-composite/src/Pagination.stories&quot;;
+import * as ParticipantBadgeStories from &quot;../../../../../libs/shared/ui-composite/src/ParticipantBadge.stories&quot;;
+import * as SearchBoxStories from &quot;../../../../../libs/shared/ui-composite/src/SearchBox.stories&quot;;
+import * as TagPillStories from &quot;../../../../../libs/shared/ui-composite/src/TagPill.stories&quot;;
+
+&lt;Meta title=&quot;Design System/Gallery&quot; /&gt;
+
+&lt;Title&gt;Gallery — 全コンポーネント一覧&lt;/Title&gt;
+&lt;Subtitle&gt;UI primitives 24 + Composite components 14 を 1 ページに実物レンダリング&lt;/Subtitle&gt;
+
+`tech-event` の全コンポーネントの代表 Story を 1 ページに並べた視覚カタログです。
+各プレビューは対応する Story を `&lt;Canvas of={...}&gt;` で埋め込んでいるため、Story を更新すれば
+ここも自動で同期します。個別の variant / props / a11y は各コンポーネントの **Docs** ページを参照してください。
+
+&gt; このページは横断ドキュメント (`apps/web/src/stories/design-system/Gallery.mdx`) です。
+&gt; テーマ切替 (light / dark / high-contrast) はツールバーの 🎨 から、全コンポーネントへ一括適用できます。
+
+---
+
+## UI primitives (24)
+
+`libs/shared/ui/` — Radix UI + CVA ベースの汎用部品。
+
+### Avatar
+&lt;Canvas of={AvatarStories.WithImage} /&gt;
+
+### Badge
+&lt;Canvas of={BadgeStories.Default} /&gt;
+
+### Button
+&lt;Canvas of={ButtonStories.Default} /&gt;
+
+### Card
+&lt;Canvas of={CardStories.Basic} /&gt;
+
+### Checkbox
+&lt;Canvas of={CheckboxStories.Default} /&gt;
+
+### Dialog
+&lt;Canvas of={DialogStories.Default} /&gt;
+
+### DropdownMenu
+&lt;Canvas of={DropdownMenuStories.Default} /&gt;
+
+### EmptyState
+&lt;Canvas of={EmptyStateStories.Default} /&gt;
+
+### ErrorState
+&lt;Canvas of={ErrorStateStories.Default} /&gt;
+
+### Form
+&lt;Canvas of={FormStories.WithValidation} /&gt;
+
+### Input
+&lt;Canvas of={InputStories.Default} /&gt;
+
+### Label
+&lt;Canvas of={LabelStories.Default} /&gt;
+
+### LoadingState
+&lt;Canvas of={LoadingStateStories.Spinner} /&gt;
+
+### Popover
+&lt;Canvas of={PopoverStories.Default} /&gt;
+
+### RadioGroup
+&lt;Canvas of={RadioGroupStories.Default} /&gt;
+
+### Select
+&lt;Canvas of={SelectStories.Default} /&gt;
+
+### Separator
+&lt;Canvas of={SeparatorStories.Horizontal} /&gt;
+
+### Sheet
+&lt;Canvas of={SheetStories.Right} /&gt;
+
+### Skeleton
+&lt;Canvas of={SkeletonStories.Default} /&gt;
+
+### Switch
+&lt;Canvas of={SwitchStories.Default} /&gt;
+
+### Tabs
+&lt;Canvas of={TabsStories.Default} /&gt;
+
+### Textarea
+&lt;Canvas of={TextareaStories.Default} /&gt;
+
+### Toast
+&lt;Canvas of={ToastStories.Default} /&gt;
+
+### Tooltip
+&lt;Canvas of={TooltipStories.Default} /&gt;
+
+---
+
+## Composite components (14)
+
+`libs/shared/ui-composite/` — primitives を組み合わせたドメイン特化部品。
+
+### Breadcrumb
+&lt;Canvas of={BreadcrumbStories.Default} /&gt;
+
+### EventCard
+&lt;Canvas of={EventCardStories.ListDefault} /&gt;
+
+### EventListRow
+&lt;Canvas of={EventListRowStories.Default} /&gt;
+
+### EventStatusBadge
+&lt;Canvas of={EventStatusBadgeStories.Default} /&gt;
+
+### EventTimeline
+&lt;Canvas of={EventTimelineStories.Default} /&gt;
+
+### Footer
+&lt;Canvas of={FooterStories.Default} /&gt;
+
+### GroupCard
+&lt;Canvas of={GroupCardStories.Standard} /&gt;
+
+### Header
+&lt;Canvas of={HeaderStories.LoggedOut} /&gt;
+
+### HostAvatarStack
+&lt;Canvas of={HostAvatarStackStories.Pair} /&gt;
+
+### MiniCalendar
+&lt;Canvas of={MiniCalendarStories.NoEvents} /&gt;
+
+### Pagination
+&lt;Canvas of={PaginationStories.Default} /&gt;
+
+### ParticipantBadge
+&lt;Canvas of={ParticipantBadgeStories.Default} /&gt;
+
+### SearchBox
+&lt;Canvas of={SearchBoxStories.Header} /&gt;
+
+### TagPill
+&lt;Canvas of={TagPillStories.Default} /&gt;
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
       <h2><span class="status-dot dot-ok"></span> Design System/High Contrast</h2>
       <div class="badges">
         
-        <label for="doc-19-design-system-high-contrast-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-20-design-system-high-contrast-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/HighContrast.mdx">design-system-high-contrast--docs · ./src/stories/design-system/HighContrast.mdx</div>
@@ -15830,7 +16041,7 @@ variant 選定ガイド:
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-19-design-system-high-contrast-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-20-design-system-high-contrast-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -16086,7 +16297,7 @@ pnpm tokens:validate
       <h2><span class="status-dot dot-ok"></span> Design System/Icons</h2>
       <div class="badges">
         
-        <label for="doc-20-design-system-icons-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-21-design-system-icons-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Icons.mdx">design-system-icons--docs · ./src/stories/design-system/Icons.mdx</div>
@@ -16095,7 +16306,7 @@ pnpm tokens:validate
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-20-design-system-icons-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-21-design-system-icons-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -16605,7 +16816,7 @@ import { Calendar } from &quot;lucide-react&quot;;
       <h2><span class="status-dot dot-ok"></span> Design System/Introduction</h2>
       <div class="badges">
         
-        <label for="doc-21-design-system-introduction-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-22-design-system-introduction-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Introduction.mdx">design-system-introduction--docs · ./src/stories/design-system/Introduction.mdx</div>
@@ -16614,7 +16825,7 @@ import { Calendar } from &quot;lucide-react&quot;;
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-21-design-system-introduction-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-22-design-system-introduction-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -16746,7 +16957,7 @@ import { Calendar } from &quot;lucide-react&quot;;
       <h2><span class="status-dot dot-ok"></span> Design System/Motion</h2>
       <div class="badges">
         
-        <label for="doc-22-design-system-motion-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-23-design-system-motion-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Motion.mdx">design-system-motion--docs · ./src/stories/design-system/Motion.mdx</div>
@@ -16755,7 +16966,7 @@ import { Calendar } from &quot;lucide-react&quot;;
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-22-design-system-motion-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-23-design-system-motion-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17089,7 +17300,7 @@ className={cn(
       <h2><span class="status-dot dot-ok"></span> Design System/Print</h2>
       <div class="badges">
         
-        <label for="doc-23-design-system-print-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-24-design-system-print-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Print.mdx">design-system-print--docs · ./src/stories/design-system/Print.mdx</div>
@@ -17098,7 +17309,7 @@ className={cn(
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-23-design-system-print-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-24-design-system-print-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17206,7 +17417,7 @@ QR コードやステータスバッジは「色がついていてこそ意味�
       <h2><span class="status-dot dot-ok"></span> Design System/RTL</h2>
       <div class="badges">
         
-        <label for="doc-24-design-system-rtl-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-25-design-system-rtl-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/RTL.mdx">design-system-rtl--docs · ./src/stories/design-system/RTL.mdx</div>
@@ -17215,7 +17426,7 @@ QR コードやステータスバッジは「色がついていてこそ意味�
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-24-design-system-rtl-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-25-design-system-rtl-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17321,7 +17532,7 @@ opt-in 方式なので、付け忘れによる「アイコンが逆向き」を�
       <h2><span class="status-dot dot-ok"></span> Design System/Radius, Shadow, Z-index</h2>
       <div class="badges">
         
-        <label for="doc-25-design-system-radius-shadow-z-index-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-26-design-system-radius-shadow-z-index-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Radius.mdx">design-system-radius-shadow-z-index--docs · ./src/stories/design-system/Radius.mdx</div>
@@ -17330,7 +17541,7 @@ opt-in 方式なので、付け忘れによる「アイコンが逆向き」を�
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-25-design-system-radius-shadow-z-index-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-26-design-system-radius-shadow-z-index-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17538,7 +17749,7 @@ light/dark で値を切り替える `elevation-*` alias を経由するのが推
       <h2><span class="status-dot dot-ok"></span> Design System/Spacing</h2>
       <div class="badges">
         
-        <label for="doc-26-design-system-spacing-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-27-design-system-spacing-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Spacing.mdx">design-system-spacing--docs · ./src/stories/design-system/Spacing.mdx</div>
@@ -17547,7 +17758,7 @@ light/dark で値を切り替える `elevation-*` alias を経由するのが推
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-26-design-system-spacing-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-27-design-system-spacing-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17737,7 +17948,7 @@ flex / grid の `gap-*` を比較:
       <h2><span class="status-dot dot-ok"></span> Design System/Theme Builder</h2>
       <div class="badges">
         
-        <label for="doc-27-design-system-theme-builder-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-28-design-system-theme-builder-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/ThemeBuilder.mdx">design-system-theme-builder--docs · ./src/stories/design-system/ThemeBuilder.mdx</div>
@@ -17746,7 +17957,7 @@ flex / grid の `gap-*` を比較:
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-27-design-system-theme-builder-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-28-design-system-theme-builder-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17839,7 +18050,7 @@ style={{ &quot;--brand-orange&quot;: …, &quot;--radius-md&quot;: … }} を [d
       <h2><span class="status-dot dot-ok"></span> Design System/Toast</h2>
       <div class="badges">
         
-        <label for="doc-28-design-system-toast-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-29-design-system-toast-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Toast.mdx">design-system-toast--docs · ./src/stories/design-system/Toast.mdx</div>
@@ -17848,7 +18059,7 @@ style={{ &quot;--brand-orange&quot;: …, &quot;--radius-md&quot;: … }} を [d
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-28-design-system-toast-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-29-design-system-toast-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -17992,7 +18203,7 @@ toast.error(&quot;送信に失敗しました。時間をおいて再度お試�
       <h2><span class="status-dot dot-ok"></span> Design System/Tokens</h2>
       <div class="badges">
         
-        <label for="doc-29-design-system-tokens-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-30-design-system-tokens-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Tokens.mdx">design-system-tokens--docs · ./src/stories/design-system/Tokens.mdx</div>
@@ -18001,7 +18212,7 @@ toast.error(&quot;送信に失敗しました。時間をおいて再度お試�
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-29-design-system-tokens-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-30-design-system-tokens-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -18227,7 +18438,7 @@ semantic alias は `src/styles/themes/light.css` (デフォルト) と `dark.css
       <h2><span class="status-dot dot-ok"></span> Design System/Typography</h2>
       <div class="badges">
         
-        <label for="doc-30-design-system-typography-docs-content" class="badge ok as-toggle">view content</label>
+        <label for="doc-31-design-system-typography-docs-content" class="badge ok as-toggle">view content</label>
       </div>
     </div>
     <div class="meta" title="./src/stories/design-system/Typography.mdx">design-system-typography--docs · ./src/stories/design-system/Typography.mdx</div>
@@ -18236,7 +18447,7 @@ semantic alias は `src/styles/themes/light.css` (デフォルト) と `dark.css
 
   <!-- Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="doc-30-design-system-typography-docs-content" class="tg tg-content" type="checkbox" hidden />
+  <input id="doc-31-design-system-typography-docs-content" class="tg tg-content" type="checkbox" hidden />
 
   <div class="panels">
     
