@@ -276,6 +276,90 @@
         "type": "color"
       }
     },
+    "purple": {
+      "50": {
+        "value": "#faf5ff",
+        "type": "color"
+      },
+      "100": {
+        "value": "#f3e8ff",
+        "type": "color"
+      },
+      "200": {
+        "value": "#e9d5ff",
+        "type": "color"
+      },
+      "300": {
+        "value": "#d8b4fe",
+        "type": "color"
+      },
+      "400": {
+        "value": "#c084fc",
+        "type": "color"
+      },
+      "500": {
+        "value": "#a855f7",
+        "type": "color"
+      },
+      "600": {
+        "value": "#9333ea",
+        "type": "color"
+      },
+      "700": {
+        "value": "#7e22ce",
+        "type": "color"
+      },
+      "800": {
+        "value": "#6b21a8",
+        "type": "color"
+      },
+      "900": {
+        "value": "#581c87",
+        "type": "color"
+      }
+    },
+    "pink": {
+      "50": {
+        "value": "#fdf2f8",
+        "type": "color"
+      },
+      "100": {
+        "value": "#fce7f3",
+        "type": "color"
+      },
+      "200": {
+        "value": "#fbcfe8",
+        "type": "color"
+      },
+      "300": {
+        "value": "#f9a8d4",
+        "type": "color"
+      },
+      "400": {
+        "value": "#f472b6",
+        "type": "color"
+      },
+      "500": {
+        "value": "#ec4899",
+        "type": "color"
+      },
+      "600": {
+        "value": "#db2777",
+        "type": "color"
+      },
+      "700": {
+        "value": "#be185d",
+        "type": "color"
+      },
+      "800": {
+        "value": "#9d174d",
+        "type": "color"
+      },
+      "900": {
+        "value": "#831843",
+        "type": "color"
+      }
+    },
     "linkBlue": {
       "200": {
         "value": "#7dc4e0",
@@ -454,6 +538,10 @@
       "value": "16px",
       "type": "borderRadius"
     },
+    "3xl": {
+      "value": "24px",
+      "type": "borderRadius"
+    },
     "full": {
       "value": "9999px",
       "type": "borderRadius"
@@ -474,6 +562,14 @@
     },
     "xl": {
       "value": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+      "type": "boxShadow"
+    },
+    "soft-md": {
+      "value": "0 8px 24px -4px rgb(0 0 0 / 0.08)",
+      "type": "boxShadow"
+    },
+    "soft-lg": {
+      "value": "0 20px 48px -12px rgb(0 0 0 / 0.12)",
       "type": "boxShadow"
     }
   },
@@ -512,6 +608,10 @@
       "value": "720px",
       "type": "other"
     }
+  },
+  "direction": {
+    "value": "ltr",
+    "type": "other"
   },
   "borderWidth": {
     "0": {

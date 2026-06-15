@@ -8,6 +8,28 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-15 — tokens:validate の drift を解消 (Luma トークンの namespace + JSON 同期)
+
+### Fixed
+- **`tokens` workflow (`pnpm tokens:validate`) が 109 件のエラーで fail** していた状態を解消。
+  commit `595d1d4` (Luma 寄せトークン追加: purple/pink scale + chart + shadow-soft +
+  elevation-soft + accent) が CSS にトークンを追加した際、(1) namespace 許可リストの更新、
+  (2) `tokens/*.json` への同期 が漏れており、さらに `tokens.yml` の **stale paths** で
+  CI が当該 commit を検出できていなかった。
+  - `apps/web/scripts/validate-tokens.ts` の `NAMESPACE_PATTERNS` に
+    `purple` / `pink` (color)、`--accent-(purple|pink)(-soft|-strong)?`、`--chart-\d+`、
+    `--direction` を追加し、`--shadow-*` / `--elevation-*` を複合段階 (`soft-md` 等) 許容へ拡張。
+  - `pnpm tokens` で CSS → JSON を再同期 (primitive +purple/pink、semantic light/dark に
+    accent / chart を反映)。
+  - 検証: `pnpm tokens:validate` → **OK (primitive 159 + semantic 33 + light 54 + dark 54、警告 0)**。
+
+### Changed
+- **`tokens.yml` の pull_request paths を Nx 構造に更新** — 旧 `src/styles/**` / `tokens/**`
+  (ルート基準) は Nx 移行後の実体 (`apps/web/src/styles/**` / `libs/shared/util-design-tokens/**`)
+  と一致せず、トークン変更時に検証が走らなくなっていた (drift を見逃した原因)。実構造に合わせて更新。
+
+---
+
 ## [Unreleased] — 2026-06-12 — seed の pre-acceptance fixture を確定化 (register-states flaky 解消)
 
 ### Fixed

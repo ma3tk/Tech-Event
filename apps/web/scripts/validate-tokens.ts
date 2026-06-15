@@ -189,13 +189,14 @@ function pathToCssVar(segs: string[]): string {
  * ============================================================ */
 
 const NAMESPACE_PATTERNS: RegExp[] = [
-  /^--color-(?:white|black|gray|orange|red|green|blue|yellow|link-blue)-?[a-z0-9-]*$/,
+  /^--color-(?:white|black|gray|orange|red|green|blue|yellow|purple|pink|link-blue)-?[a-z0-9-]*$/,
   /^--font-(?:size|weight)-[a-z0-9-]+$/,
   /^--line-height-[a-z]+$/,
   /^--spacing-\d+$/,
   /^--radius-[a-z0-9-]+$/,
-  /^--shadow-[a-z]+$/,
-  /^--elevation-[a-z]+$/,
+  // shadow / elevation は Luma 寄せで soft-md / soft-lg / soft-strong 等の複合段階を持つ。
+  /^--shadow-[a-z0-9-]+$/,
+  /^--elevation-[a-z0-9-]+$/,
   /^--z-[a-z]+$/,
   /^--border-width-\d+$/,
   /^--duration-[a-z]+$/,
@@ -207,6 +208,12 @@ const NAMESPACE_PATTERNS: RegExp[] = [
   /^--link(?:-hover)?$/,
   /^--status-[a-z]+-(?:bg|fg)$/,
   /^--focus-ring-[a-z]+$/,
+  // Luma 寄せ accent (purple / pink) — semantic theme で使用。
+  /^--accent-(?:purple|pink)(?:-(?:soft|strong))?$/,
+  // データ可視化用カラースケール (chart-1 .. chart-N)。
+  /^--chart-\d+$/,
+  // RTL 方向トークン (--direction: ltr | rtl)。
+  /^--direction$/,
   // 既存の semantic 単独名
   /^--(?:background|foreground|surface|surface-muted|muted|muted-foreground|border|border-strong)$/,
 ];
