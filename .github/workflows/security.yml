@@ -55,13 +55,13 @@ jobs:
     # → ベース動作だけ実行 (job 自体は走らせる)
     if: (github.actor != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # baseline diff のため少し深めに fetch (PR の base..head 確実取得)
           fetch-depth: ${{ github.event_name == 'pull_request' && 100 || 1 }}
 
       - name: Set up Python (for semgrep)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -123,14 +123,14 @@ jobs:
 
       - name: Upload SARIF to Code Scanning
         if: ${{ !cancelled() }}
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
           category: semgrep
 
       - name: Upload Semgrep SARIF artifact
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: semgrep-sarif
           path: semgrep.sarif
@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # full history が必要 (PR 差分も base..head のため base sha を fetch する必要あり)
           fetch-depth: 0
@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload gitleaks SARIF artifact
         if: ${{ !cancelled() && hashFiles('results.sarif') != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gitleaks-sarif
           path: results.sarif
@@ -175,7 +175,7 @@ jobs:
 
       - name: Upload SARIF to Code Scanning
         if: ${{ !cancelled() && hashFiles('results.sarif') != '' }}
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
           category: gitleaks

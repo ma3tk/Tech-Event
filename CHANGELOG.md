@@ -8,6 +8,24 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-15 — CI Actions を Node 24 対応の最新メジャーへ更新
+
+### Changed
+- **GitHub Actions を Node.js 24 ネイティブ対応のメジャーへ一括更新** — Node.js 20 ランタイムの
+  非推奨 (2026-06-16 に Node 24 強制移行 / 2026-09-16 に Node 20 削除) に対応。全 workflow を更新:
+  - `actions/checkout` v4 → **v6**
+  - `actions/setup-node` v4 → **v6**
+  - `actions/upload-artifact` v4 → **v7**
+  - `pnpm/action-setup` v4 → **v6** (`version: 9` 入力は維持、package.json に packageManager 欄が
+    無いため競合なし)
+  - `actions/setup-python` v5 → **v6**
+  - `github/codeql-action/upload-sarif` v3 → **v4**
+  - `gitleaks/gitleaks-action@v2` / `peaceiris/actions-gh-pages@v4` は最新メジャーのため据え置き。
+  - 検証: PR の ci / security に加え、`e2e:full` ラベル + storybook / tokens / lighthouse を
+    workflow_dispatch で実行し全 workflow の動作を確認。
+
+---
+
 ## [Unreleased] — 2026-06-15 — tokens:validate の drift を解消 (Luma トークンの namespace + JSON 同期)
 
 ### Fixed
