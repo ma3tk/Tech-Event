@@ -58,6 +58,13 @@ tech-event の主要マイルストーン履歴。
   - `waitForTimeout` 新規導入ゼロ。検証: 並列フルラン再現条件含め desktop/mobile で最低 5
     (実質 10) 連続 pass、`tsc --noEmit` クリーン。
 
+### Changed
+- **CI の Playwright workers を 4 → 2 に削減** — GitHub の 2 コア runner で workers=4 は過剰
+  並列となり、dev モードの on-demand compile 遅延下での hydration/Server Action タイミング
+  race や、desktop/mobile 2 project が同一 dev.db を共有する mutating テスト (stripe-payment /
+  calendar 等) の同時衝突を誘発し、run ごとに別テストが flaky 化する温床になっていた。
+  workers=2 は並列性 (~30 分、timeout 45 分以内) を保ちつつ並列起因の競合を大幅に減らす。
+
 ---
 
 ## [Unreleased] — 2026-06-15 — CI Actions を Node 24 対応の最新メジャーへ更新
