@@ -2,6 +2,7 @@ import Link from "next/link";
 import { User } from "lucide-react";
 import { cn } from "@tech-event/shared-util-cn";
 import { Avatar, AvatarImage, AvatarFallback } from "@tech-event/shared-ui";
+import { tokyoYmdSlash } from "./tokyo-date";
 import {
   Tooltip,
   TooltipContent,
@@ -179,5 +180,6 @@ export default function ParticipantBadge(props: ParticipantBadgeProps) {
 function formatAppliedAt(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")} 申込`;
+  // 表示タイムゾーン (JST) 固定で整形し SSR/client の hydration mismatch を防ぐ。
+  return `${tokyoYmdSlash(d)} 申込`;
 }

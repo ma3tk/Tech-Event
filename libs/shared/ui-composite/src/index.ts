@@ -9,6 +9,7 @@
  * `forms/ActionForm` のような apps/web 固有の hook に依存するものは含まれない
  * (apps/web 側に残してある)。
  */
+export * from "./tokyo-date";
 export * from "./Breadcrumb";
 export * from "./EventCard";
 export * from "./EventCardCompact";

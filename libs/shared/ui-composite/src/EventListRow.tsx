@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Globe, Users, Calendar } from "lucide-react";
 import { cn } from "@tech-event/shared-util-cn";
+import { tokyoYmdDowHm } from "./tokyo-date";
 import type { EventCardData, EventLocation } from "./EventCard";
 import EventStatusBadge from "./EventStatusBadge";
 import { Badge } from "@tech-event/shared-ui";
@@ -217,12 +218,11 @@ function RankBadge({ rank }: { rank: number }) {
 function FormattedDate({ iso }: { iso: string }) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  const dow = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
-  const fmt =
-    `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/` +
-    `${String(d.getDate()).padStart(2, "0")} (${dow}) ` +
-    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  return <time dateTime={iso}>{fmt}</time>;
+  // IMPORTANT: `getHours()` 等のローカル時刻依存の整形は、SSR (server TZ) と
+  // client (ブラウザ TZ) が食い違うと hydration mismatch を起こす
+  // (CI: server=UTC / Playwright ブラウザ=Asia/Tokyo)。
+  // 固定タイムゾーン (JST) で整形すれば SSR / client の出力が一致する。
+  return <time dateTime={iso}>{tokyoYmdDowHm(d)}</time>;
 }
 
 function LocationIcon({ location }: { location: EventLocation }) {

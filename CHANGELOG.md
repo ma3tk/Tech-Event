@@ -8,6 +8,65 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-15 — 日付表示を JST 固定化し TZ hydration mismatch を解消 (bookmarks-mobile CI flake の根治)
+
+### Fixed
+- **TZ 依存の日付整形による hydration mismatch を解消** — `Date.prototype.getHours()` /
+  `getFullYear()` 等のローカル時刻メソッドや `timeZone` 未指定の `Intl.DateTimeFormat` で
+  日付を整形していたため、SSR (サーバ TZ) と client (ブラウザ TZ) がズレると整形結果が
+  食い違い React hydration mismatch → tree 再生成 → ActionForm submit ボタンの dead-click が発生。
+  CI では server=UTC / Playwright ブラウザ=`Asia/Tokyo` で 9 時間ズレて顕在化し、
+  `bookmarks.spec.ts:75` (mobile) が CI 限定で hard fail していた (ローカル darwin は server も
+  JST のため再現せず)。**本番でも UTC サーバなら日付が誤表示される production バグ**でもあった。
+  - 新規 `libs/shared/ui-composite/src/tokyo-date.ts` — `Asia/Tokyo` 固定の `Intl.DateTimeFormat`
+    で日付フィールドを取り出す hydration-safe ヘルパ群 (`tokyoYmdDowHm` / `tokyoYmdSlash` /
+    `tokyoHm` / `tokyoMonthDay` / `tokyoWeekday`)。深夜 0 時を "24" と返す実装差も正規化。
+  - `EventCard` / `EventListRow` / `EventStickyCTA` / `ParticipantBadge` / `RecentlyViewedEvents` /
+    `EventTimeline` / `MiniCalendar` のローカル時刻整形を共有ヘルパへ置換。
+  - `libs/shared/util-cn/src/utils.ts` の `formatYmd` / `formatHm` / `formatEventDate(Short)` を JST 固定に。
+  - `libs/web/feature-i18n/src/lib/date.ts` の 4 つの `Intl.DateTimeFormat` に `timeZone: "Asia/Tokyo"`、
+    `formatEventDateRange` の sameDay 判定も JST 固定 (`/event/[id]` 参加者一覧の主犯)。
+  - `apps/web/src/app/bookmarks/page.tsx` の `formatRelative(new Date())` (now 基準の相対時刻で
+    本質的に SSR/client で揺れる) は `suppressHydrationWarning` で tree 再生成のみ防止。
+  - 表示文字列の変化なし (JST 環境では従来と同一)。UTC 環境では誤った UTC 表示が正しい JST 表示へ修正。
+  - 検証: `TZ=UTC` (CI 相当) で `bookmarks.spec.ts` を mobile/desktop 各 5 連続 pass、テスト経路全
+    ページで hydration error 0、typecheck / eslint クリーン。VRT baseline はバイト同一 (darwin) で波及なし。
+
+---
+
+## [Unreleased] — 2026-06-15 — e2e flaky 第2弾を安定化 (hydration dead-click / SSR fallback flush)
+
+### Fixed
+- **残存 flaky 4 件 (approval-flow:69 / bookmarks:75 / bookmarks:80 / loading-states:75) を解消**。
+  原因は 2 系統:
+  - **hydration 中の dead-click** (bookmarks / approval-flow) — bookmark / 参加リクエスト /
+    承認 / イベント編集保存ボタンは `ActionForm` ("use client") の `<form action={serverAction}>`
+    submit。SSR 直後 (hydration 前) はネイティブ POST、hydration 後は React の `formAction`
+    という progressive enhancement 構造のため、`domcontentloaded` 直後の click が form 差し替えの
+    瞬間に当たると握り潰され、状態変化が起きず timeout (並列フルランで発生率上昇)。
+  - **cold compile での SSR fallback flush 漏れ** (loading-states) — dev サーバの on-demand
+    compile で初回 hit が cold だと、streaming SSR が `loading.tsx` (Suspense fallback) を
+    flush し切る前のレスポンスを返し、skeleton needle が欠落。
+- 対応:
+  - 新規ヘルパー `apps/web-e2e/src/_helpers/actions.ts` の `clickUntil()` —
+    「click → outcome assert」を `expect(...).toPass()` でリトライし dead-click を吸収
+    (trigger が outcome 成立で detach するケースは再 click せず再 assert)。
+  - `bookmarks` / `approval-flow` の form submit を `clickUntil` 化、`clearAllBookmarks` の
+    timeout 握り潰し `Promise.race` を outcome ベースに是正、checkbox 操作前に `toBeEnabled()`。
+  - `loading-states` に `expectSsrSkeleton()` (`expect.poll` でフレッシュ fetch を繰り返し
+    compile 確定後の安定 flush を待つ) を導入し 4 テストを統一。残存 `networkidle` も撤去。
+  - `waitForTimeout` 新規導入ゼロ。検証: 並列フルラン再現条件含め desktop/mobile で最低 5
+    (実質 10) 連続 pass、`tsc --noEmit` クリーン。
+
+### Changed
+- **CI の Playwright workers を 4 → 2 に削減** — GitHub の 2 コア runner で workers=4 は過剰
+  並列となり、dev モードの on-demand compile 遅延下での hydration/Server Action タイミング
+  race や、desktop/mobile 2 project が同一 dev.db を共有する mutating テスト (stripe-payment /
+  calendar 等) の同時衝突を誘発し、run ごとに別テストが flaky 化する温床になっていた。
+  workers=2 は並列性 (~30 分、timeout 45 分以内) を保ちつつ並列起因の競合を大幅に減らす。
+
+---
+
 ## [Unreleased] — 2026-06-15 — CI Actions を Node 24 対応の最新メジャーへ更新
 
 ### Changed

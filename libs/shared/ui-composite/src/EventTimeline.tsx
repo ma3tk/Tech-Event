@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { Calendar, Globe, MapPin, Users } from "lucide-react";
 import { cn } from "@tech-event/shared-util-cn";
+import { tokyoDateParts } from "./tokyo-date";
 import EventStatusBadge from "./EventStatusBadge";
 import type { EventCardData, EventLocation } from "./EventCard";
 import { Avatar, AvatarImage, AvatarFallback } from "@tech-event/shared-ui";
@@ -146,8 +147,11 @@ function groupEventsByMonth(events: EventCardData[]): MonthGroup[] {
   for (const ev of events) {
     const d = new Date(ev.startedAt);
     if (Number.isNaN(d.getTime())) continue;
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
+    // 月グルーピングも表示タイムゾーン (JST) 固定で行い、SSR/client の TZ 差で
+    // 別の月に分かれて hydration mismatch を起こさないようにする。
+    const p = tokyoDateParts(d);
+    const y = p.year;
+    const m = p.month;
     const key = `${y}-${String(m).padStart(2, "0")}`;
     const label = `${y}年${String(m).padStart(2, "0")}月`;
 
@@ -173,10 +177,12 @@ function groupEventsByMonth(events: EventCardData[]): MonthGroup[] {
 function TimelineRow({ event }: { event: EventCardData }) {
   const href = event.href ?? `/event/${event.id}`;
   const d = new Date(event.startedAt);
-  const day = d.getDate();
-  const dow = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
+  // 表示タイムゾーン (JST) 固定で日付・時刻を分解 (hydration safe)。
+  const dp = tokyoDateParts(d);
+  const day = dp.day;
+  const dow = ["日", "月", "火", "水", "木", "金", "土"][dp.weekday];
+  const hh = String(dp.hour).padStart(2, "0");
+  const mm = String(dp.minute).padStart(2, "0");
   const groupIcon = event.group.iconUrl;
   const groupUrl = event.group.url ?? `/group/${event.group.id}`;
 

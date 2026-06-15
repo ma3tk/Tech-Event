@@ -16,13 +16,19 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  // CI で workers=1 にすると 328 tests が直列で 30 分 timeout に達するため 4 並列にする。
+  // CI workers は 2。
+  // - workers=1 は 328 tests 直列で 30 分 timeout に達するため不可。
+  // - workers=4 は GitHub の 2 コア runner では過剰並列となり、dev モードの
+  //   on-demand compile 遅延下で hydration/Server Action のタイミング race や、
+  //   desktop/mobile 2 project が同一 dev.db を共有する mutating テスト
+  //   (stripe-payment / calendar 等) の同時衝突を誘発し flaky の温床になっていた。
+  // - workers=2 は十分な並列性 (~30 分、timeout 45 分以内) を保ちつつ
+  //   並列起因の競合を大幅に減らす中庸点。
   // - serial mode のテスト群 (event-theme / lottery / stripe-payment 等) は
-  //   `test.describe.configure({ mode: "serial" })` 内で逐次化されており、
-  //   別 worker で別 spec が並列実行されても衝突しない。
+  //   `test.describe.configure({ mode: "serial" })` 内で逐次化されている。
   // - DB 書き込み test は固定 event id を分けて衝突を避けている設計
   //   (global-setup.ts のコメント参照)。
-  workers: process.env.CI ? 4 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   timeout: 60_000,
   expect: {

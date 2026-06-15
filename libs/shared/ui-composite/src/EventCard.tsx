@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Globe, Users, Calendar } from "lucide-react";
 import { cn } from "@tech-event/shared-util-cn";
+import { tokyoDateParts, tokyoYmdDowHm } from "./tokyo-date";
 import EventStatusBadge, { type EventStatus } from "./EventStatusBadge";
 import TagPill from "./TagPill";
 import { Card } from "@tech-event/shared-ui";
@@ -488,13 +489,16 @@ function Thumbnail({
 function DateBadge({ dateIso }: { dateIso: string }) {
   const d = new Date(dateIso);
   if (Number.isNaN(d.getTime())) return null;
+  // ローカル時刻依存の getMonth()/getDate() は SSR/client の TZ 差で hydration
+  // mismatch を起こすため、表示タイムゾーン (JST) 固定の分解を使う。
+  const p = tokyoDateParts(d);
   return (
     <time
       dateTime={dateIso}
       className="flex flex-col items-center rounded bg-surface/95 px-2 py-1 text-xs font-bold text-brand-orange shadow-sm"
     >
-      <span className="text-[10px] leading-tight">{d.getMonth() + 1}月</span>
-      <span className="text-base leading-tight">{d.getDate()}</span>
+      <span className="text-[10px] leading-tight">{p.month}月</span>
+      <span className="text-base leading-tight">{p.day}</span>
     </time>
   );
 }
@@ -502,12 +506,9 @@ function DateBadge({ dateIso }: { dateIso: string }) {
 function FormattedDate({ iso }: { iso: string }) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  const dow = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
-  const fmt =
-    `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/` +
-    `${String(d.getDate()).padStart(2, "0")} (${dow}) ` +
-    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  return <time dateTime={iso}>{fmt}</time>;
+  // ローカル時刻依存の整形は SSR/client の TZ 差で hydration mismatch を
+  // 起こすため、表示タイムゾーン (JST) 固定で整形する。
+  return <time dateTime={iso}>{tokyoYmdDowHm(d)}</time>;
 }
 
 function LocationIcon({ location }: { location: EventLocation }) {

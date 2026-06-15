@@ -11,6 +11,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { devLoginLegacy as devLogin } from "./_helpers/auth";
+import { clickUntil } from "./_helpers/actions";
 
 // 並列実行中に fast_moon_169 を使う他テスト (comment-bookmark など) と
 // 同一ユーザーの Bookmark 状態を奪い合うと不安定になるので、別シードユーザー
@@ -30,16 +31,17 @@ async function ensureBookmarked(
   await page.goto(`/event/${eventId}`, { waitUntil: "domcontentloaded" });
   const btn = page.getByTestId("bookmark-button");
   await expect(btn).toBeVisible();
-  if ((await btn.getAttribute("data-bookmarked")) !== "true") {
-    await btn.click();
-    // クリック後のサーバアクション完了は、状態が確定するまで toHaveAttribute で待機。
-    // (`networkidle` は Next dev サーバの HMR WS で永遠に待つ場合があるため避ける)
+  if ((await btn.getAttribute("data-bookmarked")) === "true") return;
+  // bookmark-button は ActionForm ("use client") の submit ボタン。
+  // hydration 途中の click は dead-click になり得るため clickUntil でリトライしつつ
+  // data-bookmarked が "true" に確定するまで待つ
+  // (`networkidle` は Next dev サーバの HMR WS で永遠に待つため避ける)。
+  await clickUntil(btn, async () => {
     await expect(page.getByTestId("bookmark-button")).toHaveAttribute(
       "data-bookmarked",
       "true",
-      { timeout: 15_000 },
     );
-  }
+  });
 }
 
 async function clearAllBookmarks(
@@ -50,20 +52,13 @@ async function clearAllBookmarks(
     const removeBtnLocator = page.getByTestId("bookmarks-remove");
     const count = await removeBtnLocator.count();
     if (count === 0) return;
-    await removeBtnLocator.first().click();
-    // 削除直後はサーバアクション → revalidate → 再描画。bookmark-item の総数が
-    // 減るか、空状態の表示に切り替わるまで待つ。
-    await Promise.race([
-      page
-        .getByTestId("bookmarks-remove")
-        .nth(count - 1)
-        .waitFor({ state: "detached", timeout: 10_000 })
-        .catch(() => undefined),
-      page
-        .getByTestId("bookmarks-empty")
-        .waitFor({ state: "visible", timeout: 10_000 })
-        .catch(() => undefined),
-    ]);
+    // bookmarks-remove も ActionForm の submit。hydration race を吸収するため
+    // clickUntil で「bookmark-item の件数が count 未満になる」を outcome として待つ
+    // (= 削除が確実に DOM に反映されるまでリトライ)。最後の 1 件削除時は空状態でも OK。
+    await clickUntil(removeBtnLocator.first(), async () => {
+      const remaining = await page.getByTestId("bookmark-item").count();
+      expect(remaining).toBeLessThan(count);
+    });
   }
 }
 
@@ -98,11 +93,15 @@ test.describe("/bookmarks ページ", () => {
     // 一括カレンダー化ボタンが表示されている
     await expect(page.getByTestId("bookmarks-create-calendar")).toBeVisible();
 
-    // 1 件削除すると、件数が 1 減ること
-    await page.getByTestId("bookmarks-remove").first().click();
-    await expect(page.getByTestId("bookmark-item")).toHaveCount(
-      EVENT_IDS.length - 1,
-      { timeout: 15_000 },
+    // 1 件削除すると、件数が 1 減ること。
+    // ActionForm submit の hydration race を吸収するため clickUntil でリトライしつつ待つ。
+    await clickUntil(
+      page.getByTestId("bookmarks-remove").first(),
+      async () => {
+        await expect(page.getByTestId("bookmark-item")).toHaveCount(
+          EVENT_IDS.length - 1,
+        );
+      },
     );
 
     // 残りを掃除しておく (副作用最小化)

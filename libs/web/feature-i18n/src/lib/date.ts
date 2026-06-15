@@ -30,6 +30,33 @@ function toBcp47(locale: Locale): string {
 }
 
 /**
+ * 表示用日時の固定タイムゾーン。
+ *
+ * IMPORTANT: `Intl.DateTimeFormat` を `timeZone` 指定なしで使うと、整形結果が
+ * 実行環境のローカルタイムゾーンに依存する。SSR (Node サーバ) と client
+ * (ブラウザ) で TZ が食い違うと整形文字列がズレ、React の hydration mismatch を
+ * 起こす (CI は server=UTC / Playwright ブラウザ=Asia/Tokyo で 9 時間ズレる)。
+ * tech-event は日本のイベントを扱うため、表示は常に JST で固定し SSR/client の
+ * 出力を一致させる。
+ */
+const DISPLAY_TIME_ZONE = "Asia/Tokyo";
+
+/**
+ * 表示タイムゾーン (JST) 固定で Y/M/D を取り出す (sameDay 判定用、hydration safe)。
+ */
+function tokyoYmd(d: Date): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const get = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((p) => p.type === type)?.value ?? "0");
+  return { year: get("year"), month: get("month"), day: get("day") };
+}
+
+/**
  * 与えられた値を Date に変換。失敗時は null。
  */
 function toDate(value: Date | string | number | null | undefined): Date | null {
@@ -51,6 +78,7 @@ export function formatDate(
   const d = toDate(value);
   if (!d) return "";
   return new Intl.DateTimeFormat(toBcp47(locale), {
+    timeZone: DISPLAY_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -70,6 +98,7 @@ export function formatDateOnly(
   const d = toDate(value);
   if (!d) return "";
   return new Intl.DateTimeFormat(toBcp47(locale), {
+    timeZone: DISPLAY_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -86,6 +115,7 @@ export function formatDateLong(
   const d = toDate(value);
   if (!d) return "";
   return new Intl.DateTimeFormat(toBcp47(locale), {
+    timeZone: DISPLAY_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -111,18 +141,20 @@ export function formatEventDateRange(
   const e = toDate(end);
   if (!s || !e) return "";
 
+  const sp = tokyoYmd(s);
+  const ep = tokyoYmd(e);
   const sameDay =
-    s.getFullYear() === e.getFullYear() &&
-    s.getMonth() === e.getMonth() &&
-    s.getDate() === e.getDate();
+    sp.year === ep.year && sp.month === ep.month && sp.day === ep.day;
 
   const dateFmt = new Intl.DateTimeFormat(toBcp47(locale), {
+    timeZone: DISPLAY_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     weekday: "short",
   });
   const timeFmt = new Intl.DateTimeFormat(toBcp47(locale), {
+    timeZone: DISPLAY_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
     hour12: locale === "en",

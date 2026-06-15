@@ -209,7 +209,14 @@ export default async function BookmarksPage() {
                       )}
                     </span>
                     <span aria-hidden>・</span>
-                    <span>追加 {formatRelative(new Date(b.bookmarkedAt))}</span>
+                    {/* `formatRelative` は now 基準の相対時刻で、SSR と client の
+                        レンダ時刻差で値が揺れる (例: "たった今" vs "1分前") ため
+                        hydration mismatch を起こし得る。表示文字列は変えず、
+                        この text node だけ React の hydration 検査を抑止して
+                        tree 再生成 (= bookmarks-remove ボタンの dead-click) を防ぐ。 */}
+                    <span suppressHydrationWarning>
+                      追加 {formatRelative(new Date(b.bookmarkedAt))}
+                    </span>
                   </div>
                 </div>
               </Link>
