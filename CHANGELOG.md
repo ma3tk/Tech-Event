@@ -8,6 +8,20 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-16 — Storybook に全コンポーネント一覧 (Gallery) ページを追加
+
+### Added
+- **`apps/web/src/stories/design-system/Gallery.mdx`** — UI primitives 24 + Composite components 14 の
+  全 38 コンポーネントの代表 Story を 1 ページに `<Canvas of={...}>` で実物レンダリングした視覚カタログ
+  (Storybook サイドバー `Design System/Gallery`)。各プレビューは既存 Story を参照するため Story 更新で
+  自動同期する (DRY)。ツールバーのテーマ切替で light / dark / high-contrast を全コンポーネントへ一括適用可能。
+  - 既存の `Components.mdx` (テキスト早見表) に対し、Gallery は「実物を縦に並べた一覧」を提供する補完ページ。
+  - `preview.tsx` の `storySort` に `Gallery` を追加 (`Components` の直後)。
+  - 検証: dev / static build (production) の両方で全 38 コンポーネントが描画 (No Preview / rendering error 0)、
+    `build-storybook` 成功。
+
+---
+
 ## [Unreleased] — 2026-06-15 — 日付表示を JST 固定化し TZ hydration mismatch を解消 (bookmarks-mobile CI flake の根治)
 
 ### Fixed
