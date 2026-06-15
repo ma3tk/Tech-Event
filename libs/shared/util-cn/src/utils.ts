@@ -22,20 +22,81 @@ export { cn } from "./cn";
 
 const JP_WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"] as const;
 
+/**
+ * イベント日時の表示タイムゾーン。
+ *
+ * IMPORTANT: SSR (Node サーバ) と client (ブラウザ) でローカルタイムゾーンが
+ * 異なると、`Date.prototype.getHours()` 等の **ローカル時刻依存** の整形結果が
+ * 食い違い、React の hydration mismatch を起こす。
+ * (CI は server=UTC / Playwright ブラウザ=Asia/Tokyo のため特に顕在化する。)
+ *
+ * tech-event は日本のイベントを ja-JP locale で扱うため、表示は常に JST で固定する。
+ * 固定タイムゾーンで整形すれば SSR / client の出力が一致し hydration mismatch が消える。
+ */
+export const DISPLAY_TIME_ZONE = "Asia/Tokyo";
+
 function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
+/**
+ * `Date` を固定タイムゾーン (`DISPLAY_TIME_ZONE`) の各フィールドに分解する。
+ *
+ * `Intl.DateTimeFormat` を経由するため SSR / client のローカル TZ に依存せず、
+ * 同じ `Date` からは常に同じフィールド値が得られる (hydration safe)。
+ */
+function tokyoParts(d: Date): {
+  year: number;
+  month: number; // 1-12
+  day: number;
+  hour: number; // 0-23
+  minute: number;
+  weekday: number; // 0=日 .. 6=土
+} {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    weekday: "short",
+  }).formatToParts(d);
+  const get = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  const weekdayMap: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+  // `hour12: false` でも環境によっては深夜 0 時を "24" と返す実装があるため正規化する。
+  const rawHour = Number(get("hour"));
+  return {
+    year: Number(get("year")),
+    month: Number(get("month")),
+    day: Number(get("day")),
+    hour: rawHour === 24 ? 0 : rawHour,
+    minute: Number(get("minute")),
+    weekday: weekdayMap[get("weekday")] ?? 0,
+  };
+}
+
 function formatYmd(d: Date): string {
-  const y = d.getFullYear();
-  const m = pad2(d.getMonth() + 1);
-  const day = pad2(d.getDate());
-  const w = JP_WEEKDAYS[d.getDay()];
-  return `${y}年${m}月${day}日(${w})`;
+  const p = tokyoParts(d);
+  const m = pad2(p.month);
+  const day = pad2(p.day);
+  const w = JP_WEEKDAYS[p.weekday];
+  return `${p.year}年${m}月${day}日(${w})`;
 }
 
 function formatHm(d: Date): string {
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const p = tokyoParts(d);
+  return `${pad2(p.hour)}:${pad2(p.minute)}`;
 }
 
 /**
@@ -48,10 +109,10 @@ export function formatEventDate(start: Date | string, end: Date | string): strin
   const s = start instanceof Date ? start : new Date(start);
   const e = end instanceof Date ? end : new Date(end);
 
+  const sp = tokyoParts(s);
+  const ep = tokyoParts(e);
   const sameDay =
-    s.getFullYear() === e.getFullYear() &&
-    s.getMonth() === e.getMonth() &&
-    s.getDate() === e.getDate();
+    sp.year === ep.year && sp.month === ep.month && sp.day === ep.day;
 
   if (sameDay) {
     return `${formatYmd(s)} ${formatHm(s)} 〜 ${formatHm(e)}`;

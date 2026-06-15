@@ -10,6 +10,7 @@
  */
 import Link from "next/link";
 import { cn } from "@tech-event/shared-util-cn";
+import { tokyoDateParts } from "./tokyo-date";
 
 export type MiniCalendarProps = {
   /** 表示基準月 (デフォルトは現在月) */
@@ -33,12 +34,18 @@ export default function MiniCalendar({
   eventDates,
   className,
 }: MiniCalendarProps) {
-  const year = baseDate.getFullYear();
-  const month = baseDate.getMonth();
+  // 基準月・今日は表示タイムゾーン (JST) 固定で求める。SSR (server TZ) と
+  // client (ブラウザ TZ) で月境界をまたいで別の月を描画し hydration mismatch を
+  // 起こすのを防ぐ。グリッドのセル日番号自体は year/month が一致すれば
+  // ローカルコンストラクタでも同一に並ぶ。
+  const baseParts = tokyoDateParts(baseDate);
+  const year = baseParts.year;
+  const month = baseParts.month - 1; // 0-indexed (Date コンストラクタ用)
   const firstDayOfMonth = new Date(year, month, 1);
   const firstWeekday = firstDayOfMonth.getDay(); // 0=日
   const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-  const todayYmd = ymd(new Date());
+  const nowParts = tokyoDateParts(new Date());
+  const todayYmd = `${nowParts.year}-${String(nowParts.month).padStart(2, "0")}-${String(nowParts.day).padStart(2, "0")}`;
 
   // 6行 x 7列 = 42 セルのカレンダー
   const cells: Array<{

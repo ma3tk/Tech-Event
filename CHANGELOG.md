@@ -8,6 +8,32 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-15 — 日付表示を JST 固定化し TZ hydration mismatch を解消 (bookmarks-mobile CI flake の根治)
+
+### Fixed
+- **TZ 依存の日付整形による hydration mismatch を解消** — `Date.prototype.getHours()` /
+  `getFullYear()` 等のローカル時刻メソッドや `timeZone` 未指定の `Intl.DateTimeFormat` で
+  日付を整形していたため、SSR (サーバ TZ) と client (ブラウザ TZ) がズレると整形結果が
+  食い違い React hydration mismatch → tree 再生成 → ActionForm submit ボタンの dead-click が発生。
+  CI では server=UTC / Playwright ブラウザ=`Asia/Tokyo` で 9 時間ズレて顕在化し、
+  `bookmarks.spec.ts:75` (mobile) が CI 限定で hard fail していた (ローカル darwin は server も
+  JST のため再現せず)。**本番でも UTC サーバなら日付が誤表示される production バグ**でもあった。
+  - 新規 `libs/shared/ui-composite/src/tokyo-date.ts` — `Asia/Tokyo` 固定の `Intl.DateTimeFormat`
+    で日付フィールドを取り出す hydration-safe ヘルパ群 (`tokyoYmdDowHm` / `tokyoYmdSlash` /
+    `tokyoHm` / `tokyoMonthDay` / `tokyoWeekday`)。深夜 0 時を "24" と返す実装差も正規化。
+  - `EventCard` / `EventListRow` / `EventStickyCTA` / `ParticipantBadge` / `RecentlyViewedEvents` /
+    `EventTimeline` / `MiniCalendar` のローカル時刻整形を共有ヘルパへ置換。
+  - `libs/shared/util-cn/src/utils.ts` の `formatYmd` / `formatHm` / `formatEventDate(Short)` を JST 固定に。
+  - `libs/web/feature-i18n/src/lib/date.ts` の 4 つの `Intl.DateTimeFormat` に `timeZone: "Asia/Tokyo"`、
+    `formatEventDateRange` の sameDay 判定も JST 固定 (`/event/[id]` 参加者一覧の主犯)。
+  - `apps/web/src/app/bookmarks/page.tsx` の `formatRelative(new Date())` (now 基準の相対時刻で
+    本質的に SSR/client で揺れる) は `suppressHydrationWarning` で tree 再生成のみ防止。
+  - 表示文字列の変化なし (JST 環境では従来と同一)。UTC 環境では誤った UTC 表示が正しい JST 表示へ修正。
+  - 検証: `TZ=UTC` (CI 相当) で `bookmarks.spec.ts` を mobile/desktop 各 5 連続 pass、テスト経路全
+    ページで hydration error 0、typecheck / eslint クリーン。VRT baseline はバイト同一 (darwin) で波及なし。
+
+---
+
 ## [Unreleased] — 2026-06-15 — e2e flaky 第2弾を安定化 (hydration dead-click / SSR fallback flush)
 
 ### Fixed

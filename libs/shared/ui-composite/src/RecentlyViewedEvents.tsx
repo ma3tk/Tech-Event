@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import { Card } from "@tech-event/shared-ui";
+import { tokyoMonthDay } from "./tokyo-date";
 
 export type RecentlyViewedItem = {
   id: string;
@@ -36,7 +37,8 @@ function shortDate(iso?: string): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+  // 表示タイムゾーン (JST) 固定。SSR/client の TZ 差で表記が揺れないようにする。
+  return tokyoMonthDay(d);
 }
 
 export default function RecentlyViewedEvents({

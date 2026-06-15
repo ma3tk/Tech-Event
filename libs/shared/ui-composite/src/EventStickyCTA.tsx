@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { cn } from "@tech-event/shared-util-cn";
 import { Button } from "@tech-event/shared-ui";
+import { tokyoHm, tokyoYmdSlash } from "./tokyo-date";
 
 /**
  * register-button.md の state machine を sticky CTA 用にまとめたもの。
@@ -98,14 +99,14 @@ const DISABLED_STATES: ReadonlySet<StickyState> = new Set([
   "pending",
 ]);
 
-/** "YYYY/MM/DD HH:mm" (ローカル) */
+/**
+ * "YYYY/MM/DD HH:mm" (表示タイムゾーン = JST 固定)。
+ *
+ * ローカル時刻依存の getHours() 等を使うと SSR/client の TZ 差で hydration
+ * mismatch を起こすため、固定タイムゾーンで分解して整形する。
+ */
 function formatJa(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${y}/${m}/${day} ${hh}:${mm}`;
+  return `${tokyoYmdSlash(d)} ${tokyoHm(d)}`;
 }
 
 export default function EventStickyCTA({
