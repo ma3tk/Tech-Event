@@ -23,11 +23,15 @@ name: tokens
 
 on:
   pull_request:
+    # Nx 移行で styles / tokens / scripts は apps/web 配下・libs 配下へ移動済み。
+    # 旧 paths (`src/styles/**` / `tokens/**` = リポジトリルート基準) はもう一致せず、
+    # トークン変更時に tokens 検証が走らなくなっていた (purple/pink の namespace 漏れを
+    # 検出できなかった原因)。実構造に合わせて更新する。
     paths:
-      - "src/styles/**"
-      - "tokens/**"
-      - "scripts/sync-tokens.ts"
-      - "scripts/validate-tokens.ts"
+      - "apps/web/src/styles/**"
+      - "libs/shared/util-design-tokens/**"
+      - "apps/web/scripts/sync-tokens.ts"
+      - "apps/web/scripts/validate-tokens.ts"
       - ".github/workflows/tokens.yml"
   workflow_dispatch:
 

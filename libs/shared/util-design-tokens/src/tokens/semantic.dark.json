@@ -167,6 +167,36 @@
       }
     }
   },
+  "accent": {
+    "purple": {
+      "DEFAULT": {
+        "value": "{color.purple.400}",
+        "type": "color"
+      },
+      "soft": {
+        "value": "rgba(168, 85, 247, 0.15)",
+        "type": "color"
+      },
+      "strong": {
+        "value": "{color.purple.300}",
+        "type": "color"
+      }
+    },
+    "pink": {
+      "DEFAULT": {
+        "value": "{color.pink.400}",
+        "type": "color"
+      },
+      "soft": {
+        "value": "rgba(236, 72, 153, 0.15)",
+        "type": "color"
+      },
+      "strong": {
+        "value": "{color.pink.300}",
+        "type": "color"
+      }
+    }
+  },
   "elevation": {
     "card": {
       "value": "0 1px 2px rgba(0, 0, 0, 0.4)",
@@ -183,6 +213,48 @@
     "overlay": {
       "value": "0 25px 50px -12px rgba(0, 0, 0, 0.8)",
       "type": "boxShadow"
+    },
+    "soft": {
+      "value": "0 8px 24px -4px rgba(0, 0, 0, 0.5)",
+      "type": "boxShadow"
+    },
+    "soft-strong": {
+      "value": "0 20px 48px -12px rgba(0, 0, 0, 0.65)",
+      "type": "boxShadow"
+    }
+  },
+  "chart": {
+    "1": {
+      "value": "#3aa0e6",
+      "type": "color"
+    },
+    "2": {
+      "value": "#f5b53e",
+      "type": "color"
+    },
+    "3": {
+      "value": "#4cc8a4",
+      "type": "color"
+    },
+    "4": {
+      "value": "#e29ec5",
+      "type": "color"
+    },
+    "5": {
+      "value": "#88cdef",
+      "type": "color"
+    },
+    "6": {
+      "value": "#ff8a47",
+      "type": "color"
+    },
+    "7": {
+      "value": "#fff07a",
+      "type": "color"
+    },
+    "8": {
+      "value": "#c0c0c0",
+      "type": "color"
     }
   }
 }
