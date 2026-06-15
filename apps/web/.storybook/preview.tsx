@@ -56,6 +56,7 @@ const preview: Preview = {
               "Motion",
               "Icons",
               "Components",
+              "Gallery",
               "Accessibility",
               "Dark Mode",
               "High Contrast",

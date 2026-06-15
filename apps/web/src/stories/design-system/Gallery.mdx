@@ -1,0 +1,181 @@
+import { Meta, Title, Subtitle, Canvas, Unstyled } from "@storybook/addon-docs/blocks";
+
+{/* UI primitives (24) */}
+import * as AvatarStories from "../../../../../libs/shared/ui/src/avatar.stories";
+import * as BadgeStories from "../../../../../libs/shared/ui/src/badge.stories";
+import * as ButtonStories from "../../../../../libs/shared/ui/src/button.stories";
+import * as CardStories from "../../../../../libs/shared/ui/src/card.stories";
+import * as CheckboxStories from "../../../../../libs/shared/ui/src/checkbox.stories";
+import * as DialogStories from "../../../../../libs/shared/ui/src/dialog.stories";
+import * as DropdownMenuStories from "../../../../../libs/shared/ui/src/dropdown-menu.stories";
+import * as EmptyStateStories from "../../../../../libs/shared/ui/src/empty-state.stories";
+import * as ErrorStateStories from "../../../../../libs/shared/ui/src/error-state.stories";
+import * as FormStories from "../../../../../libs/shared/ui/src/form.stories";
+import * as InputStories from "../../../../../libs/shared/ui/src/input.stories";
+import * as LabelStories from "../../../../../libs/shared/ui/src/label.stories";
+import * as LoadingStateStories from "../../../../../libs/shared/ui/src/loading-state.stories";
+import * as PopoverStories from "../../../../../libs/shared/ui/src/popover.stories";
+import * as RadioGroupStories from "../../../../../libs/shared/ui/src/radio-group.stories";
+import * as SelectStories from "../../../../../libs/shared/ui/src/select.stories";
+import * as SeparatorStories from "../../../../../libs/shared/ui/src/separator.stories";
+import * as SheetStories from "../../../../../libs/shared/ui/src/sheet.stories";
+import * as SkeletonStories from "../../../../../libs/shared/ui/src/skeleton.stories";
+import * as SwitchStories from "../../../../../libs/shared/ui/src/switch.stories";
+import * as TabsStories from "../../../../../libs/shared/ui/src/tabs.stories";
+import * as TextareaStories from "../../../../../libs/shared/ui/src/textarea.stories";
+import * as ToastStories from "../../../../../libs/shared/ui/src/toast.stories";
+import * as TooltipStories from "../../../../../libs/shared/ui/src/tooltip.stories";
+
+{/* Composite components (14) */}
+import * as BreadcrumbStories from "../../../../../libs/shared/ui-composite/src/Breadcrumb.stories";
+import * as EventCardStories from "../../../../../libs/shared/ui-composite/src/EventCard.stories";
+import * as EventListRowStories from "../../../../../libs/shared/ui-composite/src/EventListRow.stories";
+import * as EventStatusBadgeStories from "../../../../../libs/shared/ui-composite/src/EventStatusBadge.stories";
+import * as EventTimelineStories from "../../../../../libs/shared/ui-composite/src/EventTimeline.stories";
+import * as FooterStories from "../../../../../libs/shared/ui-composite/src/Footer.stories";
+import * as GroupCardStories from "../../../../../libs/shared/ui-composite/src/GroupCard.stories";
+import * as HeaderStories from "../../../../../libs/shared/ui-composite/src/Header.stories";
+import * as HostAvatarStackStories from "../../../../../libs/shared/ui-composite/src/HostAvatarStack.stories";
+import * as MiniCalendarStories from "../../../../../libs/shared/ui-composite/src/MiniCalendar.stories";
+import * as PaginationStories from "../../../../../libs/shared/ui-composite/src/Pagination.stories";
+import * as ParticipantBadgeStories from "../../../../../libs/shared/ui-composite/src/ParticipantBadge.stories";
+import * as SearchBoxStories from "../../../../../libs/shared/ui-composite/src/SearchBox.stories";
+import * as TagPillStories from "../../../../../libs/shared/ui-composite/src/TagPill.stories";
+
+<Meta title="Design System/Gallery" />
+
+<Title>Gallery — 全コンポーネント一覧</Title>
+<Subtitle>UI primitives 24 + Composite components 14 を 1 ページに実物レンダリング</Subtitle>
+
+`tech-event` の全コンポーネントの代表 Story を 1 ページに並べた視覚カタログです。
+各プレビューは対応する Story を `<Canvas of={...}>` で埋め込んでいるため、Story を更新すれば
+ここも自動で同期します。個別の variant / props / a11y は各コンポーネントの **Docs** ページを参照してください。
+
+> このページは横断ドキュメント (`apps/web/src/stories/design-system/Gallery.mdx`) です。
+> テーマ切替 (light / dark / high-contrast) はツールバーの 🎨 から、全コンポーネントへ一括適用できます。
+
+---
+
+## UI primitives (24)
+
+`libs/shared/ui/` — Radix UI + CVA ベースの汎用部品。
+
+### Avatar
+<Canvas of={AvatarStories.WithImage} />
+
+### Badge
+<Canvas of={BadgeStories.Default} />
+
+### Button
+<Canvas of={ButtonStories.Default} />
+
+### Card
+<Canvas of={CardStories.Basic} />
+
+### Checkbox
+<Canvas of={CheckboxStories.Default} />
+
+### Dialog
+<Canvas of={DialogStories.Default} />
+
+### DropdownMenu
+<Canvas of={DropdownMenuStories.Default} />
+
+### EmptyState
+<Canvas of={EmptyStateStories.Default} />
+
+### ErrorState
+<Canvas of={ErrorStateStories.Default} />
+
+### Form
+<Canvas of={FormStories.WithValidation} />
+
+### Input
+<Canvas of={InputStories.Default} />
+
+### Label
+<Canvas of={LabelStories.Default} />
+
+### LoadingState
+<Canvas of={LoadingStateStories.Spinner} />
+
+### Popover
+<Canvas of={PopoverStories.Default} />
+
+### RadioGroup
+<Canvas of={RadioGroupStories.Default} />
+
+### Select
+<Canvas of={SelectStories.Default} />
+
+### Separator
+<Canvas of={SeparatorStories.Horizontal} />
+
+### Sheet
+<Canvas of={SheetStories.Right} />
+
+### Skeleton
+<Canvas of={SkeletonStories.Default} />
+
+### Switch
+<Canvas of={SwitchStories.Default} />
+
+### Tabs
+<Canvas of={TabsStories.Default} />
+
+### Textarea
+<Canvas of={TextareaStories.Default} />
+
+### Toast
+<Canvas of={ToastStories.Default} />
+
+### Tooltip
+<Canvas of={TooltipStories.Default} />
+
+---
+
+## Composite components (14)
+
+`libs/shared/ui-composite/` — primitives を組み合わせたドメイン特化部品。
+
+### Breadcrumb
+<Canvas of={BreadcrumbStories.Default} />
+
+### EventCard
+<Canvas of={EventCardStories.ListDefault} />
+
+### EventListRow
+<Canvas of={EventListRowStories.Default} />
+
+### EventStatusBadge
+<Canvas of={EventStatusBadgeStories.Default} />
+
+### EventTimeline
+<Canvas of={EventTimelineStories.Default} />
+
+### Footer
+<Canvas of={FooterStories.Default} />
+
+### GroupCard
+<Canvas of={GroupCardStories.Standard} />
+
+### Header
+<Canvas of={HeaderStories.LoggedOut} />
+
+### HostAvatarStack
+<Canvas of={HostAvatarStackStories.Pair} />
+
+### MiniCalendar
+<Canvas of={MiniCalendarStories.NoEvents} />
+
+### Pagination
+<Canvas of={PaginationStories.Default} />
+
+### ParticipantBadge
+<Canvas of={ParticipantBadgeStories.Default} />
+
+### SearchBox
+<Canvas of={SearchBoxStories.Header} />
+
+### TagPill
+<Canvas of={TagPillStories.Default} />
