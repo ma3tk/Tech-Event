@@ -8,6 +8,23 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-16 — Storybook に Playground (クリックで要素を直接編集 → リアルタイム反映)
+
+### Added
+- **`Design System/Playground`** — コンポーネントをクリックしてその場で編集し、変更を
+  リアルタイムに反映するインタラクティブな実験場 (Storybook 専用、完全クライアントサイド)。
+  - 対象: Button / Badge / Input / TagPill / EventStatusBadge (上部タブで切替)。
+  - プレビュー内の文字を **クリックして直接編集** (contentEditable)。入力は即反映。
+  - 右インスペクタで variant / size / boolean / number を変更 → リアルタイム反映。
+  - 編集状態は **localStorage に保存** されリロードしても復元 (単一ユーザー = 実装者本人前提)。
+  - 下部に現在の **JSX を生成表示** (実装へコピー可)。
+  - 新規 `apps/web/src/stories/_support/Playground.tsx` + `Playground.stories.tsx`、
+    `preview.tsx` の `storySort` に `Playground` 追加。
+  - 検証: Storybook (dev / static build) で variant/size/text 変更・contentEditable 編集・
+    localStorage 復元・JSX 生成を確認、typecheck / lint クリーン。
+
+---
+
 ## [Unreleased] — 2026-06-16 — コンポーネントフィードバック サブシステム (DS 改善ループ)
 
 ### Added
