@@ -1,4 +1,5 @@
 import { Meta, Title, Subtitle, Canvas, Unstyled } from "@storybook/addon-docs/blocks";
+import { ComponentFeedback } from "../_support/ComponentFeedback";
 
 {/* UI primitives (24) */}
 import * as AvatarStories from "../../../../../libs/shared/ui/src/avatar.stories";
@@ -45,14 +46,19 @@ import * as TagPillStories from "../../../../../libs/shared/ui-composite/src/Tag
 <Meta title="Design System/Gallery" />
 
 <Title>Gallery — 全コンポーネント一覧</Title>
-<Subtitle>UI primitives 24 + Composite components 14 を 1 ページに実物レンダリング</Subtitle>
+<Subtitle>UI primitives 24 + Composite components 14 を 1 ページに実物レンダリング + フィードバック投稿</Subtitle>
 
 `tech-event` の全コンポーネントの代表 Story を 1 ページに並べた視覚カタログです。
 各プレビューは対応する Story を `<Canvas of={...}>` で埋め込んでいるため、Story を更新すれば
 ここも自動で同期します。個別の variant / props / a11y は各コンポーネントの **Docs** ページを参照してください。
 
-> このページは横断ドキュメント (`apps/web/src/stories/design-system/Gallery.mdx`) です。
-> テーマ切替 (light / dark / high-contrast) はツールバーの 🎨 から、全コンポーネントへ一括適用できます。
+各コンポーネントの下には **フィードバック投稿フォーム**があり、★ 評価 + 任意コメントを送信できます。
+投稿は `/api/component-feedback` に保存され、`/admin/component-feedback` で集計・トリアージして
+デザインシステムの改善に回します (DS 改善ループ)。
+
+> 送信先は dev の Next アプリ (`http://localhost:3000`) が既定です。Storybook を別ホストで開く場合は
+> `window.__TE_FEEDBACK_API_BASE__` に Next アプリの origin を設定してください。
+> テーマ切替 (light / dark / high-contrast) はツールバーの 🎨 から全コンポーネントへ一括適用できます。
 
 ---
 
@@ -62,75 +68,99 @@ import * as TagPillStories from "../../../../../libs/shared/ui-composite/src/Tag
 
 ### Avatar
 <Canvas of={AvatarStories.WithImage} />
+<ComponentFeedback component="Avatar" />
 
 ### Badge
 <Canvas of={BadgeStories.Default} />
+<ComponentFeedback component="Badge" />
 
 ### Button
 <Canvas of={ButtonStories.Default} />
+<ComponentFeedback component="Button" />
 
 ### Card
 <Canvas of={CardStories.Basic} />
+<ComponentFeedback component="Card" />
 
 ### Checkbox
 <Canvas of={CheckboxStories.Default} />
+<ComponentFeedback component="Checkbox" />
 
 ### Dialog
 <Canvas of={DialogStories.Default} />
+<ComponentFeedback component="Dialog" />
 
 ### DropdownMenu
 <Canvas of={DropdownMenuStories.Default} />
+<ComponentFeedback component="DropdownMenu" />
 
 ### EmptyState
 <Canvas of={EmptyStateStories.Default} />
+<ComponentFeedback component="EmptyState" />
 
 ### ErrorState
 <Canvas of={ErrorStateStories.Default} />
+<ComponentFeedback component="ErrorState" />
 
 ### Form
 <Canvas of={FormStories.WithValidation} />
+<ComponentFeedback component="Form" />
 
 ### Input
 <Canvas of={InputStories.Default} />
+<ComponentFeedback component="Input" />
 
 ### Label
 <Canvas of={LabelStories.Default} />
+<ComponentFeedback component="Label" />
 
 ### LoadingState
 <Canvas of={LoadingStateStories.Spinner} />
+<ComponentFeedback component="LoadingState" />
 
 ### Popover
 <Canvas of={PopoverStories.Default} />
+<ComponentFeedback component="Popover" />
 
 ### RadioGroup
 <Canvas of={RadioGroupStories.Default} />
+<ComponentFeedback component="RadioGroup" />
 
 ### Select
 <Canvas of={SelectStories.Default} />
+<ComponentFeedback component="Select" />
 
 ### Separator
 <Canvas of={SeparatorStories.Horizontal} />
+<ComponentFeedback component="Separator" />
 
 ### Sheet
 <Canvas of={SheetStories.Right} />
+<ComponentFeedback component="Sheet" />
 
 ### Skeleton
 <Canvas of={SkeletonStories.Default} />
+<ComponentFeedback component="Skeleton" />
 
 ### Switch
 <Canvas of={SwitchStories.Default} />
+<ComponentFeedback component="Switch" />
 
 ### Tabs
 <Canvas of={TabsStories.Default} />
+<ComponentFeedback component="Tabs" />
 
 ### Textarea
 <Canvas of={TextareaStories.Default} />
+<ComponentFeedback component="Textarea" />
 
 ### Toast
 <Canvas of={ToastStories.Default} />
+<ComponentFeedback component="Toast" />
 
 ### Tooltip
 <Canvas of={TooltipStories.Default} />
+<ComponentFeedback component="Tooltip" />
 
 ---
 
@@ -140,42 +170,56 @@ import * as TagPillStories from "../../../../../libs/shared/ui-composite/src/Tag
 
 ### Breadcrumb
 <Canvas of={BreadcrumbStories.Default} />
+<ComponentFeedback component="Breadcrumb" />
 
 ### EventCard
 <Canvas of={EventCardStories.ListDefault} />
+<ComponentFeedback component="EventCard" />
 
 ### EventListRow
 <Canvas of={EventListRowStories.Default} />
+<ComponentFeedback component="EventListRow" />
 
 ### EventStatusBadge
 <Canvas of={EventStatusBadgeStories.Default} />
+<ComponentFeedback component="EventStatusBadge" />
 
 ### EventTimeline
 <Canvas of={EventTimelineStories.Default} />
+<ComponentFeedback component="EventTimeline" />
 
 ### Footer
 <Canvas of={FooterStories.Default} />
+<ComponentFeedback component="Footer" />
 
 ### GroupCard
 <Canvas of={GroupCardStories.Standard} />
+<ComponentFeedback component="GroupCard" />
 
 ### Header
 <Canvas of={HeaderStories.LoggedOut} />
+<ComponentFeedback component="Header" />
 
 ### HostAvatarStack
 <Canvas of={HostAvatarStackStories.Pair} />
+<ComponentFeedback component="HostAvatarStack" />
 
 ### MiniCalendar
 <Canvas of={MiniCalendarStories.NoEvents} />
+<ComponentFeedback component="MiniCalendar" />
 
 ### Pagination
 <Canvas of={PaginationStories.Default} />
+<ComponentFeedback component="Pagination" />
 
 ### ParticipantBadge
 <Canvas of={ParticipantBadgeStories.Default} />
+<ComponentFeedback component="ParticipantBadge" />
 
 ### SearchBox
 <Canvas of={SearchBoxStories.Header} />
+<ComponentFeedback component="SearchBox" />
 
 ### TagPill
 <Canvas of={TagPillStories.Default} />
+<ComponentFeedback component="TagPill" />

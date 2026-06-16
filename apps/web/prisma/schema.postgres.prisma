@@ -9,7 +9,10 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma-pg"
+  // Nx 移行後は libs/shared/data-access-prisma 配下に出力する。
+  // これにより `@tech-event/shared-data-access-prisma` を介して
+  // 他 app/lib が import でき、apps/web を跨ぐ循環依存を解消できる。
+  output   = "../../../libs/shared/data-access-prisma/src/generated/prisma"
 }
 
 datasource db {
@@ -58,6 +61,8 @@ model User {
   calendarSubscriptions CalendarSubscription[]
   // ============ 通知の詳細プリファレンス ============
   notificationPreferences NotificationPreference[]
+  // ============ コンポーネントフィードバック (DS 改善ループ) ============
+  componentFeedbacks ComponentFeedback[]
 
   @@map("users")
   @@index([status])
@@ -145,7 +150,10 @@ model GroupMember {
   @@index([userId])
 }
 
-/// TODO: UI実装。グループ BAN 仕様は research/luma/ に存在するが Server Action / UI 未実装。
+/// TODO: UI実装。
+/// グループの BAN 仕様は research/luma/features/* に存在するが、tech-event 上の
+/// UI / Server Action は未実装。Schema だけ先行して定義し、テーブルは
+/// migrations にも含まれている状態 (空テーブル)。実装着手時はこのコメントを外す。
 model GroupBlacklist {
   id              BigInt   @id @default(autoincrement())
   groupId         BigInt
@@ -572,4 +580,36 @@ model NotificationPreference {
   @@unique([userId, kind, channel])
   @@map("notification_preferences")
   @@index([userId])
+}
+
+// ============================================================
+// ComponentFeedback — デザインシステム改善ループ用フィードバック
+//
+// Storybook (Gallery / 各 Docs) の HTML フォームから各コンポーネントへの
+// 評価 (1-5) + 任意コメントを受け付け、/admin/component-feedback で集計・
+// トリアージして改善に回す。投稿は匿名可 (userId は任意)。
+// ============================================================
+model ComponentFeedback {
+  id        BigInt  @id @default(autoincrement())
+  /// 対象コンポーネント名 (例: "Button", "EventCard")。Storybook の表示名に対応。
+  component String
+  /// 1-5 の満足度評価。
+  rating    Int
+  /// 任意の自由記述コメント (sanitize は表示側で実施)。
+  comment   String?
+  /// 投稿元 URL (Storybook の story / docs URL)。
+  sourceUrl String?
+  /// トリアージ状態: open | triaged | resolved | wontfix
+  status    String  @default("open") @db.VarChar(32)
+  /// 任意: ログイン中ユーザー。匿名投稿は null。
+  userId    BigInt?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("component_feedback")
+  @@index([component, createdAt])
+  @@index([status])
 }

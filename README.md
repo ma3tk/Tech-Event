@@ -237,6 +237,11 @@ PUBLIC_API_KEY="dev-public-api-key-please-change"
 
 # SEO 用の絶対 URL ベース (sitemap.xml / robots.txt / canonical / OG URL)
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+
+# コンポーネントフィードバック管理画面 (/admin/component-feedback) の閲覧許可
+# nickname の allowlist (カンマ区切り)。dev では ENABLE_DEV_LOGIN=1 のとき
+# 任意のログインユーザーに許可されるため未設定でも動作する。
+COMPONENT_FEEDBACK_ADMINS="alice,bob"
 ```
 
 production 移行時の追加候補 (現状はコード内デフォルトで動作):

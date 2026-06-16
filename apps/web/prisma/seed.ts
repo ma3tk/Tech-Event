@@ -253,6 +253,7 @@ const COMMENT_SAMPLES = [
 
 async function cleanup(): Promise<void> {
   // FK 関係を考慮して子から消す
+  await prisma.componentFeedback.deleteMany();
   await prisma.surveyAnswer.deleteMany();
   await prisma.surveyQuestion.deleteMany();
   await prisma.survey.deleteMany();
@@ -1187,6 +1188,42 @@ async function seedCalendars(
  * main
  * ============================================================ */
 
+/**
+ * コンポーネントフィードバックのサンプル。
+ * /admin/component-feedback と Storybook Gallery のデモ用に少量投入する。
+ */
+async function seedComponentFeedback(): Promise<number> {
+  const samples: Array<{
+    component: string;
+    rating: number;
+    comment: string | null;
+    status: string;
+  }> = [
+    { component: "Button", rating: 5, comment: "variant が揃っていて使いやすい。", status: "open" },
+    { component: "Button", rating: 4, comment: "loading 状態のスピナー位置がもう少し中央だと嬉しい。", status: "triaged" },
+    { component: "EventCard", rating: 3, comment: "情報密度が高め。モバイルで余白がほしい。", status: "open" },
+    { component: "EventListRow", rating: 4, comment: null, status: "open" },
+    { component: "Input", rating: 2, comment: "エラー時のコントラストが弱い気がする。", status: "open" },
+    { component: "MiniCalendar", rating: 5, comment: "見やすい！", status: "resolved" },
+  ];
+  let n = 0;
+  for (const s of samples) {
+    await prisma.componentFeedback.create({
+      data: {
+        id: nextId("componentFeedback"),
+        component: s.component,
+        rating: s.rating,
+        comment: s.comment,
+        sourceUrl: "http://localhost:6006/?path=/docs/design-system-gallery--docs",
+        status: s.status,
+        userId: null,
+      },
+    });
+    n += 1;
+  }
+  return n;
+}
+
 async function main(): Promise<void> {
   console.log("[seed] cleanup ...");
   await cleanup();
@@ -1221,6 +1258,10 @@ async function main(): Promise<void> {
   console.log(
     `[seed]   -> ${calendarResult.totalCalendarSubscriptions} calendar_subscriptions`,
   );
+
+  console.log("[seed] component feedback (DS 改善ループ サンプル) ...");
+  const feedbackCount = await seedComponentFeedback();
+  console.log(`[seed]   -> ${feedbackCount} component_feedback`);
 
   // 件数サマリ
   const summary = {

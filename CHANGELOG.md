@@ -8,6 +8,29 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-06-16 — コンポーネントフィードバック サブシステム (DS 改善ループ)
+
+### Added
+- **Storybook の HTML フォームから各コンポーネントへのフィードバックを受け付け、集計・
+  トリアージして改善に回すサブシステム**を追加。
+  - **Prisma `ComponentFeedback` モデル + migration** (`20260616000000_add_component_feedback`) —
+    component / rating(1-5) / comment / sourceUrl / status / userId(任意=匿名可)。pg schema 同期済み、
+    `IdGenTable` に `componentFeedback` 追加。
+  - **`POST /api/component-feedback`** — Zod 検証 + IP rate limit + nextId 保存。Storybook (別オリジン:
+    localhost:6006 / GitHub Pages) からの fetch 用に allowlist ベース CORS + OPTIONS preflight 対応。
+  - **`ComponentFeedback` ウィジェット** (`apps/web/src/stories/_support/`) — ★評価 + 任意コメント +
+    送信。**Gallery の全 38 コンポーネント**の下に設置。送信先は `window.__TE_FEEDBACK_API_BASE__` /
+    既定 `http://localhost:3000`。
+  - **`/admin/component-feedback`** — コンポーネント別サマリ (件数 / 平均評価 / 未対応数) + 個別一覧
+    (コメントは `renderMarkdown` で sanitize 表示) + 状態トリアージ (open → triaged → resolved / wontfix)
+    の Server Action。認可は `COMPONENT_FEEDBACK_ADMINS` (nickname allowlist) / dev は dev-login 許可。
+  - `prisma/seed.ts` にサンプルフィードバック 6 件、`apps/web-e2e/src/component-feedback.spec.ts`
+    (API 4 + 管理画面 2 = 6 tests) を追加。
+  - 検証: ローカルでフルループ (Storybook フォーム → API → DB → 管理画面 → トリアージ) を確認、
+    E2E 6/6 pass、`build-storybook` 成功、typecheck クリーン。
+
+---
+
 ## [Unreleased] — 2026-06-16 — Storybook に全コンポーネント一覧 (Gallery) ページを追加
 
 ### Added
