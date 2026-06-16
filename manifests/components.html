@@ -594,7 +594,7 @@
 <main>
   <div class="wrap">
     <div class="note info" style="margin-bottom: 16px;">
-            <strong>Tip:</strong> You are using <code>react-docgen</code> (the default). Generation took <strong>2.0s</strong>. For higher quality prop types, consider switching to <code>react-docgen-typescript</code> in your <code>main.ts</code>:
+            <strong>Tip:</strong> You are using <code>react-docgen</code> (the default). Generation took <strong>1.9s</strong>. For higher quality prop types, consider switching to <code>react-docgen-typescript</code> in your <code>main.ts</code>:
             <pre><code>typescript: {
   reactDocgen: 'react-docgen-typescript',
 }</code></pre>
@@ -15838,6 +15838,7 @@ variant 選定ガイド:
         <div class="panel panel-content">
           <div class="mdx-content">
             <pre><code>import { Meta, Title, Subtitle, Canvas, Unstyled } from &quot;@storybook/addon-docs/blocks&quot;;
+import { ComponentFeedback } from &quot;../_support/ComponentFeedback&quot;;
 
 {/* UI primitives (24) */}
 import * as AvatarStories from &quot;../../../../../libs/shared/ui/src/avatar.stories&quot;;
@@ -15884,14 +15885,19 @@ import * as TagPillStories from &quot;../../../../../libs/shared/ui-composite/sr
 &lt;Meta title=&quot;Design System/Gallery&quot; /&gt;
 
 &lt;Title&gt;Gallery — 全コンポーネント一覧&lt;/Title&gt;
-&lt;Subtitle&gt;UI primitives 24 + Composite components 14 を 1 ページに実物レンダリング&lt;/Subtitle&gt;
+&lt;Subtitle&gt;UI primitives 24 + Composite components 14 を 1 ページに実物レンダリング + フィードバック投稿&lt;/Subtitle&gt;
 
 `tech-event` の全コンポーネントの代表 Story を 1 ページに並べた視覚カタログです。
 各プレビューは対応する Story を `&lt;Canvas of={...}&gt;` で埋め込んでいるため、Story を更新すれば
 ここも自動で同期します。個別の variant / props / a11y は各コンポーネントの **Docs** ページを参照してください。
 
-&gt; このページは横断ドキュメント (`apps/web/src/stories/design-system/Gallery.mdx`) です。
-&gt; テーマ切替 (light / dark / high-contrast) はツールバーの 🎨 から、全コンポーネントへ一括適用できます。
+各コンポーネントの下には **フィードバック投稿フォーム**があり、★ 評価 + 任意コメントを送信できます。
+投稿は `/api/component-feedback` に保存され、`/admin/component-feedback` で集計・トリアージして
+デザインシステムの改善に回します (DS 改善ループ)。
+
+&gt; 送信先は dev の Next アプリ (`http://localhost:3000`) が既定です。Storybook を別ホストで開く場合は
+&gt; `window.__TE_FEEDBACK_API_BASE__` に Next アプリの origin を設定してください。
+&gt; テーマ切替 (light / dark / high-contrast) はツールバーの 🎨 から全コンポーネントへ一括適用できます。
 
 ---
 
@@ -15901,75 +15907,99 @@ import * as TagPillStories from &quot;../../../../../libs/shared/ui-composite/sr
 
 ### Avatar
 &lt;Canvas of={AvatarStories.WithImage} /&gt;
+&lt;ComponentFeedback component=&quot;Avatar&quot; /&gt;
 
 ### Badge
 &lt;Canvas of={BadgeStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Badge&quot; /&gt;
 
 ### Button
 &lt;Canvas of={ButtonStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Button&quot; /&gt;
 
 ### Card
 &lt;Canvas of={CardStories.Basic} /&gt;
+&lt;ComponentFeedback component=&quot;Card&quot; /&gt;
 
 ### Checkbox
 &lt;Canvas of={CheckboxStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Checkbox&quot; /&gt;
 
 ### Dialog
 &lt;Canvas of={DialogStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Dialog&quot; /&gt;
 
 ### DropdownMenu
 &lt;Canvas of={DropdownMenuStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;DropdownMenu&quot; /&gt;
 
 ### EmptyState
 &lt;Canvas of={EmptyStateStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;EmptyState&quot; /&gt;
 
 ### ErrorState
 &lt;Canvas of={ErrorStateStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;ErrorState&quot; /&gt;
 
 ### Form
 &lt;Canvas of={FormStories.WithValidation} /&gt;
+&lt;ComponentFeedback component=&quot;Form&quot; /&gt;
 
 ### Input
 &lt;Canvas of={InputStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Input&quot; /&gt;
 
 ### Label
 &lt;Canvas of={LabelStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Label&quot; /&gt;
 
 ### LoadingState
 &lt;Canvas of={LoadingStateStories.Spinner} /&gt;
+&lt;ComponentFeedback component=&quot;LoadingState&quot; /&gt;
 
 ### Popover
 &lt;Canvas of={PopoverStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Popover&quot; /&gt;
 
 ### RadioGroup
 &lt;Canvas of={RadioGroupStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;RadioGroup&quot; /&gt;
 
 ### Select
 &lt;Canvas of={SelectStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Select&quot; /&gt;
 
 ### Separator
 &lt;Canvas of={SeparatorStories.Horizontal} /&gt;
+&lt;ComponentFeedback component=&quot;Separator&quot; /&gt;
 
 ### Sheet
 &lt;Canvas of={SheetStories.Right} /&gt;
+&lt;ComponentFeedback component=&quot;Sheet&quot; /&gt;
 
 ### Skeleton
 &lt;Canvas of={SkeletonStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Skeleton&quot; /&gt;
 
 ### Switch
 &lt;Canvas of={SwitchStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Switch&quot; /&gt;
 
 ### Tabs
 &lt;Canvas of={TabsStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Tabs&quot; /&gt;
 
 ### Textarea
 &lt;Canvas of={TextareaStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Textarea&quot; /&gt;
 
 ### Toast
 &lt;Canvas of={ToastStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Toast&quot; /&gt;
 
 ### Tooltip
 &lt;Canvas of={TooltipStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Tooltip&quot; /&gt;
 
 ---
 
@@ -15979,45 +16009,59 @@ import * as TagPillStories from &quot;../../../../../libs/shared/ui-composite/sr
 
 ### Breadcrumb
 &lt;Canvas of={BreadcrumbStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Breadcrumb&quot; /&gt;
 
 ### EventCard
 &lt;Canvas of={EventCardStories.ListDefault} /&gt;
+&lt;ComponentFeedback component=&quot;EventCard&quot; /&gt;
 
 ### EventListRow
 &lt;Canvas of={EventListRowStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;EventListRow&quot; /&gt;
 
 ### EventStatusBadge
 &lt;Canvas of={EventStatusBadgeStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;EventStatusBadge&quot; /&gt;
 
 ### EventTimeline
 &lt;Canvas of={EventTimelineStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;EventTimeline&quot; /&gt;
 
 ### Footer
 &lt;Canvas of={FooterStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Footer&quot; /&gt;
 
 ### GroupCard
 &lt;Canvas of={GroupCardStories.Standard} /&gt;
+&lt;ComponentFeedback component=&quot;GroupCard&quot; /&gt;
 
 ### Header
 &lt;Canvas of={HeaderStories.LoggedOut} /&gt;
+&lt;ComponentFeedback component=&quot;Header&quot; /&gt;
 
 ### HostAvatarStack
 &lt;Canvas of={HostAvatarStackStories.Pair} /&gt;
+&lt;ComponentFeedback component=&quot;HostAvatarStack&quot; /&gt;
 
 ### MiniCalendar
 &lt;Canvas of={MiniCalendarStories.NoEvents} /&gt;
+&lt;ComponentFeedback component=&quot;MiniCalendar&quot; /&gt;
 
 ### Pagination
 &lt;Canvas of={PaginationStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;Pagination&quot; /&gt;
 
 ### ParticipantBadge
 &lt;Canvas of={ParticipantBadgeStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;ParticipantBadge&quot; /&gt;
 
 ### SearchBox
 &lt;Canvas of={SearchBoxStories.Header} /&gt;
+&lt;ComponentFeedback component=&quot;SearchBox&quot; /&gt;
 
 ### TagPill
 &lt;Canvas of={TagPillStories.Default} /&gt;
+&lt;ComponentFeedback component=&quot;TagPill&quot; /&gt;
 </code></pre>
           </div>
         </div>
