@@ -588,13 +588,13 @@
 <header>
   <div class="wrap">
     <h1>Manifest Debugger</h1>
-    <div class="summary"><a class="filter-pill all" data-k="all" href="#filter-all">All</a><a class="filter-pill err" data-k="errors" href="#filter-errors">1/38 prop type error</a><a class="filter-pill info" data-k="infos" href="#filter-infos">25/38 infos</a><span class="filter-pill ok" aria-disabled="true">207 stories ok</span><a class="filter-pill ok" data-k="docs" href="#filter-docs">70 docs ok</a></div>
+    <div class="summary"><a class="filter-pill all" data-k="all" href="#filter-all">All</a><a class="filter-pill err" data-k="errors" href="#filter-errors">1/39 prop type error</a><a class="filter-pill info" data-k="infos" href="#filter-infos">25/39 infos</a><span class="filter-pill ok" aria-disabled="true">208 stories ok</span><a class="filter-pill ok" data-k="docs" href="#filter-docs">70 docs ok</a></div>
   </div>
 </header>
 <main>
   <div class="wrap">
     <div class="note info" style="margin-bottom: 16px;">
-            <strong>Tip:</strong> You are using <code>react-docgen</code> (the default). Generation took <strong>1.9s</strong>. For higher quality prop types, consider switching to <code>react-docgen-typescript</code> in your <code>main.ts</code>:
+            <strong>Tip:</strong> You are using <code>react-docgen</code> (the default). Generation took <strong>2.2s</strong>. For higher quality prop types, consider switching to <code>react-docgen-typescript</code> in your <code>main.ts</code>:
             <pre><code>typescript: {
   reactDocgen: 'react-docgen-typescript',
 }</code></pre>
@@ -8496,6 +8496,70 @@ import { ParticipantBadge } from &quot;@tech-event/shared-ui-composite&quot;;
 <article
   class="card 
   no-error 
+  no-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Playground">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Playground</h2>
+      <div class="badges">
+        
+        
+        <label for="c-25-design-system-playground-stories" class="badge ok as-toggle">1 story</label>
+        
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/stories/design-system/Playground.stories.tsx">design-system-playground · ./src/stories/design-system/Playground.stories.tsx</div>
+    
+    <div class="hint">Playground — クリックして要素をその場で編集し、リアルタイムに反映する実験場。 - プレビュー内の文字を **クリックして直接編集** (contentEditable)。 - 右のインスペクタで variant / size / boolean / number を変更 → 即反映。 - 編集状態は localStorage に保存されリロードしても復元 (単一ユーザー前提)。 - 下部に現在の JSX を生成表示。</div>
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  
+  <input id="c-25-design-system-playground-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  
+  
+
+  <div class="panels">
+    
+    
+    
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Playground } from "@tech-event/web";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Default</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Default = () =&gt; &lt;Playground /&gt;;</code></pre>
+            </div>
+        </div>
+    
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
   has-info 
   no-story-error
   no-doc-error"
@@ -8506,9 +8570,9 @@ import { ParticipantBadge } from &quot;@tech-event/shared-ui-composite&quot;;
       <h2><span class="status-dot dot-ok"></span> Popover</h2>
       <div class="badges">
         
-        <label for="c-25-ui-popover-info" class="badge info as-toggle">1 info</label>
-        <label for="c-25-ui-popover-stories" class="badge ok as-toggle">2 stories</label>
-        <label for="c-25-ui-popover-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-26-ui-popover-info" class="badge info as-toggle">1 info</label>
+        <label for="c-26-ui-popover-stories" class="badge ok as-toggle">2 stories</label>
+        <label for="c-26-ui-popover-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -8520,9 +8584,9 @@ import { ParticipantBadge } from &quot;@tech-event/shared-ui-composite&quot;;
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-25-ui-popover-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-25-ui-popover-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-25-ui-popover-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-26-ui-popover-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-26-ui-popover-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-26-ui-popover-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -8732,9 +8796,9 @@ import { Popover, PopoverTrigger, PopoverContent } from &quot;@tech-event/shared
       <h2><span class="status-dot dot-ok"></span> RadioGroup</h2>
       <div class="badges">
         
-        <label for="c-26-ui-radiogroup-info" class="badge info as-toggle">1 info</label>
-        <label for="c-26-ui-radiogroup-stories" class="badge ok as-toggle">3 stories</label>
-        <label for="c-26-ui-radiogroup-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-27-ui-radiogroup-info" class="badge info as-toggle">1 info</label>
+        <label for="c-27-ui-radiogroup-stories" class="badge ok as-toggle">3 stories</label>
+        <label for="c-27-ui-radiogroup-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -8746,9 +8810,9 @@ import { Popover, PopoverTrigger, PopoverContent } from &quot;@tech-event/shared
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-26-ui-radiogroup-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-26-ui-radiogroup-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-26-ui-radiogroup-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-27-ui-radiogroup-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-27-ui-radiogroup-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-27-ui-radiogroup-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -8974,10 +9038,10 @@ import { RadioGroup, RadioGroupItem } from &quot;@tech-event/shared-ui&quot;;
     <div class="title">
       <h2><span class="status-dot dot-ok"></span> SearchBox</h2>
       <div class="badges">
-        <label for="c-27-components-searchbox-props" class="badge ok as-toggle">7 prop types</label>
+        <label for="c-28-components-searchbox-props" class="badge ok as-toggle">7 prop types</label>
         
-        <label for="c-27-components-searchbox-stories" class="badge ok as-toggle">4 stories</label>
-        <label for="c-27-components-searchbox-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-28-components-searchbox-stories" class="badge ok as-toggle">4 stories</label>
+        <label for="c-28-components-searchbox-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -8990,10 +9054,10 @@ import { RadioGroup, RadioGroupItem } from &quot;@tech-event/shared-ui&quot;;
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
   
-  <input id="c-27-components-searchbox-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-27-components-searchbox-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-28-components-searchbox-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-28-components-searchbox-docs" class="tg tg-docs" type="checkbox" hidden />
   
-  <input id="c-27-components-searchbox-props" class="tg tg-props" type="checkbox" hidden />
+  <input id="c-28-components-searchbox-props" class="tg tg-props" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -9197,9 +9261,9 @@ import { SearchBox } from &quot;@tech-event/shared-ui-composite&quot;;
       <h2><span class="status-dot dot-ok"></span> Select</h2>
       <div class="badges">
         
-        <label for="c-28-ui-select-info" class="badge info as-toggle">1 info</label>
-        <label for="c-28-ui-select-stories" class="badge ok as-toggle">4 stories</label>
-        <label for="c-28-ui-select-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-29-ui-select-info" class="badge info as-toggle">1 info</label>
+        <label for="c-29-ui-select-stories" class="badge ok as-toggle">4 stories</label>
+        <label for="c-29-ui-select-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -9211,9 +9275,9 @@ import { SearchBox } from &quot;@tech-event/shared-ui-composite&quot;;
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-28-ui-select-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-28-ui-select-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-28-ui-select-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-29-ui-select-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-29-ui-select-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-29-ui-select-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -9495,10 +9559,10 @@ import {
     <div class="title">
       <h2><span class="status-dot dot-ok"></span> Separator</h2>
       <div class="badges">
-        <label for="c-29-ui-separator-props" class="badge ok as-toggle">2 prop types</label>
-        <label for="c-29-ui-separator-info" class="badge info as-toggle">1 info</label>
-        <label for="c-29-ui-separator-stories" class="badge ok as-toggle">2 stories</label>
-        <label for="c-29-ui-separator-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-30-ui-separator-props" class="badge ok as-toggle">2 prop types</label>
+        <label for="c-30-ui-separator-info" class="badge info as-toggle">1 info</label>
+        <label for="c-30-ui-separator-stories" class="badge ok as-toggle">2 stories</label>
+        <label for="c-30-ui-separator-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -9510,11 +9574,11 @@ import {
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-29-ui-separator-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-29-ui-separator-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-29-ui-separator-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-30-ui-separator-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-30-ui-separator-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-30-ui-separator-docs" class="tg tg-docs" type="checkbox" hidden />
   
-  <input id="c-29-ui-separator-props" class="tg tg-props" type="checkbox" hidden />
+  <input id="c-30-ui-separator-props" class="tg tg-props" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -9706,9 +9770,9 @@ import { Separator } from &quot;@tech-event/shared-ui&quot;;
       <h2><span class="status-dot dot-ok"></span> Sheet</h2>
       <div class="badges">
         
-        <label for="c-30-ui-sheet-info" class="badge info as-toggle">1 info</label>
-        <label for="c-30-ui-sheet-stories" class="badge ok as-toggle">4 stories</label>
-        <label for="c-30-ui-sheet-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-31-ui-sheet-info" class="badge info as-toggle">1 info</label>
+        <label for="c-31-ui-sheet-stories" class="badge ok as-toggle">4 stories</label>
+        <label for="c-31-ui-sheet-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -9720,9 +9784,9 @@ import { Separator } from &quot;@tech-event/shared-ui&quot;;
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-30-ui-sheet-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-30-ui-sheet-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-30-ui-sheet-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-31-ui-sheet-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-31-ui-sheet-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-31-ui-sheet-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -10019,9 +10083,9 @@ import {
       <h2><span class="status-dot dot-ok"></span> Skeleton</h2>
       <div class="badges">
         
-        <label for="c-31-ui-skeleton-info" class="badge info as-toggle">1 info</label>
-        <label for="c-31-ui-skeleton-stories" class="badge ok as-toggle">3 stories</label>
-        <label for="c-31-ui-skeleton-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-32-ui-skeleton-info" class="badge info as-toggle">1 info</label>
+        <label for="c-32-ui-skeleton-stories" class="badge ok as-toggle">3 stories</label>
+        <label for="c-32-ui-skeleton-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -10033,9 +10097,9 @@ import {
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-31-ui-skeleton-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-31-ui-skeleton-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-31-ui-skeleton-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-32-ui-skeleton-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-32-ui-skeleton-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-32-ui-skeleton-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -10244,9 +10308,9 @@ import { Skeleton } from &quot;@tech-event/shared-ui&quot;;
       <h2><span class="status-dot dot-ok"></span> Switch</h2>
       <div class="badges">
         
-        <label for="c-32-ui-switch-info" class="badge info as-toggle">1 info</label>
-        <label for="c-32-ui-switch-stories" class="badge ok as-toggle">6 stories</label>
-        <label for="c-32-ui-switch-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-33-ui-switch-info" class="badge info as-toggle">1 info</label>
+        <label for="c-33-ui-switch-stories" class="badge ok as-toggle">6 stories</label>
+        <label for="c-33-ui-switch-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -10258,9 +10322,9 @@ import { Skeleton } from &quot;@tech-event/shared-ui&quot;;
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-32-ui-switch-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-32-ui-switch-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-32-ui-switch-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-33-ui-switch-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-33-ui-switch-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-33-ui-switch-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -10482,9 +10546,9 @@ import { Switch } from &quot;@tech-event/shared-ui&quot;;
       <h2><span class="status-dot dot-ok"></span> Tabs</h2>
       <div class="badges">
         
-        <label for="c-33-ui-tabs-info" class="badge info as-toggle">1 info</label>
-        <label for="c-33-ui-tabs-stories" class="badge ok as-toggle">2 stories</label>
-        <label for="c-33-ui-tabs-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-34-ui-tabs-info" class="badge info as-toggle">1 info</label>
+        <label for="c-34-ui-tabs-stories" class="badge ok as-toggle">2 stories</label>
+        <label for="c-34-ui-tabs-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -10496,9 +10560,9 @@ import { Switch } from &quot;@tech-event/shared-ui&quot;;
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-33-ui-tabs-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-33-ui-tabs-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-33-ui-tabs-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-34-ui-tabs-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-34-ui-tabs-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-34-ui-tabs-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -10711,10 +10775,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from &quot;@tech-event/share
     <div class="title">
       <h2><span class="status-dot dot-ok"></span> TagPill</h2>
       <div class="badges">
-        <label for="c-34-components-tagpill-props" class="badge ok as-toggle">11 prop types</label>
+        <label for="c-35-components-tagpill-props" class="badge ok as-toggle">11 prop types</label>
         
-        <label for="c-34-components-tagpill-stories" class="badge ok as-toggle">8 stories</label>
-        <label for="c-34-components-tagpill-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-35-components-tagpill-stories" class="badge ok as-toggle">8 stories</label>
+        <label for="c-35-components-tagpill-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -10727,10 +10791,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from &quot;@tech-event/share
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
   
-  <input id="c-34-components-tagpill-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-34-components-tagpill-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-35-components-tagpill-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-35-components-tagpill-docs" class="tg tg-docs" type="checkbox" hidden />
   
-  <input id="c-34-components-tagpill-props" class="tg tg-props" type="checkbox" hidden />
+  <input id="c-35-components-tagpill-props" class="tg tg-props" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -11074,10 +11138,10 @@ import { TagPill } from &quot;@tech-event/shared-ui-composite&quot;;
     <div class="title">
       <h2><span class="status-dot dot-ok"></span> Textarea</h2>
       <div class="badges">
-        <label for="c-35-ui-textarea-props" class="badge ok as-toggle">1 prop type</label>
-        <label for="c-35-ui-textarea-info" class="badge info as-toggle">1 info</label>
-        <label for="c-35-ui-textarea-stories" class="badge ok as-toggle">4 stories</label>
-        <label for="c-35-ui-textarea-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-36-ui-textarea-props" class="badge ok as-toggle">1 prop type</label>
+        <label for="c-36-ui-textarea-info" class="badge info as-toggle">1 info</label>
+        <label for="c-36-ui-textarea-stories" class="badge ok as-toggle">4 stories</label>
+        <label for="c-36-ui-textarea-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -11089,11 +11153,11 @@ import { TagPill } from &quot;@tech-event/shared-ui-composite&quot;;
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-35-ui-textarea-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-35-ui-textarea-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-35-ui-textarea-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-36-ui-textarea-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-36-ui-textarea-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-36-ui-textarea-docs" class="tg tg-docs" type="checkbox" hidden />
   
-  <input id="c-35-ui-textarea-props" class="tg tg-props" type="checkbox" hidden />
+  <input id="c-36-ui-textarea-props" class="tg tg-props" type="checkbox" hidden />
 
   <div class="panels">
     
@@ -11326,10 +11390,10 @@ default / hover / focus-visible / disabled / error。`&lt;Input&gt;` と同じ�
     <div class="title">
       <h2><span class="status-dot dot-err"></span> Toast</h2>
       <div class="badges">
-        <label for="c-36-ui-toast-err" class="badge err as-toggle">prop type error</label>
-        <label for="c-36-ui-toast-info" class="badge info as-toggle">1 info</label>
-        <label for="c-36-ui-toast-stories" class="badge ok as-toggle">7 stories</label>
-        <label for="c-36-ui-toast-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-37-ui-toast-err" class="badge err as-toggle">prop type error</label>
+        <label for="c-37-ui-toast-info" class="badge info as-toggle">1 info</label>
+        <label for="c-37-ui-toast-stories" class="badge ok as-toggle">7 stories</label>
+        <label for="c-37-ui-toast-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -11340,10 +11404,10 @@ default / hover / focus-visible / disabled / error。`&lt;Input&gt;` と同じ�
   </div>
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
-  <input id="c-36-ui-toast-err" class="tg tg-err" type="checkbox" hidden />
-  <input id="c-36-ui-toast-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-36-ui-toast-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-36-ui-toast-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-37-ui-toast-err" class="tg tg-err" type="checkbox" hidden />
+  <input id="c-37-ui-toast-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-37-ui-toast-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-37-ui-toast-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
@@ -11747,9 +11811,9 @@ toast(&quot;予約が完了しました&quot;, {
       <h2><span class="status-dot dot-ok"></span> Tooltip</h2>
       <div class="badges">
         
-        <label for="c-37-ui-tooltip-info" class="badge info as-toggle">1 info</label>
-        <label for="c-37-ui-tooltip-stories" class="badge ok as-toggle">3 stories</label>
-        <label for="c-37-ui-tooltip-docs" class="badge ok as-toggle">1 doc</label>
+        <label for="c-38-ui-tooltip-info" class="badge info as-toggle">1 info</label>
+        <label for="c-38-ui-tooltip-stories" class="badge ok as-toggle">3 stories</label>
+        <label for="c-38-ui-tooltip-docs" class="badge ok as-toggle">1 doc</label>
         
       </div>
     </div>
@@ -11761,9 +11825,9 @@ toast(&quot;予約が完了しました&quot;, {
 
   <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
   
-  <input id="c-37-ui-tooltip-info" class="tg tg-info" type="checkbox" hidden />
-  <input id="c-37-ui-tooltip-stories" class="tg tg-stories" type="checkbox" hidden />
-  <input id="c-37-ui-tooltip-docs" class="tg tg-docs" type="checkbox" hidden />
+  <input id="c-38-ui-tooltip-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-38-ui-tooltip-stories" class="tg tg-stories" type="checkbox" hidden />
+  <input id="c-38-ui-tooltip-docs" class="tg tg-docs" type="checkbox" hidden />
   
   
 
