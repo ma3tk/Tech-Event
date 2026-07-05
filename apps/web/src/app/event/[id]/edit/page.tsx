@@ -64,6 +64,7 @@ export default async function EventEditPage({ params }: PageProps) {
         include: { questions: { orderBy: { displayOrder: "asc" } } },
       },
       presentations: { orderBy: { displayOrder: "asc" } },
+      tags: { include: { tag: true } },
     },
   });
   if (!event) notFound();
@@ -153,6 +154,22 @@ export default async function EventEditPage({ params }: PageProps) {
               />
             </Field>
           </div>
+          <Field
+            label="タグ"
+            htmlFor="tags"
+            help="カンマ区切りで最大 10 個。空にすると全タグを外します。「イベントを探す」のタグ絞り込みに使われます。"
+          >
+            <input
+              id="tags"
+              name="tags"
+              type="text"
+              maxLength={600}
+              defaultValue={event.tags.map((t) => t.tag.name).join(", ")}
+              placeholder="React, TypeScript, AI"
+              data-testid="event-tags-input"
+              className="block w-full rounded-md border border-border bg-white px-3 py-2 text-sm focus:border-brand-orange focus:outline-none"
+            />
+          </Field>
         </Section>
 
         <Section title="開催形式・会場">

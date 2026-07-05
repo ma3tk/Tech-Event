@@ -24,8 +24,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { addGroupMember } from "./lib/group-membership";
 import { validateSlackWebhookUrl } from "@/lib/slack";
 import { recordAudit } from "@/lib/audit";
-import { nextId } from "@/lib/id-gen";
-import { buildRedirectUrlWithFormError } from "@/lib/action-error";
+import { nextId, withRetry } from "@/lib/id-gen";
+import { ActionError, buildRedirectUrlWithFormError } from "@/lib/action-error";
 import { isReservedSlug } from "@/lib/reserved-words";
 import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
@@ -338,4 +338,238 @@ export async function updateGroup(formData: FormData): Promise<void> {
   revalidatePath(`/group/${group.subdomain}`);
   revalidatePath(`/group/${group.subdomain}/edit`);
   redirect(`/group/${group.subdomain}`);
+}
+
+/* ============================================================
+ * グループブラックリスト (GroupBlacklist)
+ *
+ * - addToBlacklist / removeFromBlacklist: 引数指定のコア Action
+ * - addToBlacklistAction / removeFromBlacklistAction: 管理ページの
+ *   form から呼ぶ FormData ラッパ (nickname → userId 解決 + redirect)
+ *
+ * 認可: 対象グループの GroupAdmin (owner / admin) のみ。
+ * BL 登録済みユーザーの参加申込は joinEvent / submitSurveyAndJoin の
+ * 入口 (feature-event) でブロックされる。
+ * ============================================================ */
+
+const BlacklistIdsSchema = z.object({
+  groupId: z.string().regex(/^\d+$/),
+  userId: z.string().regex(/^\d+$/),
+  reason: z.string().max(500).optional().default(""),
+});
+
+/**
+ * addToBlacklist (グループ管理者): 指定ユーザーをグループのブラックリストに追加。
+ *
+ * - 既に登録済みなら reason のみ更新 (冪等)。
+ * - 自分自身・グループ管理者 (owner/admin) は登録不可。
+ */
+export async function addToBlacklist(
+  groupId: bigint | string,
+  userId: bigint | string,
+  reason?: string,
+): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new ActionError("unauthorized", "ログインが必要です");
+  }
+
+  const parsed = BlacklistIdsSchema.safeParse({
+    groupId: String(groupId),
+    userId: String(userId),
+    reason: reason ?? "",
+  });
+  if (!parsed.success) {
+    throw new ActionError("invalid_input", "入力内容が不正です");
+  }
+  const gid = BigInt(parsed.data.groupId);
+  const uid = BigInt(parsed.data.userId);
+  const trimmedReason = parsed.data.reason.trim();
+
+  const perm = await isGroupAdminOrOwner(gid, user.id);
+  if (!perm.ok) {
+    throw new ActionError("forbidden", "グループ管理者権限が必要です");
+  }
+
+  const group = await prisma.group.findUnique({ where: { id: gid } });
+  if (!group) {
+    throw new ActionError("not_found", "グループが見つかりません");
+  }
+  const target = await prisma.user.findUnique({ where: { id: uid } });
+  if (!target) {
+    throw new ActionError("not_found", "ユーザーが見つかりません");
+  }
+  if (uid === user.id) {
+    throw new ActionError("invalid_input", "自分自身はブラックリストに追加できません");
+  }
+  // グループ管理者は BL 対象にできない (owner を admin が BAN する事故防止)
+  const targetAdmin = await prisma.groupAdmin.findUnique({
+    where: { groupId_userId: { groupId: gid, userId: uid } },
+  });
+  if (targetAdmin && (targetAdmin.role === "owner" || targetAdmin.role === "admin")) {
+    throw new ActionError("invalid_input", "グループ管理者はブラックリストに追加できません");
+  }
+
+  await withRetry(() =>
+    prisma.$transaction(async (tx) => {
+      const existing = await tx.groupBlacklist.findUnique({
+        where: { groupId_userId: { groupId: gid, userId: uid } },
+      });
+      if (existing) {
+        // 冪等: 登録済みなら reason のみ更新
+        await tx.groupBlacklist.update({
+          where: { id: existing.id },
+          data: { reason: trimmedReason || null },
+        });
+        return;
+      }
+      await tx.groupBlacklist.create({
+        data: {
+          id: await nextId(tx, "groupBlacklist"),
+          groupId: gid,
+          userId: uid,
+          reason: trimmedReason || null,
+          addedByUserId: user.id,
+        },
+      });
+    }),
+  );
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "group.blacklist.add",
+    targetType: "Group",
+    targetId: gid,
+    metadata: { userId: uid.toString(), nickname: target.nickname },
+  });
+
+  revalidatePath(`/group/${group.subdomain}/admin/blacklist`);
+}
+
+/**
+ * removeFromBlacklist (グループ管理者): ブラックリストから解除。
+ * 未登録なら no-op (冪等)。
+ */
+export async function removeFromBlacklist(
+  groupId: bigint | string,
+  userId: bigint | string,
+): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new ActionError("unauthorized", "ログインが必要です");
+  }
+
+  const parsed = BlacklistIdsSchema.safeParse({
+    groupId: String(groupId),
+    userId: String(userId),
+  });
+  if (!parsed.success) {
+    throw new ActionError("invalid_input", "入力内容が不正です");
+  }
+  const gid = BigInt(parsed.data.groupId);
+  const uid = BigInt(parsed.data.userId);
+
+  const perm = await isGroupAdminOrOwner(gid, user.id);
+  if (!perm.ok) {
+    throw new ActionError("forbidden", "グループ管理者権限が必要です");
+  }
+
+  const group = await prisma.group.findUnique({ where: { id: gid } });
+  if (!group) {
+    throw new ActionError("not_found", "グループが見つかりません");
+  }
+
+  await prisma.groupBlacklist.deleteMany({
+    where: { groupId: gid, userId: uid },
+  });
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "group.blacklist.remove",
+    targetType: "Group",
+    targetId: gid,
+    metadata: { userId: uid.toString() },
+  });
+
+  revalidatePath(`/group/${group.subdomain}/admin/blacklist`);
+}
+
+/**
+ * addToBlacklistAction: BL 管理ページの追加 form 用ラッパ。
+ *
+ * FormData: subdomain (必須) / nickname (必須) / reason (任意)
+ * 成否はクエリパラメータで BL 管理ページに戻して表示する。
+ */
+export async function addToBlacklistAction(formData: FormData): Promise<void> {
+  const subdomain = formValue(formData, "subdomain");
+  const nickname = formValue(formData, "nickname").trim();
+  const reason = formValue(formData, "reason");
+  const basePath = `/group/${subdomain}/admin/blacklist`;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(basePath)}`);
+  }
+
+  const group = await prisma.group.findUnique({ where: { subdomain } });
+  if (!group) {
+    redirect(`${basePath}?error=${encodeURIComponent("グループが見つかりません")}`);
+  }
+  if (!nickname) {
+    redirect(`${basePath}?error=${encodeURIComponent("ニックネームを入力してください")}`);
+  }
+  const target = await prisma.user.findUnique({ where: { nickname } });
+  if (!target) {
+    redirect(
+      `${basePath}?error=${encodeURIComponent(`ユーザー "@${nickname}" が見つかりません`)}`,
+    );
+  }
+
+  try {
+    await addToBlacklist(group.id, target.id, reason);
+  } catch (e) {
+    if (e instanceof ActionError) {
+      redirect(`${basePath}?error=${encodeURIComponent(e.message)}`);
+    }
+    throw e;
+  }
+  redirect(`${basePath}?toast=blacklist-added`);
+}
+
+/**
+ * removeFromBlacklistAction: BL 管理ページの解除ボタン用ラッパ。
+ *
+ * FormData: subdomain (必須) / userId (必須)
+ */
+export async function removeFromBlacklistAction(
+  formData: FormData,
+): Promise<void> {
+  const subdomain = formValue(formData, "subdomain");
+  const userIdRaw = formValue(formData, "userId");
+  const basePath = `/group/${subdomain}/admin/blacklist`;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(basePath)}`);
+  }
+
+  const group = await prisma.group.findUnique({ where: { subdomain } });
+  if (!group) {
+    redirect(`${basePath}?error=${encodeURIComponent("グループが見つかりません")}`);
+  }
+  if (!/^\d+$/.test(userIdRaw)) {
+    redirect(`${basePath}?error=${encodeURIComponent("ユーザー ID が不正です")}`);
+  }
+
+  try {
+    await removeFromBlacklist(group.id, BigInt(userIdRaw));
+  } catch (e) {
+    if (e instanceof ActionError) {
+      redirect(`${basePath}?error=${encodeURIComponent(e.message)}`);
+    }
+    throw e;
+  }
+  redirect(`${basePath}?toast=blacklist-removed`);
 }

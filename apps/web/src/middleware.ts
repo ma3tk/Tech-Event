@@ -7,6 +7,7 @@
  *   - Content-Security-Policy:
  *       default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
  *       img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:;
+ *       frame-src 'self' https://www.openstreetmap.org (会場地図の埋め込み用);
  *       frame-ancestors 'none'; base-uri 'self'; form-action 'self';
  *     - Next.js は inline script (RSC payload) と inline style を多用するため `'unsafe-inline'` を許容。
  *     - 本来は nonce-based に移すべきだが、Next 16 + Storybook のため段階移行。
@@ -79,6 +80,10 @@ function applySecurityHeaders(
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
+    // 会場地図 (OpenStreetMap) の iframe 埋め込みを許可する。
+    // default-src 'self' のままだと frame-src が 'self' に fallback して
+    // 地図がブロックされるため明示する。
+    "frame-src 'self' https://www.openstreetmap.org",
     `frame-ancestors ${frameAncestors}`,
   ].join("; ");
   response.headers.set("Content-Security-Policy", csp);

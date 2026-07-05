@@ -152,6 +152,22 @@ export default async function EventCreatePage({
                 />
               </Field>
             </div>
+
+            <Field
+              label="タグ"
+              htmlFor="tags"
+              help="カンマ区切りで最大 10 個。「イベントを探す」のタグ絞り込みに使われます。"
+            >
+              <input
+                id="tags"
+                name="tags"
+                type="text"
+                maxLength={600}
+                placeholder="React, TypeScript, AI"
+                data-testid="event-tags-input"
+                className="block w-full rounded-md border border-border bg-white px-3 py-2 text-sm focus:border-brand-orange focus:outline-none"
+              />
+            </Field>
           </Section>
 
           <Section title="開催形式・会場">

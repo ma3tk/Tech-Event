@@ -39,6 +39,7 @@
       "@/lib/public-api": ["../../libs/shared/util-public-api/src/public-api.ts"],
       "@/lib/public-api-mappers": ["../../libs/shared/util-public-api/src/public-api-mappers.ts"],
       "@/lib/categories": ["../../libs/shared/util-categories/src/categories.ts"],
+      "@/lib/prefectures": ["../../libs/shared/util-categories/src/prefectures.ts"],
       "@/lib/serialize": ["../../libs/shared/util-serialize/src/serialize.ts"],
       "@/env": ["../../libs/shared/util-env/src/env.ts"],
       "@/lib/event-card": ["../../libs/web/feature-event/src/lib/event-card.ts"],

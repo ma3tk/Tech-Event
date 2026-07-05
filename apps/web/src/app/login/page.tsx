@@ -18,7 +18,12 @@ import { signIn } from "../../../auth";
 import { MagicLinkForm } from "./MagicLinkForm";
 import { loadDict, t } from "@/lib/i18n";
 
-type SearchParams = Promise<{ next?: string; error?: string }>;
+type SearchParams = Promise<{
+  next?: string;
+  error?: string;
+  reset?: string;
+  withdrawn?: string;
+}>;
 
 const IS_DEV_ENV = process.env.NODE_ENV !== "production";
 
@@ -30,6 +35,8 @@ export default async function LoginPage({
   const sp = await searchParams;
   const next = sp.next ?? "/dashboard";
   const error = sp.error;
+  const passwordResetDone = sp.reset === "1";
+  const withdrawnDone = sp.withdrawn === "1";
   const { dict } = await loadDict();
 
   // 開発用: 適当なシードユーザー 5 名を取得 (active のみ)
@@ -60,6 +67,26 @@ export default async function LoginPage({
             {error === "invalid"
               ? "メールアドレスまたはパスワードが正しくありません。"
               : "ログインに失敗しました。"}
+          </div>
+        )}
+
+        {passwordResetDone && (
+          <div
+            role="status"
+            data-testid="login-password-reset-done"
+            className="mt-4 rounded-md border border-brand-orange bg-brand-orange-soft px-3 py-2 text-sm text-brand-orange"
+          >
+            パスワードを再設定しました。新しいパスワードでログインしてください。
+          </div>
+        )}
+
+        {withdrawnDone && (
+          <div
+            role="status"
+            data-testid="login-withdrawn-done"
+            className="mt-4 rounded-md border border-brand-orange bg-brand-orange-soft px-3 py-2 text-sm text-brand-orange"
+          >
+            退会の手続きが完了しました。ご利用ありがとうございました。
           </div>
         )}
 

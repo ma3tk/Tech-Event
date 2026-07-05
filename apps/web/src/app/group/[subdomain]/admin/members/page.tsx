@@ -74,6 +74,13 @@ export default async function GroupAdminMembersPage({ params }: PageProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/group/${subdomain}/admin/blacklist`}
+            data-testid="group-blacklist-link"
+            className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
+          >
+            ブラックリスト管理
+          </Link>
           <a
             href={`/group/${subdomain}/admin/members/export.csv`}
             data-testid="group-members-csv-button"

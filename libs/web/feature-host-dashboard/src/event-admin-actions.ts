@@ -159,6 +159,115 @@ function parseRoles(form: FormData): {
 }
 
 /* ============================================================
+ * イベントタグ (Tag / EventTag)
+ * ============================================================ */
+
+/**
+ * カンマ区切りのタグ入力をパースする。
+ *
+ * - 半角カンマ / 全角読点の両方を区切りとして受け付ける
+ * - 前後空白除去・空要素除去・大文字小文字を無視した重複除去
+ * - 1 件 50 文字まで、最大 10 件
+ */
+function parseTagsInput(raw: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of raw.split(/[,、]/)) {
+    const name = part.trim();
+    if (!name || name.length > 50) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+    if (out.length >= 10) break;
+  }
+  return out;
+}
+
+/**
+ * Tag.slug の生成 (seed.ts の生成規則を踏襲しつつ日本語も許容)。
+ * 記号・空白は `-` に落とし、全て潰れた場合は hex fallback で一意性を確保する。
+ */
+function tagSlug(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || `tag-${Buffer.from(name, "utf8").toString("hex").slice(0, 24)}`;
+}
+
+/**
+ * イベントとタグ名リストの紐付けを同期する (トランザクション内で呼ぶ)。
+ *
+ * - 未知のタグ名は Tag を新規作成 (slug 衝突時は suffix を付与)
+ * - mode="create": EventTag を単純追加 (新規イベント用)
+ * - mode="replace": 既存 EventTag との差分を取り、外れたタグは削除
+ * - Tag.usageCount は EventTag 作成時 increment / 削除時 decrement
+ *   (duplicateEvent と同じ規約, data-model review Critical #5)
+ */
+async function syncEventTags(
+  tx: Tx2,
+  eventId: bigint,
+  tagNames: string[],
+  mode: "create" | "replace",
+): Promise<void> {
+  // タグ名 → Tag.id を解決 (無ければ作成)
+  const tagIds: bigint[] = [];
+  for (const name of tagNames) {
+    let tag = await tx.tag.findUnique({ where: { name } });
+    if (!tag) {
+      let slug = tagSlug(name);
+      const slugTaken = await tx.tag.findUnique({ where: { slug } });
+      const id = await nextId(tx, "tag");
+      if (slugTaken) slug = `${slug}-${id.toString()}`;
+      tag = await tx.tag.create({
+        data: { id, name, slug, usageCount: 0 },
+      });
+    }
+    tagIds.push(tag.id);
+  }
+
+  const wanted = new Set(tagIds.map((id) => id.toString()));
+
+  if (mode === "replace") {
+    const existing = await tx.eventTag.findMany({ where: { eventId } });
+    const existingIds = new Set(existing.map((e) => e.tagId.toString()));
+    // 外れたタグを削除
+    for (const et of existing) {
+      if (!wanted.has(et.tagId.toString())) {
+        await tx.eventTag.delete({
+          where: { eventId_tagId: { eventId, tagId: et.tagId } },
+        });
+        await tx.tag.update({
+          where: { id: et.tagId },
+          data: { usageCount: { decrement: 1 } },
+        });
+      }
+    }
+    // 増えたタグを追加
+    for (const tid of tagIds) {
+      if (!existingIds.has(tid.toString())) {
+        await tx.eventTag.create({ data: { eventId, tagId: tid } });
+        await tx.tag.update({
+          where: { id: tid },
+          data: { usageCount: { increment: 1 } },
+        });
+      }
+    }
+    return;
+  }
+
+  // mode === "create": 新規イベントなので単純追加
+  for (const tid of tagIds) {
+    await tx.eventTag.create({ data: { eventId, tagId: tid } });
+    await tx.tag.update({
+      where: { id: tid },
+      data: { usageCount: { increment: 1 } },
+    });
+  }
+}
+
+/* ============================================================
  * createEvent
  * ============================================================ */
 
@@ -232,6 +341,7 @@ export async function createEvent(formData: FormData): Promise<void> {
   const lotteryAnnounceAt = parseDateTimeLocal(data.lotteryAnnounceAt);
 
   const roles = parseRoles(formData);
+  const tagNames = parseTagsInput(formValue(formData, "tags"));
 
   let newEventId: bigint = BigInt(0);
   const finalStatus = data.status === "published" ? "published" : "draft";
@@ -284,6 +394,11 @@ export async function createEvent(formData: FormData): Promise<void> {
           currency: "JPY",
         },
       });
+    }
+
+    // タグ紐付け (入力タグを Tag に upsert して EventTag を作成)
+    if (tagNames.length > 0) {
+      await syncEventTags(tx, eventId, tagNames, "create");
     }
 
     // group.eventCount は status=published のみカウント (draft はカウント外)。
@@ -432,6 +547,16 @@ export async function updateEvent(formData: FormData): Promise<void> {
       ...themeUpdate,
     },
   });
+
+  // タグ同期: form に tags フィールドが存在する場合のみ差分反映する。
+  // (旧フォーム / 既存テストは tags を送らないため、その場合はタグを変更しない)
+  if (formData.has("tags")) {
+    const tagNames = parseTagsInput(formValue(formData, "tags"));
+    await prisma.$transaction(async (tx) => {
+      await syncEventTags(tx, eventId, tagNames, "replace");
+    });
+    revalidatePath("/explore");
+  }
 
   // 監査ログ
   void recordAudit({

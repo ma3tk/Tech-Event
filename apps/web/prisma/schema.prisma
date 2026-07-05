@@ -57,6 +57,8 @@ model User {
   notificationPreferences NotificationPreference[]
   // ============ コンポーネントフィードバック (DS 改善ループ) ============
   componentFeedbacks ComponentFeedback[]
+  // ============ パスワードリセット ============
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
   @@index([status])
@@ -470,6 +472,31 @@ model Message {
 }
 
 // ============ Magic Link (Luma inspired) ============
+
+// ============ パスワードリセット ============
+
+// パスワードリセット用ワンタイムトークン。
+// - 生トークン (32byte hex) はメール本文でのみ送付し、DB には sha256 ハッシュのみ保存する
+//   (DB 漏洩時にトークンを直接使えなくするため)。
+// - 有効期限は発行から 1 時間。使用済みは usedAt を set してワンタイム化する。
+model PasswordResetToken {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  /// 生トークンの sha256 ハッシュ (hex 64 文字)
+  tokenHash String   @unique
+  /// 有効期限 (発行から 1 時間)
+  expiresAt DateTime
+  /// 使用済み日時 (未使用は null)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  // 期限切れ token のクリーンアップ (`DELETE WHERE expiresAt < now()`) で使う index
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
 
 model MagicLinkToken {
   id        String   @id @default(uuid())

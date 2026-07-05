@@ -3,7 +3,10 @@
  *
  * Query:
  *  - q          フリーワード (title / catchPhrase / description にマッチ)
- *  - prefecture 都道府県スラッグ (address LIKE)
+ *  - prefecture 都道府県スラッグ (address LIKE)。47 都道府県 + overseas は
+ *               `@/lib/prefectures` の LOCATION_OPTIONS を参照。`online` は
+ *               eventFormat online/hybrid に絞り込み。旧地域スラッグ (tohoku 等)
+ *               もレガシーエイリアスとして後方互換
  *  - online     "1" のときオフライン除外
  *  - order      new(default) | popular | started_at
  *  - tag        タグ slug
@@ -32,27 +35,9 @@ import {
   absoluteUrl,
 } from "@/lib/seo";
 import { applyFtsWhere } from "@/lib/search";
+import { LOCATION_OPTIONS, prefectureLabel } from "@/lib/prefectures";
 
 const PAGE_SIZE = 20;
-
-/* ============================================================
- * 都道府県スラッグ -> 表示名のテーブル (47 都道府県の代表的なもの)
- *
- * フィルタ UI のセレクトオプションと、住所文字列マッチ用の正規化に使う。
- * ============================================================ */
-const PREFECTURES = [
-  { slug: "hokkaido", label: "北海道" },
-  { slug: "tohoku", label: "東北" },
-  { slug: "tokyo", label: "東京都" },
-  { slug: "kanagawa", label: "神奈川県" },
-  { slug: "chiba", label: "千葉県" },
-  { slug: "saitama", label: "埼玉県" },
-  { slug: "aichi", label: "愛知県" },
-  { slug: "osaka", label: "大阪府" },
-  { slug: "kyoto", label: "京都府" },
-  { slug: "hyogo", label: "兵庫県" },
-  { slug: "fukuoka", label: "福岡県" },
-] as const;
 
 type ExplorePageSearchParams = {
   q?: string;
@@ -134,9 +119,15 @@ function buildWhere(f: ParsedFilters): Prisma.EventWhereInput {
 
   // 都道府県は online との両立を許容 (hybrid 開催を考慮)
   if (f.prefecture) {
-    const label =
-      PREFECTURES.find((p) => p.slug === f.prefecture)?.label ?? f.prefecture;
-    where.address = { contains: label };
+    if (f.prefecture === "online") {
+      // 開催地セレクトの「オンライン」= オンラインのみチェックボックスと同義
+      where.eventFormat = { in: ["online", "hybrid"] };
+    } else {
+      // 47 都道府県 + 海外 + レガシー地域スラグ (tohoku 等) をラベルに解決して
+      // 住所文字列に部分一致。未知の slug は従来どおり生値でマッチ (後方互換)。
+      const label = prefectureLabel(f.prefecture) ?? f.prefecture;
+      where.address = { contains: label };
+    }
   }
 
   if (f.tag) {
@@ -506,7 +497,7 @@ function SearchFilterPanel({ filters }: { filters: ParsedFilters }) {
           className="h-9 rounded-md border border-border bg-background px-2 text-sm focus:border-brand-orange focus:outline-none"
         >
           <option value="">指定なし</option>
-          {PREFECTURES.map((p) => (
+          {LOCATION_OPTIONS.map((p) => (
             <option key={p.slug} value={p.slug}>
               {p.label}
             </option>

@@ -366,6 +366,19 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new Error("event_not_found");
+
+    // グループブラックリスト: BL 登録済みユーザーの申込は入口でブロックする
+    // (joinEvent と同じ判定。アンケート付き申込経路もカバーする)
+    const blacklisted = await tx.groupBlacklist.findUnique({
+      where: { groupId_userId: { groupId: event.groupId, userId: user.id } },
+    });
+    if (blacklisted) {
+      throw new ActionError(
+        "forbidden",
+        "このグループの主催者により参加申込がブロックされています",
+      );
+    }
+
     const role = await tx.eventRole.findUnique({ where: { id: eventRoleId } });
     if (!role || role.eventId !== eventId) {
       throw new Error("role_not_found");

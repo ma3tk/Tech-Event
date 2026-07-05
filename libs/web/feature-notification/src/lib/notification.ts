@@ -123,6 +123,8 @@ export type NotificationPayload = {
   /** host blast / direct message 用 */
   messageId?: string;
   subject?: string;
+  /** reminder_24h / reminder_1h 用: イベント開始日時 (ISO 8601) */
+  startedAt?: string;
 };
 
 /** JSON 文字列の payload を安全に object 化する。失敗時は空オブジェクト。 */
@@ -179,9 +181,86 @@ export function formatNotificationText(
       const subject = payload.subject ?? "お知らせ";
       return `主催者からのメッセージ: 「${subject}」`;
     }
+    case "reminder_24h": {
+      const title = payload.eventTitle ?? "参加予定のイベント";
+      return `リマインダー: 「${title}」は 24 時間以内に開始します`;
+    }
+    case "reminder_1h": {
+      const title = payload.eventTitle ?? "参加予定のイベント";
+      return `リマインダー: 「${title}」はまもなく (1 時間以内に) 開始します`;
+    }
     default:
       return `通知 (${kind})`;
   }
+}
+
+/* ============================================================
+ * 開催前リマインダー (reminder_24h / reminder_1h)
+ * ============================================================ */
+
+/** リマインダー通知の kind (cron `run-reminders` が生成する)。 */
+export const REMINDER_KINDS = ["reminder_24h", "reminder_1h"] as const;
+export type ReminderKind = (typeof REMINDER_KINDS)[number];
+
+/** kind ごとの「開催何ミリ秒前からウィンドウに入るか」。 */
+export const REMINDER_WINDOW_MS: Record<ReminderKind, number> = {
+  reminder_24h: 24 * 60 * 60 * 1000,
+  reminder_1h: 60 * 60 * 1000,
+};
+
+/**
+ * リマインダーメールの件名・本文を組み立てる。
+ *
+ * - i18n 辞書は使わず日本語直書き (メールはサイト表示言語と独立のため)。
+ * - `startedAt` は Asia/Tokyo で整形して本文に含める。
+ */
+export function buildReminderMailContent(params: {
+  kind: ReminderKind;
+  eventTitle: string;
+  startedAt: Date;
+  eventUrl: string;
+}): { subject: string; text: string; html: string } {
+  const { kind, eventTitle, startedAt, eventUrl } = params;
+  const when = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(startedAt);
+
+  const lead =
+    kind === "reminder_24h"
+      ? "開催まであと 24 時間を切りました"
+      : "開催まであと 1 時間を切りました";
+  const subject =
+    kind === "reminder_24h"
+      ? `【リマインダー】明日開催: ${eventTitle}`
+      : `【リマインダー】まもなく開催: ${eventTitle}`;
+
+  const text = [
+    `参加予定のイベント「${eventTitle}」の${lead}。`,
+    "",
+    `開始日時: ${when}`,
+    `イベントページ: ${eventUrl}`,
+    "",
+    "参加をキャンセルする場合はイベントページから手続きしてください。",
+    "このメールの受信設定は「設定 > 通知」から変更できます。",
+  ].join("\n");
+
+  const esc = (s: string): string =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const html = [
+    `<p>参加予定のイベント「${esc(eventTitle)}」の${esc(lead)}。</p>`,
+    `<p>開始日時: ${esc(when)}<br/>`,
+    `イベントページ: <a href="${esc(eventUrl)}">${esc(eventUrl)}</a></p>`,
+    `<p style="color:#666;font-size:12px">参加をキャンセルする場合はイベントページから手続きしてください。<br/>`,
+    `このメールの受信設定は「設定 &gt; 通知」から変更できます。</p>`,
+  ].join("\n");
+
+  return { subject, text, html };
 }
 
 /**
@@ -221,6 +300,8 @@ export function notificationIconKind(kind: string): NotificationIconKind {
   if (kind.startsWith("participant")) return "user";
   // ブックマーク
   if (kind.startsWith("bookmark")) return "heart";
+  // 開催前リマインダー
+  if (kind.startsWith("reminder")) return "calendar";
   // イベント / カレンダー
   if (kind === "event_published") return "calendar";
   if (kind.startsWith("event")) return "calendar";

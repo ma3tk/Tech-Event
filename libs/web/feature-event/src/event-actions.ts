@@ -168,6 +168,17 @@ export async function joinEvent(formData: FormData): Promise<void> {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new ActionError("not_found", "イベントが見つかりません");
 
+    // グループブラックリスト: BL 登録済みユーザーの申込は入口でブロックする
+    const blacklisted = await tx.groupBlacklist.findUnique({
+      where: { groupId_userId: { groupId: event.groupId, userId: user.id } },
+    });
+    if (blacklisted) {
+      throw new ActionError(
+        "forbidden",
+        "このグループの主催者により参加申込がブロックされています",
+      );
+    }
+
     const role = await tx.eventRole.findUnique({ where: { id: eventRoleId } });
     if (!role || role.eventId !== eventId) {
       throw new ActionError("not_found", "参加枠が見つかりません");

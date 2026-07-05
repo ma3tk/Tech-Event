@@ -6,13 +6,17 @@
  * 対応クエリパラメータ:
  *  - `event_id`         : イベントID (カンマ区切り複数可)
  *  - `keyword`          : タイトル/キャッチ/概要/住所 への AND 部分一致 (カンマ区切り複数可)
+ *  - `keyword_or`       : タイトル/キャッチ/概要/住所 への OR 部分一致 (カンマ区切り複数可)
  *  - `nickname`         : 参加者ニックネーム (カンマ区切り複数可)
  *  - `owner_nickname`   : 主催者ニックネーム (カンマ区切り複数可)
  *  - `group_id`         : グループID (カンマ区切り複数可)
+ *  - `subdomain`        : グループ subdomain (カンマ区切り複数可)
  *  - `prefecture`       : 都道府県スラグ。`online` で online format に絞り込み
  *  - `online`           : "true"/"1" で online イベントのみに絞り込み (拡張)
  *  - `ym`               : `yyyymm` (開催年月。複数指定はカンマ区切り)
  *  - `ymd`              : `yyyymmdd` (開催年月日。複数指定はカンマ区切り)
+ *  - `publish_ym`       : `yyyymm` (公開年月。複数指定はカンマ区切り)
+ *  - `publish_ymd`      : `yyyymmdd` (公開年月日。複数指定はカンマ区切り)
  *  - `order`            : 1=updated_at desc, 2=started_at asc, 3=accepted desc
  *  - `start` / `count`  : ページング
  *
@@ -124,6 +128,28 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
   }
 
+  // keyword_or: 各キーワードを OR 部分一致。`searchEvents` の検索演算子 `OR` を
+  // 利用するため、各キーワードをフレーズ quote して `OR` で連結する
+  // (FTS5 / LIKE フォールバック両対応)。
+  const keywordsOr = multi(searchParams, "keyword_or");
+  if (keywordsOr.length > 0) {
+    const orQuery = keywordsOr
+      .map((k) => `"${k.replace(/"/g, '""')}"`)
+      .join(" OR ");
+    const ids = await searchEvents(orQuery, { limit: 1000 });
+    if (ids !== null) {
+      andConditions.push({ id: { in: ids } });
+    }
+  }
+
+  // subdomain: グループの subdomain
+  const subdomains = multi(searchParams, "subdomain");
+  if (subdomains.length > 0) {
+    andConditions.push({
+      group: { subdomain: { in: subdomains } },
+    });
+  }
+
   // owner_nickname: ownerユーザーのnickname
   const ownerNicknames = multi(searchParams, "owner_nickname");
   if (ownerNicknames.length > 0) {
@@ -157,6 +183,23 @@ export async function GET(request: NextRequest): Promise<Response> {
     andConditions.push({
       OR: dateRanges.map((r) => ({
         startedAt: { gte: r.gte, lt: r.lt },
+      })),
+    });
+  }
+
+  // publish_ym / publish_ymd: 公開日時 (publishedAt) に対する範囲絞り込み。
+  // 開催日 (ym/ymd) とは独立した条件として AND 合成する (connpass v2 準拠)。
+  const publishYmRanges = multi(searchParams, "publish_ym")
+    .map(ymToRange)
+    .filter((r): r is { gte: Date; lt: Date } => r !== null);
+  const publishYmdRanges = multi(searchParams, "publish_ymd")
+    .map(ymdToRange)
+    .filter((r): r is { gte: Date; lt: Date } => r !== null);
+  const publishRanges = [...publishYmRanges, ...publishYmdRanges];
+  if (publishRanges.length > 0) {
+    andConditions.push({
+      OR: publishRanges.map((r) => ({
+        publishedAt: { gte: r.gte, lt: r.lt },
       })),
     });
   }
