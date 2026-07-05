@@ -37,6 +37,7 @@ import {
 } from "@/lib/notification";
 
 import { fanoutNotifications, resolveBaseUrl } from "./lib/notification-fanout";
+import { refundPayment } from "@tech-event/web-feature-payment";
 
 /* ============================================================
  * バリデーション
@@ -44,7 +45,8 @@ import { fanoutNotifications, resolveBaseUrl } from "./lib/notification-fanout";
 
 const EventFormatEnum = z.enum(["offline", "online", "hybrid"]);
 const RecruitmentEnum = z.enum(["fcfs", "lottery"]);
-const PricingEnum = z.enum(["free", "on_site", "prepaid"]);
+// donation = 寄付型 (donationMinAmount 以上の任意額。price は推奨額)
+const PricingEnum = z.enum(["free", "on_site", "prepaid", "donation"]);
 
 const EventRoleInputSchema = z.object({
   name: z.string().min(1).max(120),
@@ -126,41 +128,112 @@ async function isGroupAdmin(
   return !!row && (row.role === "owner" || row.role === "admin");
 }
 
-/** form から 3 件分の EventRole 入力を読み出す */
-function parseRoles(form: FormData): {
+type EventRolePricing = "free" | "on_site" | "prepaid" | "donation";
+
+type EventRoleInput = {
   name: string;
   capacity?: number;
-  pricingType: "free" | "on_site" | "prepaid";
+  pricingType: EventRolePricing;
   price: number;
-}[] {
-  const out: ReturnType<typeof parseRoles> = [];
+  /** 販売開始日時 (null = 即時販売) */
+  saleStartsAt: Date | null;
+  /** 販売終了日時 (null = イベント受付終了まで) */
+  saleEndsAt: Date | null;
+  /** 招待コード限定枠のコード (null = 制限なし) */
+  unlockCode: string | null;
+  /** pricingType=donation のときの最低寄付額 (null = 0 円扱い) */
+  donationMinAmount: number | null;
+};
+
+const PRICING_VALUES = ["free", "on_site", "prepaid", "donation"] as const;
+
+/**
+ * form から i 番目の EventRole 入力 1 行を読み出す。
+ * 枠名が空なら null (= 無効な行としてスキップ)。
+ * 販売期間の逆転や不正な招待コードは ActionError で弾く。
+ */
+function parseRoleRow(form: FormData, i: number): EventRoleInput | null {
+  const name = formValue(form, `eventRole[${i}].name`);
+  if (!name) return null;
+  const capRaw = formValue(form, `eventRole[${i}].capacity`);
+  const capacity = capRaw === "" ? undefined : Number(capRaw);
+  const priceRaw = formValue(form, `eventRole[${i}].price`);
+  const price = priceRaw === "" ? 0 : Number(priceRaw);
+  const pricingRaw = formValue(form, `eventRole[${i}].pricingType`);
+  const pricing = (PRICING_VALUES as readonly string[]).includes(pricingRaw)
+    ? (pricingRaw as EventRolePricing)
+    : "free";
+  const parsed = EventRoleInputSchema.safeParse({
+    name,
+    capacity:
+      capacity != null && Number.isFinite(capacity) ? capacity : undefined,
+    pricingType: pricing,
+    price: Number.isFinite(price) ? price : 0,
+  });
+  if (!parsed.success) return null;
+
+  // ---- 販売期間 (Early Bird 等) ----
+  const saleStartsAt = parseDateTimeLocal(
+    formValue(form, `eventRole[${i}].saleStartsAt`),
+  );
+  const saleEndsAt = parseDateTimeLocal(
+    formValue(form, `eventRole[${i}].saleEndsAt`),
+  );
+  if (saleStartsAt && saleEndsAt && saleEndsAt <= saleStartsAt) {
+    throw new ActionError(
+      "invalid_input",
+      `参加枠「${name}」の販売終了日時は販売開始日時より後にしてください`,
+    );
+  }
+
+  // ---- Unlock Code (招待コード限定枠) ----
+  const unlockRaw = formValue(form, `eventRole[${i}].unlockCode`).trim();
+  if (unlockRaw.length > 64) {
+    throw new ActionError(
+      "invalid_input",
+      `参加枠「${name}」の招待コードは 64 文字以内で入力してください`,
+    );
+  }
+  const unlockCode = unlockRaw || null;
+
+  // ---- Donation (寄付型) の最低寄付額 ----
+  const donationRaw = formValue(form, `eventRole[${i}].donationMinAmount`);
+  const donationNum = donationRaw === "" ? NaN : Number(donationRaw);
+  const donationMinAmount =
+    parsed.data.pricingType === "donation" &&
+    Number.isFinite(donationNum) &&
+    donationNum >= 0 &&
+    donationNum <= 10_000_000
+      ? Math.floor(donationNum)
+      : null;
+
+  return {
+    ...parsed.data,
+    saleStartsAt,
+    saleEndsAt,
+    unlockCode,
+    donationMinAmount,
+  };
+}
+
+/** form から 5 件分の EventRole 入力を読み出す */
+function parseRoles(form: FormData): EventRoleInput[] {
+  const out: EventRoleInput[] = [];
   for (let i = 0; i < 5; i++) {
-    const name = formValue(form, `eventRole[${i}].name`);
-    if (!name) continue;
-    const capRaw = formValue(form, `eventRole[${i}].capacity`);
-    const capacity = capRaw === "" ? undefined : Number(capRaw);
-    const priceRaw = formValue(form, `eventRole[${i}].price`);
-    const price = priceRaw === "" ? 0 : Number(priceRaw);
-    const pricingRaw = formValue(form, `eventRole[${i}].pricingType`);
-    const pricing = (["free", "on_site", "prepaid"] as const).includes(
-      pricingRaw as "free" | "on_site" | "prepaid",
-    )
-      ? (pricingRaw as "free" | "on_site" | "prepaid")
-      : "free";
-    const parsed = EventRoleInputSchema.safeParse({
-      name,
-      capacity:
-        capacity != null && Number.isFinite(capacity) ? capacity : undefined,
-      pricingType: pricing,
-      price: Number.isFinite(price) ? price : 0,
-    });
-    if (parsed.success) {
-      out.push(parsed.data);
-    }
+    const row = parseRoleRow(form, i);
+    if (row) out.push(row);
   }
   if (out.length === 0) {
     // フォールバック: 一般 (定員/料金は親 capacity に従う)
-    out.push({ name: "一般", pricingType: "free", price: 0 });
+    out.push({
+      name: "一般",
+      pricingType: "free",
+      price: 0,
+      saleStartsAt: null,
+      saleEndsAt: null,
+      unlockCode: null,
+      donationMinAmount: null,
+    });
   }
   return out;
 }
@@ -399,6 +472,10 @@ export async function createEvent(formData: FormData): Promise<void> {
           pricingType: r.pricingType,
           price: r.price,
           currency: "JPY",
+          saleStartsAt: r.saleStartsAt,
+          saleEndsAt: r.saleEndsAt,
+          unlockCode: r.unlockCode,
+          donationMinAmount: r.donationMinAmount,
         },
       });
     }
@@ -554,6 +631,43 @@ export async function updateEvent(formData: FormData): Promise<void> {
       ...themeUpdate,
     },
   });
+
+  // ---- 参加枠 (EventRole) の設定更新 ----
+  // form に eventRole[i].id が含まれる場合のみ、該当枠の販売設定
+  // (name / capacity / pricingType / price / saleStartsAt / saleEndsAt /
+  //  unlockCode / donationMinAmount) を更新する。
+  // 旧フォーム / 既存テストはこれらのキーを送らないため、その場合は
+  // 参加枠を一切変更しない (後方互換)。枠の削除は行わない (参加者が参照するため)。
+  const roleUpdates: { id: bigint; input: EventRoleInput }[] = [];
+  for (let i = 0; i < 10; i++) {
+    const idRaw = formValue(formData, `eventRole[${i}].id`);
+    if (!/^\d+$/.test(idRaw)) continue;
+    const input = parseRoleRow(formData, i);
+    if (!input) continue; // 枠名が空の行はスキップ (変更しない)
+    roleUpdates.push({ id: BigInt(idRaw), input });
+  }
+  if (roleUpdates.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      for (const { id, input } of roleUpdates) {
+        const role = await tx.eventRole.findUnique({ where: { id } });
+        // 他イベントの枠 id が紛れ込んでいた場合は無視 (認可済み event のみ更新)
+        if (!role || role.eventId !== eventId) continue;
+        await tx.eventRole.update({
+          where: { id },
+          data: {
+            name: input.name,
+            capacity: input.capacity ?? null,
+            pricingType: input.pricingType,
+            price: input.price,
+            saleStartsAt: input.saleStartsAt,
+            saleEndsAt: input.saleEndsAt,
+            unlockCode: input.unlockCode,
+            donationMinAmount: input.donationMinAmount,
+          },
+        });
+      }
+    });
+  }
 
   // タグ同期: form に tags フィールドが存在する場合のみ差分反映する。
   // (旧フォーム / 既存テストは tags を送らないため、その場合はタグを変更しない)
@@ -798,6 +912,46 @@ export async function cancelEvent(formData: FormData): Promise<void> {
         err: e instanceof Error ? e.message : String(e),
       },
       "event cancelled participant notification failed",
+    );
+  }
+
+  // 有料参加者への自動返金 (イベント中止時)。
+  // - 支払い済み (succeeded / partially_refunded) の Payment を持つ参加者を全額返金。
+  // - refundPayment 内部で認可 (owner/GroupAdmin) と冪等 (残額 0 はスキップ) を担保。
+  // - Stripe 未設定 (現地払い) 時は DB のみ更新。個別失敗は握りつぶしてログ。
+  try {
+    const paidParticipants = await prisma.participant.findMany({
+      where: {
+        eventId,
+        payment: { is: { status: { in: ["succeeded", "partially_refunded"] } } },
+      },
+      select: { id: true },
+    });
+    for (const p of paidParticipants) {
+      try {
+        await refundPayment(p.id.toString(), {
+          reason: cancelReason
+            ? `イベント中止による自動返金: ${cancelReason}`
+            : "イベント中止による自動返金",
+        });
+      } catch (e) {
+        logger.warn(
+          {
+            eventId: eventId.toString(),
+            participantId: p.id.toString(),
+            err: e instanceof Error ? e.message : String(e),
+          },
+          "event cancel auto-refund failed for participant",
+        );
+      }
+    }
+  } catch (e) {
+    logger.warn(
+      {
+        eventId: eventId.toString(),
+        err: e instanceof Error ? e.message : String(e),
+      },
+      "event cancel auto-refund lookup failed",
     );
   }
 
@@ -1352,6 +1506,15 @@ export async function duplicateEvent(formData: FormData): Promise<void> {
             currency: r.currency,
             autoPromoteFromWaiting: r.autoPromoteFromWaiting,
             visibleAfterFull: r.visibleAfterFull,
+            // 販売期間は開催日時と同様に shiftDays 分シフトしてコピー
+            saleStartsAt: r.saleStartsAt
+              ? new Date(r.saleStartsAt.getTime() + shiftMs)
+              : null,
+            saleEndsAt: r.saleEndsAt
+              ? new Date(r.saleEndsAt.getTime() + shiftMs)
+              : null,
+            unlockCode: r.unlockCode,
+            donationMinAmount: r.donationMinAmount,
           },
         });
       }

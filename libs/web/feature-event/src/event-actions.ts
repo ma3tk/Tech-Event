@@ -17,6 +17,8 @@
  * BigInt / Date は SQLite + Prisma 7 上で正常に動作する。
  */
 
+import { timingSafeEqual } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -144,6 +146,82 @@ async function notifyOwner(
   });
 }
 
+/** タイミング攻撃を避けた文字列比較 (招待コード照合用) */
+function safeCodeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
+/**
+ * 参加枠のゲート条件 (販売期間 / Unlock Code / 寄付額) を検証する。
+ *
+ * - 販売期間: now が saleStartsAt 前 or saleEndsAt 後なら申込不可 (null は無制限)
+ * - Unlock Code: role.unlockCode が設定されている枠は、form の `unlockCode`
+ *   (apply フォームの入力欄 or URL `?unlock=` から埋め込まれた値) と一致しないと申込不可
+ * - Donation: pricingType=donation の枠は form の `donationAmount` が
+ *   donationMinAmount (未設定なら 0) 以上の整数でないと申込不可
+ *
+ * 戻り値: donation 枠のときは検証済み寄付額、それ以外は null。
+ * ゲート違反時は ActionError を throw する。
+ */
+function assertRoleGate(
+  role: {
+    saleStartsAt: Date | null;
+    saleEndsAt: Date | null;
+    unlockCode: string | null;
+    pricingType: string;
+    donationMinAmount: number | null;
+  },
+  formData: FormData,
+  now: Date = new Date(),
+): number | null {
+  // ---- 販売期間 (Early Bird 等) ----
+  if (role.saleStartsAt && now < role.saleStartsAt) {
+    throw new ActionError(
+      "forbidden",
+      "この参加枠はまだ販売開始前です (販売期間外)",
+    );
+  }
+  if (role.saleEndsAt && now > role.saleEndsAt) {
+    throw new ActionError(
+      "forbidden",
+      "この参加枠の販売期間は終了しました (販売期間外)",
+    );
+  }
+
+  // ---- Unlock Code (招待コード限定枠) ----
+  if (role.unlockCode) {
+    const code = formValue(formData, "unlockCode").trim();
+    if (!code || !safeCodeEqual(code, role.unlockCode)) {
+      throw new ActionError(
+        "forbidden",
+        "この参加枠は招待コード限定です。正しい招待コードを入力してください",
+      );
+    }
+  }
+
+  // ---- Donation (寄付型) ----
+  if (role.pricingType === "donation") {
+    const raw = formValue(formData, "donationAmount").trim();
+    const amount = Number(raw);
+    const min = role.donationMinAmount ?? 0;
+    if (
+      !raw ||
+      !Number.isInteger(amount) ||
+      amount < min ||
+      amount > 10_000_000
+    ) {
+      throw new ActionError(
+        "invalid_input",
+        `寄付金額は ${min.toLocaleString("ja-JP")} 円以上の整数で入力してください`,
+      );
+    }
+    return amount;
+  }
+  return null;
+}
+
 /**
  * NotificationPreference を参照し、kind × channel が有効か判定する。
  * レコード無し = 既定で有効として扱う。
@@ -178,6 +256,17 @@ export async function joinEvent(formData: FormData): Promise<void> {
   if (!user) {
     loginRedirect(eventId.toString());
   }
+
+  // ---- 参加枠ゲート (販売期間 / Unlock Code / 寄付額) の事前チェック ----
+  // トランザクション内でも role の存在検証は行うが、ゲート違反は
+  // ここで先に弾く (redirect / ActionError をトランザクション外で発生させる)。
+  const gateRole = await prisma.eventRole.findUnique({
+    where: { id: eventRoleId },
+  });
+  if (!gateRole || gateRole.eventId !== eventId) {
+    throw new ActionError("not_found", "参加枠が見つかりません");
+  }
+  const donationAmount = assertRoleGate(gateRole, formData);
 
   // 絶対 URL (メール/通知内リンク) 用の origin はトランザクション前に解決しておく
   const origin = await resolveRequestOrigin();
@@ -495,11 +584,21 @@ export async function joinEvent(formData: FormData): Promise<void> {
   await sendParticipantMailsSafely([mailTask]);
 
   // 監査ログ (best-effort, トランザクション外)
+  // donation 枠の場合は寄付額を metadata に記録する
+  // (prepaid 相当の決済は P1 の決済アクションに委譲。ここは金額記録のみ)
   await recordAudit({
     actorUserId: user.id,
     action: "event.join",
     targetType: "Event",
     targetId: eventId,
+    ...(donationAmount != null
+      ? {
+          metadata: {
+            donationAmount,
+            eventRoleId: eventRoleId.toString(),
+          },
+        }
+      : {}),
   });
 
   revalidateEvent(eventId);

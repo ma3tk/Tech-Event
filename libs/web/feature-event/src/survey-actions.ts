@@ -21,12 +21,15 @@
  *   scale    -> 1〜5 などの段階評価 (options: { min:1, max:5 })
  */
 
+import { timingSafeEqual } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
 import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
@@ -306,6 +309,13 @@ const SubmitSchema = z.object({
   eventRoleId: BigIntIdString,
 });
 
+/** タイミング攻撃を避けた文字列比較 (招待コード照合用) */
+function safeCodeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
 /**
  * アンケート回答を保存しつつ参加申込を行う。
  *
@@ -328,6 +338,55 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
     redirect(
       `/login?next=${encodeURIComponent(`/event/${eventId.toString()}/apply`)}`,
     );
+  }
+
+  // ============ 参加枠ゲート (販売期間 / Unlock Code / 寄付額) ============
+  // apply ページ経由の申込では、入力ミス (コード不一致 / 寄付額不足) は
+  // フォームに戻して再入力させる (既存の error=required と同じ流儀)。
+  // 販売期間外は入力で回復できないため ActionError で拒否する。
+  const gateRole = await prisma.eventRole.findUnique({
+    where: { id: eventRoleId },
+  });
+  if (!gateRole || gateRole.eventId !== eventId) {
+    throw new ActionError("not_found", "参加枠が見つかりません");
+  }
+  const gateNow = new Date();
+  if (gateRole.saleStartsAt && gateNow < gateRole.saleStartsAt) {
+    throw new ActionError(
+      "forbidden",
+      "この参加枠はまだ販売開始前です (販売期間外)",
+    );
+  }
+  if (gateRole.saleEndsAt && gateNow > gateRole.saleEndsAt) {
+    throw new ActionError(
+      "forbidden",
+      "この参加枠の販売期間は終了しました (販売期間外)",
+    );
+  }
+  if (gateRole.unlockCode) {
+    const code = formValueRaw(formData, "unlockCode").trim();
+    if (!code || !safeCodeEqual(code, gateRole.unlockCode)) {
+      redirect(
+        `/event/${eventId.toString()}/apply?eventRoleId=${eventRoleId.toString()}&error=unlock`,
+      );
+    }
+  }
+  let donationAmount: number | null = null;
+  if (gateRole.pricingType === "donation") {
+    const raw = formValueRaw(formData, "donationAmount").trim();
+    const amount = Number(raw);
+    const min = gateRole.donationMinAmount ?? 0;
+    if (
+      !raw ||
+      !Number.isInteger(amount) ||
+      amount < min ||
+      amount > 10_000_000
+    ) {
+      redirect(
+        `/event/${eventId.toString()}/apply?eventRoleId=${eventRoleId.toString()}&error=donation`,
+      );
+    }
+    donationAmount = amount;
   }
 
   // 質問取得 (validation 用)
@@ -631,6 +690,21 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
 
   // メール送信は DB commit 後 (失敗しても throw しない)
   await sendParticipantMailsSafely([mailTask]);
+
+  // donation 枠の場合は寄付額を監査ログに記録する
+  // (prepaid 相当の決済は P1 の決済アクションに委譲。ここは金額記録のみ)
+  if (donationAmount != null) {
+    void recordAudit({
+      actorUserId: user.id,
+      action: "event.join-donation",
+      targetType: "Event",
+      targetId: eventId,
+      metadata: {
+        donationAmount,
+        eventRoleId: eventRoleId.toString(),
+      },
+    });
+  }
 
   revalidatePath(`/event/${eventId.toString()}`);
   revalidatePath(`/dashboard`);

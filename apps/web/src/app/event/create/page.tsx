@@ -390,78 +390,153 @@ function RoleRow({
 }: {
   index: number;
   defaultName: string;
-  defaultPricing: "free" | "on_site" | "prepaid";
+  defaultPricing: "free" | "on_site" | "prepaid" | "donation";
   required?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-3 rounded-md border border-border p-3 sm:grid-cols-[2fr_1fr_1fr_1fr]">
-      <div>
-        <label
-          htmlFor={`eventRole-${index}-name`}
-          className="mb-1 block text-xs font-medium text-muted-foreground"
-        >
-          枠名{required ? " *" : ""}
-        </label>
-        <input
-          id={`eventRole-${index}-name`}
-          name={`eventRole[${index}].name`}
-          type="text"
-          required={required}
-          defaultValue={defaultName}
-          maxLength={120}
-          placeholder={index === 0 ? "一般" : "(空欄なら無効)"}
-          className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
-        />
+    <div className="space-y-3 rounded-md border border-border p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr_1fr_1fr]">
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-name`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            枠名{required ? " *" : ""}
+          </label>
+          <input
+            id={`eventRole-${index}-name`}
+            name={`eventRole[${index}].name`}
+            type="text"
+            required={required}
+            defaultValue={defaultName}
+            maxLength={120}
+            placeholder={index === 0 ? "一般" : "(空欄なら無効)"}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-capacity`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            定員
+          </label>
+          <input
+            id={`eventRole-${index}-capacity`}
+            name={`eventRole[${index}].capacity`}
+            type="number"
+            min={0}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-pricingType`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            料金タイプ
+          </label>
+          <select
+            id={`eventRole-${index}-pricingType`}
+            name={`eventRole[${index}].pricingType`}
+            defaultValue={defaultPricing}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          >
+            <option value="free">無料</option>
+            <option value="on_site">会場払い</option>
+            <option value="prepaid">前払い</option>
+            <option value="donation">寄付 (任意額)</option>
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-price`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            料金 (円)
+          </label>
+          <input
+            id={`eventRole-${index}-price`}
+            name={`eventRole[${index}].price`}
+            type="number"
+            min={0}
+            defaultValue={0}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
       </div>
-      <div>
-        <label
-          htmlFor={`eventRole-${index}-capacity`}
-          className="mb-1 block text-xs font-medium text-muted-foreground"
-        >
-          定員
-        </label>
-        <input
-          id={`eventRole-${index}-capacity`}
-          name={`eventRole[${index}].capacity`}
-          type="number"
-          min={0}
-          className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
-        />
+      {/* 販売期間 (Early Bird 等) / 招待コード / 寄付最低額 */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr]">
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-saleStartsAt`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            販売開始日時
+          </label>
+          <input
+            id={`eventRole-${index}-saleStartsAt`}
+            name={`eventRole[${index}].saleStartsAt`}
+            type="datetime-local"
+            data-testid={`event-role-${index}-sale-starts-at`}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-saleEndsAt`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            販売終了日時
+          </label>
+          <input
+            id={`eventRole-${index}-saleEndsAt`}
+            name={`eventRole[${index}].saleEndsAt`}
+            type="datetime-local"
+            data-testid={`event-role-${index}-sale-ends-at`}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-unlockCode`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            招待コード
+          </label>
+          <input
+            id={`eventRole-${index}-unlockCode`}
+            name={`eventRole[${index}].unlockCode`}
+            type="text"
+            maxLength={64}
+            placeholder="(設定すると限定枠)"
+            data-testid={`event-role-${index}-unlock-code`}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`eventRole-${index}-donationMinAmount`}
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            最低寄付額 (円)
+          </label>
+          <input
+            id={`eventRole-${index}-donationMinAmount`}
+            name={`eventRole[${index}].donationMinAmount`}
+            type="number"
+            min={0}
+            placeholder="寄付枠のみ"
+            data-testid={`event-role-${index}-donation-min`}
+            className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
+          />
+        </div>
       </div>
-      <div>
-        <label
-          htmlFor={`eventRole-${index}-pricingType`}
-          className="mb-1 block text-xs font-medium text-muted-foreground"
-        >
-          料金タイプ
-        </label>
-        <select
-          id={`eventRole-${index}-pricingType`}
-          name={`eventRole[${index}].pricingType`}
-          defaultValue={defaultPricing}
-          className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
-        >
-          <option value="free">無料</option>
-          <option value="on_site">会場払い</option>
-          <option value="prepaid">前払い</option>
-        </select>
-      </div>
-      <div>
-        <label
-          htmlFor={`eventRole-${index}-price`}
-          className="mb-1 block text-xs font-medium text-muted-foreground"
-        >
-          料金 (円)
-        </label>
-        <input
-          id={`eventRole-${index}-price`}
-          name={`eventRole[${index}].price`}
-          type="number"
-          min={0}
-          defaultValue={0}
-          className="block w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm focus:border-brand-orange focus:outline-none"
-        />
-      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        販売期間を設定すると期間外は申込不可になります (Early Bird 等)。
+        招待コードを設定するとコードを知っている人のみ申込可能です。
+        料金タイプ「寄付」は最低寄付額以上の任意額で申込できます (料金欄は推奨額)。
+      </p>
     </div>
   );
 }

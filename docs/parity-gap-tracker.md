@@ -38,13 +38,17 @@
 - [x] グループ一括メッセージ (sendGroupMessage + /group/[subdomain]/admin/broadcast)
 - [ ] 残: bookmark_event_started の発生源 (ブックマークしたイベント開始通知) は未接続
 
-## Wave 3 — 決済拡張
+## Wave 3 — 決済拡張 — 完了 ✅ 2026-07-06
 
-- [ ] 返金処理 (webhook refund + 手動 refund)
-- [ ] 領収データ / 適格請求書番号発行
-- [ ] クーポン / 割引コード
-- [ ] Unlock Code (招待コード限定枠)
-- [ ] Donation チケット / Tier 別販売期間 (Early Bird)
+schema 基盤 (8df3673) は Opus 直実装。実装は決済コア (P1) / 枠設定ゲート (P2) を並列 + donation×Stripe シーム・自動返金は Opus 統合。
+検証: typecheck 36 / build / lint 0 errors / 新規 E2E 9 passed (payment-refund-coupon 5 + eventrole-sale-unlock 4) / 回帰 stripe-payment·participate·organizer-broadcast 緑。
+
+- [x] 返金処理 (webhook charge.refunded/refund.updated + 手動 refundPayment + admin/refunds UI)
+- [x] イベント中止時の自動返金 (cancelEvent → 支払い済み参加者を全額返金)
+- [x] 領収データ / 適格請求書番号発行 (/event/[id]/receipt, R-{eventId}-{seq} 採番, 内税内訳)
+- [x] クーポン / 割引コード (Coupon CRUD + validateCoupon + checkout 割引 + admin/coupons UI)
+- [x] Unlock Code (招待コード限定枠, timingSafeEqual 比較, apply ゲート)
+- [x] Donation チケット (任意額入力 → Stripe checkout に配線) / Tier 別販売期間 (saleStartsAt/saleEndsAt)
 
 ## Wave 4 — 発見・ソーシャル
 
