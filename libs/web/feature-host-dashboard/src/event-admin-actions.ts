@@ -30,6 +30,13 @@ import { logger } from "@/lib/logger";
 import { incrementCounter, METRIC_NAMES } from "@/lib/metrics";
 import { getString as formValue, getStringRaw as formValueRaw, getInt as formInt } from "@/lib/form-data";
 import { BigIntIdString, UrlOrEmpty } from "@/lib/schemas";
+import {
+  buildEventCancelledMailContent,
+  buildGroupMessageMailContent,
+  formatEventDateJst,
+} from "@/lib/notification";
+
+import { fanoutNotifications, resolveBaseUrl } from "./lib/notification-fanout";
 
 /* ============================================================
  * バリデーション
@@ -628,6 +635,68 @@ export async function publishEvent(formData: FormData): Promise<void> {
     });
   }
 
+  // グループメンバーへの新着イベント通知 (event_published): 初回公開時のみ。
+  // - GroupMember.receiveAnnouncement=false / 退会済 (leftAt) / 公開者本人は対象外
+  // - NotificationPreference (event_published × in_app/email) を尊重
+  // - 冪等性: 同一 (recipientUserId, eventId, kind) の既存行があればスキップ
+  // - 通知処理の失敗は公開処理自体を止めない (握りつぶしてログ)
+  if (!wasAlreadyPublished) {
+    try {
+      const members = await prisma.groupMember.findMany({
+        where: {
+          groupId: event.groupId,
+          leftAt: null,
+          receiveAnnouncement: true,
+          userId: { not: user.id },
+        },
+        select: {
+          userId: true,
+          user: { select: { email: true, status: true } },
+        },
+      });
+      const recipients = members
+        .filter((m) => m.user.status === "active")
+        .map((m) => ({ userId: m.userId, email: m.user.email }));
+      const eventUrl = `${resolveBaseUrl()}/event/${eventId.toString()}`;
+      const mail = buildGroupMessageMailContent({
+        groupName: event.group.name,
+        subject: `新着イベント: ${event.title}`,
+        body: [
+          `${event.group.name} の新しいイベントが公開されました。`,
+          "",
+          `イベント名: ${event.title}`,
+          `開催日時: ${formatEventDateJst(event.startedAt)}`,
+        ].join("\n"),
+        url: eventUrl,
+      });
+      const result = await fanoutNotifications({
+        kind: "event_published",
+        eventId,
+        groupId: event.groupId,
+        recipients,
+        payload: { eventTitle: event.title, groupName: event.group.name },
+        dedupeByEvent: true,
+        buildMail: () => mail,
+      });
+      logger.info(
+        {
+          action: "event.publish.notify-members",
+          eventId: eventId.toString(),
+          ...result,
+        },
+        "event published notifications dispatched",
+      );
+    } catch (e) {
+      logger.warn(
+        {
+          eventId: eventId.toString(),
+          err: e instanceof Error ? e.message : String(e),
+        },
+        "event published member notification failed",
+      );
+    }
+  }
+
   // 監査ログ
   void recordAudit({
     actorUserId: user.id,
@@ -678,6 +747,59 @@ export async function cancelEvent(formData: FormData): Promise<void> {
       });
     }
   });
+
+  // 参加者 (accepted + waiting) への中止通知 (event_cancelled)。
+  // - NotificationPreference (event_cancelled × in_app/email) を尊重
+  // - 冪等性: 同一 (recipientUserId, eventId, kind) の既存行があればスキップ
+  //   (既に cancelled の event を再中止しても二重送信されない)
+  // - form の `reason` (任意, 500 文字まで) があればメール / payload に含める
+  // - 通知処理の失敗は中止処理自体を止めない (commit 済のため握りつぶしてログ)
+  const cancelReason = formValue(formData, "reason").trim().slice(0, 500);
+  try {
+    const participants = await prisma.participant.findMany({
+      where: { eventId, status: { in: ["accepted", "waiting"] } },
+      select: {
+        userId: true,
+        user: { select: { email: true, status: true } },
+      },
+    });
+    const recipients = participants
+      .filter((p) => p.user.status === "active")
+      .map((p) => ({ userId: p.userId, email: p.user.email }));
+    const eventUrl = `${resolveBaseUrl()}/event/${eventId.toString()}`;
+    const mail = buildEventCancelledMailContent({
+      eventTitle: event.title,
+      reason: cancelReason || undefined,
+      eventUrl,
+    });
+    const result = await fanoutNotifications({
+      kind: "event_cancelled",
+      eventId,
+      recipients,
+      payload: {
+        eventTitle: event.title,
+        ...(cancelReason ? { reason: cancelReason } : {}),
+      },
+      dedupeByEvent: true,
+      buildMail: () => mail,
+    });
+    logger.info(
+      {
+        action: "event.cancel.notify-participants",
+        eventId: eventId.toString(),
+        ...result,
+      },
+      "event cancelled notifications dispatched",
+    );
+  } catch (e) {
+    logger.warn(
+      {
+        eventId: eventId.toString(),
+        err: e instanceof Error ? e.message : String(e),
+      },
+      "event cancelled participant notification failed",
+    );
+  }
 
   // 監査ログ
   void recordAudit({

@@ -29,6 +29,22 @@ import { nextId, withRetry } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
 import { getStringRaw as formValue } from "@/lib/form-data";
 import { BigIntIdSchema } from "@/lib/schemas";
+import {
+  buildCancelMailContent,
+  buildJoinConfirmedMailContent,
+  buildWaitlistedMailContent,
+  isNotificationKindEnabled,
+} from "@/lib/notification";
+
+import {
+  buildEventIcsAttachment,
+  createParticipantNotification,
+  eventAbsoluteUrl,
+  promoteWaitingHeadIfEnabled,
+  resolveRequestOrigin,
+  sendParticipantMailsSafely,
+  type ParticipantMailTask,
+} from "./lib/participant-notify";
 
 /* ============================================================
  * バリデーションスキーマ
@@ -163,8 +179,12 @@ export async function joinEvent(formData: FormData): Promise<void> {
     loginRedirect(eventId.toString());
   }
 
-  // UNIQUE 制約衝突 (採番レース) を最大 3 回までリトライ
-  await withRetry(() => prisma.$transaction(async (tx) => {
+  // 絶対 URL (メール/通知内リンク) 用の origin はトランザクション前に解決しておく
+  const origin = await resolveRequestOrigin();
+
+  // UNIQUE 制約衝突 (採番レース) を最大 3 回までリトライ。
+  // 戻り値 = commit 後に送信する参加者向けメール (不要なら null)。
+  const mailTask = await withRetry(() => prisma.$transaction(async (tx): Promise<ParticipantMailTask | null> => {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new ActionError("not_found", "イベントが見つかりません");
 
@@ -192,7 +212,7 @@ export async function joinEvent(formData: FormData): Promise<void> {
         status: { not: "cancelled" },
       },
     });
-    if (existing) return;
+    if (existing) return null;
 
     const now = new Date();
 
@@ -243,7 +263,8 @@ export async function joinEvent(formData: FormData): Promise<void> {
         eventId,
         kind: "approval_requested",
       });
-      return;
+      // 参加はまだ確定していない (承認結果は approval-actions で通知する)
+      return null;
     }
 
     // 抽選方式の枠 (役割) の場合は status=pending で保存し、定員チェックや
@@ -291,7 +312,8 @@ export async function joinEvent(formData: FormData): Promise<void> {
         eventId,
         kind: "participant_joined",
       });
-      return;
+      // 参加はまだ確定していない (抽選結果は lottery-actions で通知する)
+      return null;
     }
 
     // 以下は先着 (fcfs) のときの従来挙動
@@ -417,7 +439,60 @@ export async function joinEvent(formData: FormData): Promise<void> {
       userId: user.id,
       joinedVia: "event_join",
     });
+
+    // ---- 参加者本人向け通知 (join_confirmed / waitlisted) + メールタスク ----
+    // NotificationPreference (in_app / email) を尊重。メール送信自体は
+    // DB commit 後 (sendParticipantMailsSafely) に行う。
+    const eventUrl = eventAbsoluteUrl(origin, eventId);
+    const selfKind = isFull ? "waitlisted" : "join_confirmed";
+    const { emailEnabled } = await createParticipantNotification(tx, {
+      recipientUserId: user.id,
+      eventId,
+      kind: selfKind,
+      payload: {
+        eventTitle: event.title,
+        startedAt: event.startedAt.toISOString(),
+      },
+      receiveNotificationEmail: user.receiveNotificationEmail,
+    });
+    if (!emailEnabled) return null;
+
+    if (isFull) {
+      // 補欠登録メール (.ics なし: 参加は未確定のため)
+      return {
+        to: user.email,
+        content: buildWaitlistedMailContent({
+          eventTitle: event.title,
+          eventUrl,
+        }),
+      };
+    }
+    // 申込完了メール (.ics 添付)
+    return {
+      to: user.email,
+      content: buildJoinConfirmedMailContent({
+        eventTitle: event.title,
+        startedAt: event.startedAt,
+        venue: [event.place, event.address].filter(Boolean).join(" ") || undefined,
+        eventUrl,
+        roleName: role.name,
+      }),
+      attachments: [
+        buildEventIcsAttachment({
+          eventId,
+          title: event.title,
+          startedAt: event.startedAt,
+          endedAt: event.endedAt,
+          place: event.place,
+          address: event.address,
+          eventUrl,
+        }),
+      ],
+    };
   }));
+
+  // メール送信は DB commit 後 (失敗しても throw しない)
+  await sendParticipantMailsSafely([mailTask]);
 
   // 監査ログ (best-effort, トランザクション外)
   await recordAudit({
@@ -448,7 +523,13 @@ export async function cancelParticipation(formData: FormData): Promise<void> {
     loginRedirect(eventId.toString());
   }
 
-  await withRetry(() => prisma.$transaction(async (tx) => {
+  // 絶対 URL (メール内リンク) 用の origin はトランザクション前に解決しておく
+  const origin = await resolveRequestOrigin();
+
+  // 戻り値 = commit 後に送信するメール群 (本人向けキャンセル完了 / 繰上当選者向け)
+  const mailTasks = await withRetry(() => prisma.$transaction(async (tx): Promise<(ParticipantMailTask | null)[]> => {
+    const tasks: (ParticipantMailTask | null)[] = [];
+
     // 自分の active な参加レコード (accepted | waiting | pending) を取得
     const me = await tx.participant.findFirst({
       where: {
@@ -457,7 +538,7 @@ export async function cancelParticipation(formData: FormData): Promise<void> {
         status: { in: ["accepted", "waiting", "pending"] },
       },
     });
-    if (!me) return; // no-op
+    if (!me) return tasks; // no-op
 
     const wasAccepted = me.status === "accepted";
     const wasWaiting = me.status === "waiting";
@@ -486,7 +567,7 @@ export async function cancelParticipation(formData: FormData): Promise<void> {
       });
     }
 
-    // 主催者にキャンセル通知
+    // 主催者にキャンセル通知 (既存挙動: participant_cancelled は残す)
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (event) {
       await notifyOwner(tx, {
@@ -496,45 +577,48 @@ export async function cancelParticipation(formData: FormData): Promise<void> {
         eventId,
         kind: "participant_cancelled",
       });
+
+      // 本人向けキャンセル完了メール (in-app 通知は作らない)。
+      // NotificationPreference は participant_cancelled × email で判定
+      // (キャンセル完了専用 kind は無いため最も近い kind を使う)。
+      const emailEnabled =
+        user.receiveNotificationEmail &&
+        (await isNotificationKindEnabled(
+          tx,
+          user.id,
+          "participant_cancelled",
+          "email",
+        ));
+      if (emailEnabled) {
+        tasks.push({
+          to: user.email,
+          content: buildCancelMailContent({
+            eventTitle: event.title,
+            eventUrl: eventAbsoluteUrl(origin, eventId),
+          }),
+        });
+      }
     }
 
     // accepted のキャンセル時のみ補欠繰り上げを試みる
-    if (!wasAccepted) return;
+    if (!wasAccepted) return tasks;
 
-    const role = await tx.eventRole.findUnique({
-      where: { id: eventRoleId },
-    });
-    if (!role) return;
-    if (!role.autoPromoteFromWaiting) return;
-
-    // 同 role の先頭 waiting (appliedAt 昇順) を 1 件昇格
-    const head = await tx.participant.findFirst({
-      where: {
+    // 自動繰り上げ (role.autoPromoteFromWaiting 判定込み)。
+    // ヘルパー内部で繰り上がった本人への promoted_from_waiting 通知まで作成し、
+    // email pref 有効なら繰上メール (.ics 添付) のタスクを返す。
+    tasks.push(
+      await promoteWaitingHeadIfEnabled(tx, {
         eventId,
         eventRoleId,
-        status: "waiting",
-      },
-      orderBy: [{ waitingPosition: "asc" }, { appliedAt: "asc" }],
-    });
-    if (!head) return;
-
-    await tx.participant.update({
-      where: { id: head.id },
-      data: {
-        status: "accepted",
-        acceptedAt: now,
-        waitingPosition: null,
-      },
-    });
-
-    await tx.event.update({
-      where: { id: eventId },
-      data: {
-        acceptedCount: { increment: 1 },
-        waitingCount: { decrement: 1 },
-      },
-    });
+        origin,
+        now,
+      }),
+    );
+    return tasks;
   }));
+
+  // メール送信は DB commit 後 (失敗しても throw しない)
+  await sendParticipantMailsSafely(mailTasks);
 
   // 監査ログ (fire-and-forget)
   void recordAudit({

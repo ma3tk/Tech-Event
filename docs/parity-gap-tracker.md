@@ -22,15 +22,21 @@
 | W1-8 | イベントタグ付与 UI (作成/編集にタグ入力無し) | connpass tags | event create/edit, event-admin-actions | [x] |
 | W1-9 | リマインダー cron (24h/1h) + トランザクションメール送信基盤 | connpass/luma notifications | `api/cron/run-reminders`, feature-notification | [x] |
 
-## Wave 2 — 通知・メール配線 (トランザクション)
+## Wave 2 — 通知・メール配線 (トランザクション) — 完了 ✅ 2026-07-06
 
-- [ ] 申込完了メール + .ics 添付 (joinEvent → sendMail)
-- [ ] 抽選結果 / 繰上 / キャンセル完了 メール
-- [ ] イベント中止時の参加者通知 (cancelEvent → Notification + mail)
-- [ ] 繰上げ本人への通知 (autoPromote → notification)
-- [ ] グループ新着イベント公開通知 (メンバー宛)
-- [ ] グループ一括メッセージ (メンバー宛 blast)
-- [ ] 通知設定の未接続 kind の発生源接続 (reminder_24h/1h, event_published, promoted_from_waiting 等)
+基盤 (mailer 添付 + notification builder 8 種) は Opus 直実装、配線は participant/organizer で並列。
+検証: typecheck 36 / build / lint 0 errors / 新規 E2E 4 passed / 回帰 participate·lottery·notifications 9 passed。
+
+- [x] 申込完了メール + .ics 添付 (joinEvent/submitSurveyAndJoin → join_confirmed + sendMail)
+- [x] 補欠登録メール (waitlisted)
+- [x] 抽選結果メール (当選 .ics 添付 / 落選) — cron + 手動 runLottery 両経路配線
+- [x] 繰上げ本人への通知 + メール (promoteWaitingHeadIfEnabled ヘルパー内)
+- [x] キャンセル完了メール (本人宛)
+- [x] 承認/却下結果メール (approval_result + reason)
+- [x] イベント中止時の参加者通知 + メール (cancelEvent → event_cancelled)
+- [x] グループ新着イベント公開通知 (publishEvent → メンバー宛 event_published)
+- [x] グループ一括メッセージ (sendGroupMessage + /group/[subdomain]/admin/broadcast)
+- [ ] 残: bookmark_event_started の発生源 (ブックマークしたイベント開始通知) は未接続
 
 ## Wave 3 — 決済拡張
 

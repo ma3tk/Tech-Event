@@ -30,6 +30,12 @@ import { isReservedSlug } from "@/lib/reserved-words";
 import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
 import { SlugSchema as SubdomainSchema, UrlOrEmpty } from "@/lib/schemas";
+import { sendMail } from "@/lib/mailer";
+import {
+  buildGroupMessageMailContent,
+  isNotificationKindEnabled,
+} from "@/lib/notification";
+import { logger } from "@/lib/logger";
 
 /* ============================================================
  * バリデーション
@@ -338,6 +344,268 @@ export async function updateGroup(formData: FormData): Promise<void> {
   revalidatePath(`/group/${group.subdomain}`);
   revalidatePath(`/group/${group.subdomain}/edit`);
   redirect(`/group/${group.subdomain}`);
+}
+
+/* ============================================================
+ * グループ一斉メッセージ (group_message)
+ *
+ * - sendGroupMessage        : 引数指定のコア Action (owner/admin のみ)
+ * - sendGroupMessageAction  : `/group/[subdomain]/admin/broadcast` の form 用ラッパ
+ *
+ * 宛先は GroupMember のうち `leftAt IS NULL` かつ `receiveAnnouncement = true`
+ * の active ユーザー全員 (送信者自身もメンバーなら含む)。さらに
+ * NotificationPreference (group_message × in_app/email) を尊重する:
+ *   - in_app OFF → Notification 行は email マーカー (readAt 即時セット) として残す
+ *   - email OFF  → メールを送らない
+ *   - 両方 OFF   → 行を作らない
+ * メール送信は Message / Notification の commit 後に行い、1 通ごとの失敗は
+ * 握りつぶしてログする (1 通の失敗が全体を止めない)。
+ * ============================================================ */
+
+const GroupMessageSchema = z.object({
+  groupId: z.string().regex(/^\d+$/),
+  subject: z
+    .string()
+    .min(1, "件名を入力してください")
+    .max(200, "件名は 200 文字以内で入力してください"),
+  body: z
+    .string()
+    .min(1, "本文を入力してください")
+    .max(20_000, "本文は 20000 文字以内で入力してください"),
+});
+
+/** グループ URL (絶対 URL)。feature-payment / util-slack と同じ規約。 */
+function groupBaseUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ||
+    "http://localhost:3000"
+  );
+}
+
+/**
+ * sendGroupMessage (グループ管理者): メンバー全員へ一斉メッセージを送る。
+ *
+ * Message (audience="group_members") を記録し、各メンバーへ
+ * `Notification(kind='group_message')` + メールをファンアウトする。
+ */
+export async function sendGroupMessage(
+  groupId: bigint | string,
+  subject: string,
+  body: string,
+): Promise<{ recipientCount: number; mailed: number }> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new ActionError("unauthorized", "ログインが必要です");
+  }
+
+  const parsed = GroupMessageSchema.safeParse({
+    groupId: String(groupId),
+    subject: subject.trim(),
+    body,
+  });
+  if (!parsed.success) {
+    throw new ActionError(
+      "invalid_input",
+      parsed.error.issues[0]?.message ?? "入力内容が不正です",
+    );
+  }
+  const gid = BigInt(parsed.data.groupId);
+
+  const perm = await isGroupAdminOrOwner(gid, user.id);
+  if (!perm.ok) {
+    throw new ActionError("forbidden", "グループ管理者権限が必要です");
+  }
+  const group = await prisma.group.findUnique({ where: { id: gid } });
+  if (!group) {
+    throw new ActionError("not_found", "グループが見つかりません");
+  }
+
+  // レート制限 (user 単位: createResource と同じ 5 回/時)
+  try {
+    assertRateLimit(
+      `user:${user.id}:sendGroupMessage`,
+      RATE_LIMITS.createResource,
+    );
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      throw new ActionError("rate_limited", e.message);
+    }
+    throw e;
+  }
+
+  // 宛先: 受信許諾 (receiveAnnouncement) のある在籍メンバーの active ユーザー
+  const members = await prisma.groupMember.findMany({
+    where: { groupId: gid, leftAt: null, receiveAnnouncement: true },
+    select: {
+      userId: true,
+      user: { select: { email: true, status: true } },
+    },
+  });
+  const byUser = new Map<string, { userId: bigint; email: string }>();
+  for (const m of members) {
+    if (m.user.status !== "active") continue;
+    const key = m.userId.toString();
+    if (!byUser.has(key)) byUser.set(key, { userId: m.userId, email: m.user.email });
+  }
+
+  // NotificationPreference (group_message × channel) の判定
+  type Target = {
+    userId: bigint;
+    email: string;
+    inAppEnabled: boolean;
+    emailEnabled: boolean;
+  };
+  const targets: Target[] = [];
+  for (const r of byUser.values()) {
+    const inAppEnabled = await isNotificationKindEnabled(
+      prisma,
+      r.userId,
+      "group_message",
+      "in_app",
+    );
+    const emailEnabled = await isNotificationKindEnabled(
+      prisma,
+      r.userId,
+      "group_message",
+      "email",
+    );
+    if (!inAppEnabled && !emailEnabled) continue;
+    targets.push({ ...r, inAppEnabled, emailEnabled });
+  }
+
+  const now = new Date();
+  const trimmedSubject = parsed.data.subject;
+  const messageBody = parsed.data.body;
+
+  await withRetry(() =>
+    prisma.$transaction(async (tx) => {
+      const messageId = await nextId(tx, "message");
+      await tx.message.create({
+        data: {
+          id: messageId,
+          groupId: gid,
+          senderUserId: user.id,
+          audience: "group_members",
+          subject: trimmedSubject,
+          body: messageBody,
+          recipientCount: byUser.size,
+          sentAt: now,
+        },
+      });
+      if (targets.length > 0) {
+        const payload = JSON.stringify({
+          groupName: group.name,
+          subject: trimmedSubject,
+          excerpt: messageBody.slice(0, 80),
+          messageId: messageId.toString(),
+        });
+        const baseId = await nextId(tx, "notification");
+        await tx.notification.createMany({
+          data: targets.map((t, i) => ({
+            id: baseId + BigInt(i),
+            recipientUserId: t.userId,
+            kind: "group_message",
+            groupId: gid,
+            payload,
+            // in_app OFF (email のみ) は email マーカー行 (未読に出さない)
+            channel: t.inAppEnabled ? "in_app" : "email",
+            sentAt: t.emailEnabled ? now : null,
+            readAt: t.inAppEnabled ? null : now,
+          })),
+        });
+      }
+    }),
+  );
+
+  // メール送信は commit 後。個別失敗は握りつぶしてログ (全体を止めない)。
+  const mail = buildGroupMessageMailContent({
+    groupName: group.name,
+    subject: trimmedSubject,
+    body: messageBody,
+    url: `${groupBaseUrl()}/group/${group.subdomain}`,
+  });
+  let mailed = 0;
+  for (const t of targets) {
+    if (!t.emailEnabled) continue;
+    try {
+      await sendMail({
+        to: t.email,
+        subject: mail.subject,
+        text: mail.text,
+        html: mail.html,
+      });
+      mailed += 1;
+    } catch (e) {
+      logger.warn(
+        {
+          groupId: gid.toString(),
+          userId: t.userId.toString(),
+          err: e instanceof Error ? e.message : String(e),
+        },
+        "group message mail send failed",
+      );
+    }
+  }
+
+  logger.info(
+    {
+      action: "group.send-message",
+      groupId: gid.toString(),
+      recipients: byUser.size,
+      mailed,
+      subject: trimmedSubject,
+    },
+    "group message dispatched",
+  );
+
+  // 監査ログ
+  void recordAudit({
+    actorUserId: user.id,
+    action: "group.send-message",
+    targetType: "Group",
+    targetId: gid,
+    metadata: { subject: trimmedSubject, recipientCount: byUser.size },
+  });
+
+  revalidatePath(`/group/${group.subdomain}/admin/broadcast`);
+  return { recipientCount: byUser.size, mailed };
+}
+
+/**
+ * sendGroupMessageAction: 一斉メッセージ送信ページの form 用ラッパ。
+ *
+ * FormData: subdomain (必須) / subject (必須) / body (必須)
+ * 成否はクエリパラメータで broadcast ページに戻して表示する。
+ */
+export async function sendGroupMessageAction(
+  formData: FormData,
+): Promise<void> {
+  const subdomain = formValue(formData, "subdomain");
+  const basePath = `/group/${subdomain}/admin/broadcast`;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(basePath)}`);
+  }
+
+  const group = await prisma.group.findUnique({ where: { subdomain } });
+  if (!group) {
+    redirect(`${basePath}?error=${encodeURIComponent("グループが見つかりません")}`);
+  }
+
+  try {
+    await sendGroupMessage(
+      group.id,
+      formValue(formData, "subject"),
+      formValueRaw(formData, "body"),
+    );
+  } catch (e) {
+    if (e instanceof ActionError) {
+      redirect(`${basePath}?error=${encodeURIComponent(e.message)}`);
+    }
+    throw e;
+  }
+  redirect(`${basePath}?sent=1`);
 }
 
 /* ============================================================

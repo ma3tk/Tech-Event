@@ -75,6 +75,13 @@ export default async function GroupAdminMembersPage({ params }: PageProps) {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href={`/group/${subdomain}/admin/broadcast`}
+            data-testid="group-broadcast-link"
+            className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"
+          >
+            一斉メッセージ
+          </Link>
+          <Link
             href={`/group/${subdomain}/admin/blacklist`}
             data-testid="group-blacklist-link"
             className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium hover:bg-brand-orange-soft"

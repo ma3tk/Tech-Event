@@ -31,6 +31,19 @@ import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
 import { BigIntIdString } from "@/lib/schemas";
+import {
+  buildJoinConfirmedMailContent,
+  buildWaitlistedMailContent,
+} from "@/lib/notification";
+
+import {
+  buildEventIcsAttachment,
+  createParticipantNotification,
+  eventAbsoluteUrl,
+  resolveRequestOrigin,
+  sendParticipantMailsSafely,
+  type ParticipantMailTask,
+} from "./lib/participant-notify";
 
 /* ============================================================
  * 共通ヘルパー
@@ -362,8 +375,12 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
     }
   }
 
+  // 絶対 URL (メール/通知内リンク) 用の origin はトランザクション前に解決しておく
+  const origin = await resolveRequestOrigin();
+
   // ============ Participant 作成 + SurveyAnswer 保存 (joinEvent と同じロジック) ============
-  await prisma.$transaction(async (tx) => {
+  // 戻り値 = commit 後に送信する参加者向けメール (不要なら null)
+  const mailTask = await prisma.$transaction(async (tx): Promise<ParticipantMailTask | null> => {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new Error("event_not_found");
 
@@ -394,6 +411,8 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
     });
 
     let participantId: bigint;
+    // fcfs で新規に参加が確定/補欠になったか (既参加 no-op や抽選 pending は null)
+    let joinOutcome: "accepted" | "waiting" | null = null;
     const now = new Date();
 
     if (existing) {
@@ -480,6 +499,7 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
           where: { id: eventId },
           data: { waitingCount: { increment: 1 } },
         });
+        joinOutcome = "waiting";
       } else {
         const cancelled = await tx.participant.findFirst({
           where: { eventId, userId: user.id, status: "cancelled" },
@@ -516,6 +536,7 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
           where: { id: eventId },
           data: { acceptedCount: { increment: 1 } },
         });
+        joinOutcome = "accepted";
       }
     }
 
@@ -558,7 +579,58 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
         },
       });
     }
+
+    // ---- 参加者本人向け通知 (join_confirmed / waitlisted) + メールタスク ----
+    // (joinEvent と同じ配線。fcfs で新規に確定/補欠になった場合のみ)
+    if (joinOutcome == null) return null;
+
+    const eventUrl = eventAbsoluteUrl(origin, eventId);
+    const { emailEnabled } = await createParticipantNotification(tx, {
+      recipientUserId: user.id,
+      eventId,
+      kind: joinOutcome === "waiting" ? "waitlisted" : "join_confirmed",
+      payload: {
+        eventTitle: event.title,
+        startedAt: event.startedAt.toISOString(),
+      },
+      receiveNotificationEmail: user.receiveNotificationEmail,
+    });
+    if (!emailEnabled) return null;
+
+    if (joinOutcome === "waiting") {
+      return {
+        to: user.email,
+        content: buildWaitlistedMailContent({
+          eventTitle: event.title,
+          eventUrl,
+        }),
+      };
+    }
+    return {
+      to: user.email,
+      content: buildJoinConfirmedMailContent({
+        eventTitle: event.title,
+        startedAt: event.startedAt,
+        venue: [event.place, event.address].filter(Boolean).join(" ") || undefined,
+        eventUrl,
+        roleName: role.name,
+      }),
+      attachments: [
+        buildEventIcsAttachment({
+          eventId,
+          title: event.title,
+          startedAt: event.startedAt,
+          endedAt: event.endedAt,
+          place: event.place,
+          address: event.address,
+          eventUrl,
+        }),
+      ],
+    };
   });
+
+  // メール送信は DB commit 後 (失敗しても throw しない)
+  await sendParticipantMailsSafely([mailTask]);
 
   revalidatePath(`/event/${eventId.toString()}`);
   revalidatePath(`/dashboard`);

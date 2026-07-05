@@ -6,3 +6,5 @@
  */
 export * from "./event-admin-actions";
 export * from "./lib/insights";
+export * from "./lib/notification-fanout";
+export * from "./lib/lottery-notifications";
