@@ -51,7 +51,9 @@ export type IdGenTable =
   | "componentFeedback"
   | "passwordResetToken"
   | "coupon"
-  | "couponRedemption";
+  | "couponRedemption"
+  | "follow"
+  | "tagFollow";
 
 /**
  * tx (or prisma) と table 名を受け取り、現存最大 id + 1 を返す。
