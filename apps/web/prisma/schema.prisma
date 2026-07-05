@@ -59,6 +59,8 @@ model User {
   componentFeedbacks ComponentFeedback[]
   // ============ パスワードリセット ============
   passwordResetTokens PasswordResetToken[]
+  // ============ クーポン利用履歴 ============
+  couponRedemptions CouponRedemption[]
 
   @@map("users")
   @@index([status])
@@ -99,6 +101,10 @@ model Group {
   eventCount          Int      @default(0)
   presentationCount   Int      @default(0)
   status              String   @default("active") // active|archived
+  /// 領収データ: 発行者名 (未指定ならグループ名)
+  receiptIssuerName   String?
+  /// 領収データ: 適格請求書発行事業者の登録番号 (T + 13 桁)
+  invoiceRegistrationNumber String?
   publishedAt         DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -108,6 +114,7 @@ model Group {
   members      GroupMember[]
   blacklist    GroupBlacklist[]
   messages     Message[]
+  coupons      Coupon[]
 
   @@map("groups")
   @@index([status])
@@ -224,6 +231,7 @@ model Event {
   notifications Notification[]
   messages      Message[]
   calendars     CalendarEvent[]
+  coupons       Coupon[]
 
   @@map("events")
   @@index([groupId, startedAt])
@@ -241,11 +249,19 @@ model EventRole {
   description               String?
   capacity                  Int?
   recruitmentMethod         String   @default("fcfs") // fcfs|lottery|designated
-  pricingType               String   @default("free") // free|on_site|prepaid
+  pricingType               String   @default("free") // free|on_site|prepaid|donation
   price                     Int      @default(0)
   currency                  String   @default("JPY")
   autoPromoteFromWaiting    Boolean  @default(true)
   visibleAfterFull          Boolean  @default(true)
+  /// チケット販売開始日時 (null=即時)。Early Bird 等の tier 別販売期間に使う。
+  saleStartsAt              DateTime?
+  /// チケット販売終了日時 (null=イベント受付終了まで)
+  saleEndsAt                DateTime?
+  /// 招待コード限定枠: 設定時はこのコードを知る人のみ申込可 (Unlock Code)
+  unlockCode                String?
+  /// pricingType=donation のときの最低寄付額 (JPY)。price は推奨額として扱う。
+  donationMinAmount         Int?
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
@@ -297,16 +313,82 @@ model Payment {
   participantId   BigInt   @unique
   amount          Int
   currency        String   @default("JPY")
-  provider        String   // paypal
+  provider        String   // paypal|stripe
   providerTxnId   String?
-  status          String   // pending|succeeded|refunded|failed
+  status          String   // pending|succeeded|refunded|partially_refunded|failed
   paidAt          DateTime?
   refundedAt      DateTime?
+  /// 返金額 (部分返金対応)。全額返金なら amount と同額。
+  refundedAmount  Int?
+  /// 返金理由 (主催者入力 or イベント中止など)
+  refundReason    String?
+  /// プロバイダ側の返金 ID (Stripe refund id 等)
+  providerRefundId String?
+  /// クーポンによる割引額 (適用時のみ)
+  discountAmount  Int?     @default(0)
+  couponId        BigInt?
   receiptIssuedAt DateTime?
+  /// 領収データ: 通し番号 (発行時に採番)
+  receiptNumber   String?
+  /// 領収データ: 宛名 (未指定なら参加者名)
+  receiptName     String?
 
   participant     Participant   @relation(fields: [participantId], references: [id])
+  coupon          Coupon?       @relation(fields: [couponId], references: [id])
 
   @@map("payments")
+  @@index([couponId])
+}
+
+/// クーポン / 割引コード。イベント単位 or グループ単位で発行する。
+model Coupon {
+  id              BigInt   @id @default(autoincrement())
+  /// 割引コード (大文字正規化して保存)
+  code            String
+  /// スコープ: "event" | "group"
+  scope           String   @default("event")
+  eventId         BigInt?
+  groupId         BigInt?
+  /// "percent" (率) | "fixed" (定額 JPY)
+  discountType    String   @default("fixed")
+  /// percent なら 1-100、fixed なら JPY
+  discountValue   Int
+  /// 利用上限 (null=無制限)
+  maxRedemptions  Int?
+  redeemedCount   Int      @default(0)
+  /// 1 ユーザーあたり利用上限 (既定 1)
+  perUserLimit    Int      @default(1)
+  expiresAt       DateTime?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  event           Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  group           Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  redemptions     CouponRedemption[]
+  payments        Payment[]
+
+  @@unique([scope, eventId, groupId, code])
+  @@index([eventId])
+  @@index([groupId])
+  @@map("coupons")
+}
+
+/// クーポン利用履歴 (per-user 上限の enforcement + 監査)。
+model CouponRedemption {
+  id         BigInt   @id @default(autoincrement())
+  couponId   BigInt
+  userId     BigInt
+  paymentId  BigInt?
+  amount     Int      // 実際に割り引いた額
+  redeemedAt DateTime @default(now())
+
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
 }
 
 // ============ Content ============

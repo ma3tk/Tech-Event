@@ -65,6 +65,7 @@ model User {
   componentFeedbacks ComponentFeedback[]
   // ============ パスワードリセット ============
   passwordResetTokens PasswordResetToken[]
+  couponRedemptions CouponRedemption[]
 
   @@map("users")
   @@index([status])
@@ -105,6 +106,8 @@ model Group {
   eventCount          Int      @default(0)
   presentationCount   Int      @default(0)
   status              String   @default("active") @db.VarChar(32) // active|archived
+  receiptIssuerName   String?
+  invoiceRegistrationNumber String?
   publishedAt         DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -114,6 +117,7 @@ model Group {
   members      GroupMember[]
   blacklist    GroupBlacklist[]
   messages     Message[]
+  coupons      Coupon[]
 
   @@map("groups")
   @@index([status])
@@ -230,6 +234,7 @@ model Event {
   notifications Notification[]
   messages      Message[]
   calendars     CalendarEvent[]
+  coupons       Coupon[]
 
   @@map("events")
   @@index([groupId, startedAt])
@@ -247,11 +252,15 @@ model EventRole {
   description               String? @db.Text
   capacity                  Int?
   recruitmentMethod         String   @default("fcfs") // fcfs|lottery|designated
-  pricingType               String   @default("free") // free|on_site|prepaid
+  pricingType               String   @default("free") // free|on_site|prepaid|donation
   price                     Int      @default(0)
   currency                  String   @default("JPY")
   autoPromoteFromWaiting    Boolean  @default(true)
   visibleAfterFull          Boolean  @default(true)
+  saleStartsAt              DateTime?
+  saleEndsAt                DateTime?
+  unlockCode                String?
+  donationMinAmount         Int?
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
@@ -303,16 +312,68 @@ model Payment {
   participantId   BigInt   @unique
   amount          Int
   currency        String   @default("JPY")
-  provider        String   // paypal
+  provider        String   // paypal|stripe
   providerTxnId   String?
-  status          String @db.VarChar(32) // pending|succeeded|refunded|failed
+  status          String @db.VarChar(32) // pending|succeeded|refunded|partially_refunded|failed
   paidAt          DateTime?
   refundedAt      DateTime?
+  refundedAmount  Int?
+  refundReason    String?
+  providerRefundId String?
+  discountAmount  Int?     @default(0)
+  couponId        BigInt?
   receiptIssuedAt DateTime?
+  receiptNumber   String?
+  receiptName     String?
 
   participant     Participant   @relation(fields: [participantId], references: [id])
+  coupon          Coupon?       @relation(fields: [couponId], references: [id])
 
   @@map("payments")
+  @@index([couponId])
+}
+
+model Coupon {
+  id              BigInt   @id @default(autoincrement())
+  code            String
+  scope           String   @default("event")
+  eventId         BigInt?
+  groupId         BigInt?
+  discountType    String   @default("fixed")
+  discountValue   Int
+  maxRedemptions  Int?
+  redeemedCount   Int      @default(0)
+  perUserLimit    Int      @default(1)
+  expiresAt       DateTime?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  event           Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  group           Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  redemptions     CouponRedemption[]
+  payments        Payment[]
+
+  @@unique([scope, eventId, groupId, code])
+  @@index([eventId])
+  @@index([groupId])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id         BigInt   @id @default(autoincrement())
+  couponId   BigInt
+  userId     BigInt
+  paymentId  BigInt?
+  amount     Int
+  redeemedAt DateTime @default(now())
+
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
 }
 
 // ============ Content ============
