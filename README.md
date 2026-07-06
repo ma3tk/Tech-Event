@@ -77,16 +77,17 @@ pnpm dev
     production のデフォルトは `false` (= POST 限定)。`.env.example` も参照。
   - リクエスト発行は IP 単位で 3 回 / 15 分。ログインエンドポイントは 5 回 / 5 分。
 
-### 2.4 完成度サマリー (2026-06-05 時点)
+### 2.4 完成度サマリー (2026-07-06 時点)
 
 | 指標 | 値 | 補足 |
 | --- | --: | --- |
-| connpass コア機能カバー率 | **約 88 %** | research/ 17 カテゴリのうち 15 実装 |
-| Luma 追加機能カバー率 | **約 70 %** | calendar / co-host / sticky CTA / share modal / discover / theme 実装済 |
-| 総合機能カバー率 | **約 83 %** | 重み付け平均 (connpass 0.7 + Luma 0.3) |
-| 公開ページ数 | **68** | `pnpm build` ルートマニフェスト |
-| 公開 REST API | **10 endpoint** | connpass v2 準拠 |
-| E2E spec / `test()` | **34 / 234+** | `e2e/*.spec.ts`、fullyParallel + globalSetup/Teardown 隔離、`e2e/vrt-stories.spec.ts` (VRT) を追加 |
+| connpass コア機能カバー率 | **約 97 % (推計)** | 1:1 パリティ Wave 1-6b 完了 ([`docs/parity-gap-tracker.md`](./docs/parity-gap-tracker.md))。残は oEmbed / 権限階層 5 段階 / i18n 全ページ等の磨き込み |
+| Luma 追加機能カバー率 | **約 90 % (推計)** | calendar / co-host / sticky CTA / share modal / discover / PWA / QR チケット / Plus 課金 / Membership / Org / Web Push 実装済。残は Google Cal OAuth / カスタムドメイン / SMS (外部インフラ待ち) + テーマ磨き込み |
+| 総合機能カバー率 | **約 95 % (推計)** | 重み付け平均 (connpass 0.7 + Luma 0.3) |
+| 1:1 パリティ進捗 | **Wave 1-6b 完了** | source of truth: [`docs/parity-gap-tracker.md`](./docs/parity-gap-tracker.md) (2026-07-06) |
+| 公開ページ数 | **68 page.tsx / 48 route.ts** | `apps/web/src/app` 実測 (2026-07-06) |
+| 公開 REST API | **12 endpoint** | connpass v2 準拠 (読み取り 10 + 書き込み POST 2) |
+| E2E spec / `test()` | **83 / 280** | `apps/web-e2e/src/*.spec.ts`、fullyParallel + globalSetup/Teardown 隔離、VRT 込み |
 | デザインシステム完成度 | **100 %** (DS v1.0.0) | `docs/design-system-audit.md` の自己評価 |
 | Storybook stories | **35 file / 190 story entries** (21 ui + 14 composite) | + 14 MDX ドキュメント (Welcome + Design System 13) |
 | WCAG AA color-contrast | 10 ページ全てで違反 0 | axe critical/serious=0 (CI 強制) |
@@ -201,8 +202,10 @@ pnpm dev
 | `GET /api/v2/calendars` | Luma 由来カレンダー |
 | `GET /api/v2/calendars/[slug]/events` | カレンダー所属イベント |
 | `GET /api/v2/docs` | OpenAPI ドキュメント (static) |
+| `POST /api/v2/events` | イベント作成 (write スコープ必須、2026-07-06 追加) |
+| `POST /api/v2/events/[id]/participants` | 参加登録 (write スコープ必須、2026-07-06 追加) |
 
-認証: `X-API-Key` (PUBLIC_API_KEY) + `User-Agent` 必須。1 req/sec のレート制限。
+認証: `X-API-Key` (env の `PUBLIC_API_KEY`、または `/settings/api-keys` で発行する `te_live_...` DB キーの両対応) + `User-Agent` 必須。1 req/sec のレート制限。書き込みは write スコープ付きキーのみ。
 
 ### 3.9 SEO
 
@@ -217,6 +220,42 @@ pnpm dev
 | JSON-LD | Event / Organization / Person / WebSite+SearchAction / BreadcrumbList | |
 | OG 画像生成 | `/event/-/opengraph-image`, `/group/-/opengraph-image` | next/og 動的 1200x630 PNG |
 
+### 3.10 connpass/Luma 1:1 パリティ拡張 (Wave 1-6b, 2026-07-06 追加)
+
+完了状況の source of truth は [`docs/parity-gap-tracker.md`](./docs/parity-gap-tracker.md)。
+
+| Wave | 機能 | 場所 | 備考 |
+| --- | --- | --- | --- |
+| 1 | パスワードリセット | `/account/password_reset`, `/account/password_reset/[token]` | メールトークン |
+| 1 | プロフィール編集 | `/settings/profile` | updateProfile |
+| 1 | 退会フロー | `/account/withdraw` | status=withdrawn |
+| 1 | 会場地図埋め込み (OSM iframe) | `/event/[id]` | Event.lat/lon |
+| 1 | 47 都道府県セレクト | `/explore` | `util-categories/prefectures.ts` |
+| 1 | 公開 API パラメータ拡張 | `/api/v2/events` | keyword_or / publish_ym / publish_ymd / subdomain |
+| 1 | グループ blacklist UI | `/group/[subdomain]/admin/blacklist` | 申込ブロック連動 |
+| 1 | イベントタグ付与 UI | event create / edit | |
+| 1 | リマインダー cron (24h/1h) | `GET /api/cron/run-reminders?secret=...` | CRON_SECRET 共通 |
+| 2 | トランザクション通知 / メール | 参加・抽選・承認・中止など発生源に配線 | 申込完了 (.ics 添付) / 補欠 / キャンセル / 繰上 / 承認結果 / 抽選 / イベント中止 / グループ新着 |
+| 2 | グループ一斉メッセージ | `/group/[subdomain]/admin/broadcast` | sendGroupMessage |
+| 3 | 返金処理 | `/event/[id]/admin/refunds` + webhook | charge.refunded / 手動 / 中止時自動返金 |
+| 3 | 領収データ / 適格請求書番号 | `/event/[id]/receipt` | `R-{eventId}-{seq}` 採番、内税内訳 |
+| 3 | クーポン / 割引コード | `/event/[id]/admin/coupons` | checkout 割引連動 |
+| 3 | Unlock Code / Donation / 販売期間 | EventRole 設定 | timingSafeEqual 比較 / 任意額 Stripe / saleStartsAt–saleEndsAt |
+| 4 | ユーザーフォロー | `/user/[nickname]/followers`, `/following` | カウンタ tx 整合 + Going タブ |
+| 4 | タグフォロー / 関連タグ | `/tag/[slug]`, `/following/tags` | EventTag 共起 + 前方一致サジェスト |
+| 4 | discover 都市/カテゴリ LP | `/discover/[city]`, `/discover/category/[slug]` | JSON-LD + sitemap |
+| 5 | API キー管理 | `/settings/api-keys` | `te_live_` キー sha256 保存 / 失効 |
+| 5 | Outbound Webhooks | `/group/[subdomain]/admin/webhooks` | SSRF 二重検証 + HMAC 署名 + 配信ログ |
+| 5 | ゲスト個別招待 + CSV | `/event/[id]/admin/guests` | 再送 / 取消 |
+| 5 | One-Tap RSVP | `/rsvp/[token]` | 署名トークン → セッション発行 → joinEvent |
+| 6a | PWA | `manifest.webmanifest` / `sw.js` / `offline.html` | 認証 HTML 非キャッシュ |
+| 6a | チケット QR + スキャナ | `/event/[id]/ticket`, `/event/[id]/admin/check-in` | native BarcodeDetector + 手入力フォールバック |
+| 6a | Insights ファネル + UTM | `/event/[id]/admin/insights` | EventView beacon (`/api/track/view`) |
+| 6b | Plus プラン課金 | `/group/[subdomain]/admin/billing` | Stripe subscription。`STRIPE_PLUS_PRICE_ID` 未設定なら「準備中」 |
+| 6b | Membership Tiers | `/calendar/[slug]/manage` | 承認制 / 有料購読 (無料購読は後方互換) |
+| 6b | Organization 階層 | `/org/create`, `/org/[slug]`, `/org/[slug]/edit` | カレンダー org 割り当て |
+| 6b | Web Push | `/api/push/{subscribe,unsubscribe}` + PushToggle | `web-push` + VAPID env 揃い時に実配信 |
+
 ---
 
 ## 4. 環境変数 (`.env`)
@@ -227,7 +266,8 @@ pnpm dev
 # Prisma / DB 接続 (better-sqlite3 driver adapter)
 DATABASE_URL="file:./dev.db"
 
-# 抽選自動実行エンドポイントのシークレット (`GET /api/cron/run-lotteries?secret=...`)
+# cron エンドポイントのシークレット。抽選 (`GET /api/cron/run-lotteries?secret=...`) と
+# リマインダー通知 24h/1h (`GET /api/cron/run-reminders?secret=...`) で共通。
 # 未設定なら 503 を返す
 CRON_SECRET="dev-cron-secret"
 
@@ -284,6 +324,23 @@ TWITTER_CLIENT_ID=
 TWITTER_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+
+# === Stripe 決済 (未設定なら「現地払い」フォールバック) ===
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+# Plus プラン (グループ向け subscription) の Stripe Price ID。
+# STRIPE_SECRET_KEY と両方設定で /group/[subdomain]/admin/billing の課金が有効化。
+# 未設定なら billing UI は「準備中」表示 (2026-07-06 Wave 6b 追加)
+STRIPE_PLUS_PRICE_ID=
+
+# === Web Push (VAPID) — 2026-07-06 Wave 6b 追加 ===
+# `pnpm add web-push` + `npx web-push generate-vapid-keys` で鍵生成後に設定すると実配信が有効化。
+# 未設定 (or web-push 未インストール) なら no-op スキャフォールドとして安全に動作する
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=                            # mailto: or https URL (未設定時は mailto:noreply@tech-event.local)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=             # VAPID_PUBLIC_KEY と同値 (client 側の購読登録に使用)
 ```
 
 ### 4.1 SMTP 開発手順 (Mailpit)
@@ -634,7 +691,7 @@ research/                             # connpass + Luma 調査資料 (94 .md / 2
   README.md                           # 調査資料インデックス
 
 prisma/
-  schema.prisma                       # 全 28 モデル (SQLite 正本)
+  schema.prisma                       # 全 40 モデル (SQLite 正本、2026-07-06 Wave 1-6b で +13)
   schema.postgres.prisma              # 自動生成 (scripts/sync-schema-pg.ts; PostgreSQL 用)
   migrations/                         # マイグレーション履歴
   seed.ts                             # 全シード
@@ -865,6 +922,7 @@ docker compose up -d        # postgres + redis + worker + (mailpit + minio)
 | --- | --- |
 | [docs/architecture.md](docs/architecture.md) | レイヤーアーキテクチャ / 依存関係 / データフロー / 認証フロー / テスト戦略 |
 | [docs/completion-report.md](docs/completion-report.md) | 完成度サマリ / 機能網羅マトリクス / 残課題 / プロジェクト統計 |
+| [docs/parity-gap-tracker.md](docs/parity-gap-tracker.md) | connpass+Luma 1:1 パリティの完了状況 (Wave 1-6b、source of truth) |
 | [docs/perf-report.md](docs/perf-report.md) | production build / bundle 分析 / 主要 10 ページの応答時間計測 |
 | [docs/deployment.md](docs/deployment.md) | **Vercel / Docker デプロイ手順 + 環境変数完全リスト + PG 移行 + SMTP 選定** |
 | [CHANGELOG.md](CHANGELOG.md) | 主要マイルストーン履歴 (0.1.0 → 0.9.0) |
@@ -896,13 +954,21 @@ docker compose up -d        # postgres + redis + worker + (mailpit + minio)
 ## 9. 未実装 (将来作業)
 
 - OAuth (X / GitHub / Facebook) のフルセットアップ (schema は対応済)
-- PayPal / Stripe 決済
-- i18n (英語 / 中国語)
-- 検索の FTS 全文インデックス
+- PayPal 決済 (Stripe は Checkout / 返金 / 領収 / クーポン / Unlock / Donation / Plus subscription まで実装済 → §3.10)
+- i18n (英語 / 中国語) の全ページ網羅 (settings / admin 系未対応)
+- 外部インフラ待ち (実装コードは 2026-07-06 Wave 6b で同梱済、詳細は [`docs/parity-gap-tracker.md`](./docs/parity-gap-tracker.md)):
+  - Google Calendar OAuth 自動同期 (Google Cloud プロジェクト + OAuth 同意画面が必要)
+  - カスタムドメイン CNAME ホワイトラベル (DNS / 証明書インフラが必要)
+  - SMS / WhatsApp 配信チャネル (Twilio 等の外部契約が必要)
 - PostgreSQL 本番化のラストワンマイル: `src/lib/prisma.ts` で driver adapter を
   `@prisma/adapter-pg` に切替える (schema / migrations / docker compose は対応済)
 
 ### 9.1 完了済み (旧未実装)
+
+- connpass/Luma 1:1 パリティ Wave 1-6b (2026-07-06): パスワードリセット / プロフィール編集 / 退会 /
+  トランザクション通知メール / 決済拡張 (返金・領収・クーポン・Unlock・Donation) / フォロー (ユーザー・タグ) /
+  discover LP / API キー管理 + 書き込み CRUD / Outbound Webhooks / ゲスト招待 / One-Tap RSVP /
+  PWA / チケット QR / Insights ファネル / Plus 課金 / Membership Tiers / Organization / Web Push → §3.10
 
 - SMTP 連携: `src/lib/mailer.ts` + `nodemailer` で Magic Link / Blast を実送信
   (`SMTP_URL` 未設定なら console.log フォールバック)

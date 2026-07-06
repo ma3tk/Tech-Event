@@ -8,6 +8,65 @@ tech-event の主要マイルストーン履歴。
 
 ---
 
+## [Unreleased] — 2026-07-06 — connpass/Luma 1:1 パリティ (Wave 1-6b)
+
+完了状況の source of truth は `docs/parity-gap-tracker.md`。schema は +13 モデル / migration 6 本
+(`20260706000000_add_password_reset` 〜 `20260706050000_add_billing_org_push`、PG schema 同期済)。
+新規 E2E 21 spec を追加 (計 83 spec / 280 test())。
+
+### Added
+
+- **Wave 1 — 壊れ修正 + クイックウィン** (e712190)
+  - パスワードリセット (`/account/password_reset` + トークンメール) / プロフィール編集 (`/settings/profile`) /
+    退会フロー (`/account/withdraw`, status=withdrawn)
+  - 会場地図埋め込み (OSM iframe) / 47 都道府県セレクト / 公開 API events パラメータ拡張
+    (keyword_or / publish_ym / publish_ymd / subdomain)
+  - GroupBlacklist UI (`/group/[subdomain]/admin/blacklist` + 申込ブロック) / イベントタグ付与 UI /
+    リマインダー cron (`/api/cron/run-reminders`, 24h/1h, `CRON_SECRET` 共通)
+- **Wave 2 — トランザクション通知・メール** (75c9af2 + 8452e8c)
+  - 申込完了 (+.ics 添付) / 補欠登録 / キャンセル / 繰上げ / 承認・却下結果 / 抽選結果 (当選 .ics) /
+    イベント中止 / グループ新着イベント公開の各通知 + メールを発生源に配線
+  - グループ一斉メッセージ (`/group/[subdomain]/admin/broadcast`)
+- **Wave 3 — 決済拡張** (8df3673 + 3eba8b3)
+  - 返金 (webhook charge.refunded + 手動 `admin/refunds` UI + イベント中止時の自動全額返金)
+  - 領収データ / 適格請求書番号 (`/event/[id]/receipt`, `R-{eventId}-{seq}` 採番, 内税内訳)
+  - クーポン / 割引コード (`admin/coupons` + checkout 割引) / Unlock Code (timingSafeEqual 比較) /
+    Donation チケット (任意額 → Stripe) / Tier 別販売期間 (saleStartsAt / saleEndsAt)
+- **Wave 4 — ソーシャル** (ea8c841 + cfa2bde)
+  - ユーザーフォロー (Followers / Following / Going タブ + 友達の参加イベント dashboard)
+  - タグフォロー (`/tag/[slug]`, `/following/tags`) + 関連タグ (EventTag 共起) + タグサジェスト (前方一致)
+  - Discover 都市別 LP (`/discover/[city]`) + カテゴリ別 LP (`/discover/category/[slug]`) + JSON-LD + sitemap
+- **Wave 5 — プラットフォーム / API** (15b0742 + d41f322)
+  - API キー発行・管理 UI (`/settings/api-keys`, `te_live_` キー sha256 保存 / 失効。env キーと両対応)
+  - Public API 書き込み CRUD (`POST /api/v2/events`, `POST /api/v2/events/[id]/participants`, write スコープ)
+  - Outbound Webhooks (CRUD + SSRF 二重検証 + HMAC 署名 + 配信ログ + `admin/webhooks` UI)
+  - ゲスト個別招待 + CSV import (再送 / 取消) / One-Tap RSVP (`/rsvp/[token]`, 署名トークン → セッション発行)
+- **Wave 6a — PWA / QR / Insights** (ceb741a + b83e2af)
+  - PWA (manifest.webmanifest / 手書き service worker / offline.html / install prompt。認証 HTML 非キャッシュ)
+  - チケット QR (`/event/[id]/ticket`) + カメラ QR スキャナ (native BarcodeDetector + 手入力フォールバック)
+  - Insights ファネル (Page views → RSVP → Check-in) + 流入経路 / UTM (`/api/track/view` beacon)
+- **Wave 6b — 課金 / 組織 / Push (env フォールバック scaffold)** (3f8e325 + c7afafb + 75b69f5)
+  - Plus プラン課金 (Stripe subscription checkout + isGroupPlus 機能ゲート + `admin/billing` UI。
+    `STRIPE_PLUS_PRICE_ID` 未設定なら「準備中」表示)
+  - Membership Tiers (CalendarMembershipTier CRUD + 承認制 / 有料購読。無料購読は後方互換)
+  - Organization 階層 (`/org/create`, `/org/[slug]`, `/org/[slug]/edit` + カレンダー org 割り当て、非破壊)
+  - Web Push (PushSubscription + sendWebPush dynamic import + PushToggle + sw.js。`pnpm add web-push` +
+    VAPID env (`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY`)
+    が揃うと実配信有効化)
+
+### Docs
+
+- README (§2.4 完成度 / §3.10 パリティ一覧 / §4 env: `STRIPE_PLUS_PRICE_ID` + VAPID 系 + `CRON_SECRET` の
+  run-reminders 追記 / §9) / `docs/completion-report.md` (カバー率 connpass 約 97% / Luma 約 90% /
+  総合 約 95% (推計)) / `docs/deployment.md` / `docs/todo.md` を同期更新
+
+### 残課題 (外部インフラ待ち)
+
+- Google Calendar OAuth 自動同期 / カスタムドメイン (CNAME) / SMS・WhatsApp 配信 — 外部アカウント・契約が必要
+- 磨き込み 8 項目 + `bookmark_event_started` 発生源接続は `docs/parity-gap-tracker.md` 末尾を参照
+
+---
+
 ## [Unreleased] — 2026-06-16 — Storybook に Playground (クリックで要素を直接編集 → リアルタイム反映)
 
 ### Added

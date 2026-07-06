@@ -4,7 +4,8 @@
 コード品質レビュー (`research/code-review/*.md`) の Medium / Low 指摘のうち
 **実装には踏み切らないが追跡が必要なもの** をリストアップしています。
 
-最終更新: 2026-06-05
+最終更新: 2026-07-06 (connpass/Luma 1:1 パリティ Wave 1-6b 完了分を反映。
+パリティ残課題の source of truth は [`parity-gap-tracker.md`](./parity-gap-tracker.md))
 
 ---
 
@@ -142,6 +143,8 @@
 - 想定: sitemap に `/calendars`, `/discover`, `/calendar/[slug]` を追加。
   robots disallow に `/notifications`, `/settings`, `/bookmarks`, `/account`,
   `/event/*/apply`, `/calendar/*/edit`, `/calendar/*/manage`, `/logout`。
+- 一部対応 (2026-07-06 Wave 4): sitemap に `/discover` + 都市別 LP (`/discover/[city]` 47 都道府県
+  + online) + カテゴリ別 LP (`/discover/category/[slug]`) を追加済み。robots disallow 側は未対応。
 
 ### E10. `LanguageSwitcher` 切替で full reload
 - 位置: `src/components/LanguageSwitcher.tsx:41-46`
