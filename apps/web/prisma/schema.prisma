@@ -242,6 +242,7 @@ model Event {
   calendars     CalendarEvent[]
   coupons       Coupon[]
   invitations   Invitation[]
+  views         EventView[]
 
   @@map("events")
   @@index([groupId, startedAt])
@@ -547,6 +548,26 @@ model Invitation {
   @@unique([eventId, email])
   @@index([eventId])
   @@map("invitations")
+}
+
+/// イベントページ閲覧ログ (Insights ファネル: Page views→RSVP→Check-in + 流入経路/UTM)。
+model EventView {
+  id          BigInt   @id @default(autoincrement())
+  eventId     BigInt
+  /// 匿名セッション識別子 (cookie ベース, ユニークビジター推計用)
+  sessionId   String
+  userId      BigInt?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  createdAt   DateTime @default(now())
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@index([eventId, sessionId])
+  @@map("event_views")
 }
 
 model EventTag {
