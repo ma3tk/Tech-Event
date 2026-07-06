@@ -67,6 +67,8 @@ model User {
   followerCount    Int         @default(0)
   followingCount   Int         @default(0)
   tagFollows       TagFollow[]
+  // ============ プラットフォーム / API ============
+  apiKeys          ApiKey[]
 
   @@map("users")
   @@index([status])
@@ -121,6 +123,7 @@ model Group {
   blacklist    GroupBlacklist[]
   messages     Message[]
   coupons      Coupon[]
+  webhookEndpoints WebhookEndpoint[]
 
   @@map("groups")
   @@index([status])
@@ -238,6 +241,7 @@ model Event {
   messages      Message[]
   calendars     CalendarEvent[]
   coupons       Coupon[]
+  invitations   Invitation[]
 
   @@map("events")
   @@index([groupId, startedAt])
@@ -460,6 +464,89 @@ model TagFollow {
   @@unique([userId, tagId])
   @@index([tagId])
   @@map("tag_follows")
+}
+
+/// 発行済み API キー (ユーザー / 契約単位)。生キーはハッシュのみ保存。
+model ApiKey {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt
+  /// 表示用ラベル
+  name        String
+  /// 生キーの sha256 ハッシュ (hex)
+  keyHash     String   @unique
+  /// 生キーの先頭 8 文字 (一覧表示用、キー全体は再表示しない)
+  prefix      String
+  /// スコープ (カンマ区切り: "read" / "write")。既定 read。
+  scopes      String   @default("read")
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
+}
+
+/// Outbound Webhook 購読エンドポイント (グループ単位)。
+model WebhookEndpoint {
+  id          BigInt   @id @default(autoincrement())
+  groupId     BigInt
+  url         String
+  /// 署名用シークレット (HMAC-SHA256)
+  secret      String
+  /// 購読イベント種別 (カンマ区切り: guest.registered / guest.cancelled / event.published 等)
+  events      String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@index([groupId])
+  @@map("webhook_endpoints")
+}
+
+/// Webhook 配信ログ (再送 / 監査)。
+model WebhookDelivery {
+  id            BigInt   @id @default(autoincrement())
+  endpointId    BigInt
+  eventType     String
+  payload       String   // JSON 文字列
+  /// pending|success|failed
+  status        String   @default("pending")
+  statusCode    Int?
+  attempts      Int      @default(0)
+  lastAttemptAt DateTime?
+  createdAt     DateTime @default(now())
+
+  endpoint      WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+  @@index([status])
+  @@map("webhook_deliveries")
+}
+
+/// ゲスト個別招待 + One-Tap RSVP (署名トークンでメールから 1 クリック登録)。
+model Invitation {
+  id            BigInt   @id @default(autoincrement())
+  eventId       BigInt
+  email         String
+  /// 招待トークンの sha256 ハッシュ (生トークンはメールのみ)
+  tokenHash     String   @unique
+  /// pending|accepted|declined|expired
+  status        String   @default("pending")
+  invitedByUserId BigInt?
+  expiresAt     DateTime?
+  acceptedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@map("invitations")
 }
 
 model EventTag {

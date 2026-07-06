@@ -65,12 +65,16 @@ model User {
   componentFeedbacks ComponentFeedback[]
   // ============ パスワードリセット ============
   passwordResetTokens PasswordResetToken[]
+  // ============ クーポン利用履歴 ============
   couponRedemptions CouponRedemption[]
+  // ============ ソーシャル (フォロー) ============
   following        Follow[]    @relation("Follower")
   followers        Follow[]    @relation("Followee")
   followerCount    Int         @default(0)
   followingCount   Int         @default(0)
   tagFollows       TagFollow[]
+  // ============ プラットフォーム / API ============
+  apiKeys          ApiKey[]
 
   @@map("users")
   @@index([status])
@@ -111,7 +115,9 @@ model Group {
   eventCount          Int      @default(0)
   presentationCount   Int      @default(0)
   status              String   @default("active") @db.VarChar(32) // active|archived
+  /// 領収データ: 発行者名 (未指定ならグループ名)
   receiptIssuerName   String?
+  /// 領収データ: 適格請求書発行事業者の登録番号 (T + 13 桁)
   invoiceRegistrationNumber String?
   publishedAt         DateTime @default(now())
   createdAt           DateTime @default(now())
@@ -123,6 +129,7 @@ model Group {
   blacklist    GroupBlacklist[]
   messages     Message[]
   coupons      Coupon[]
+  webhookEndpoints WebhookEndpoint[]
 
   @@map("groups")
   @@index([status])
@@ -240,6 +247,7 @@ model Event {
   messages      Message[]
   calendars     CalendarEvent[]
   coupons       Coupon[]
+  invitations   Invitation[]
 
   @@map("events")
   @@index([groupId, startedAt])
@@ -262,9 +270,13 @@ model EventRole {
   currency                  String   @default("JPY")
   autoPromoteFromWaiting    Boolean  @default(true)
   visibleAfterFull          Boolean  @default(true)
+  /// チケット販売開始日時 (null=即時)。Early Bird 等の tier 別販売期間に使う。
   saleStartsAt              DateTime?
+  /// チケット販売終了日時 (null=イベント受付終了まで)
   saleEndsAt                DateTime?
+  /// 招待コード限定枠: 設定時はこのコードを知る人のみ申込可 (Unlock Code)
   unlockCode                String?
+  /// pricingType=donation のときの最低寄付額 (JPY)。price は推奨額として扱う。
   donationMinAmount         Int?
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
@@ -322,13 +334,19 @@ model Payment {
   status          String @db.VarChar(32) // pending|succeeded|refunded|partially_refunded|failed
   paidAt          DateTime?
   refundedAt      DateTime?
+  /// 返金額 (部分返金対応)。全額返金なら amount と同額。
   refundedAmount  Int?
+  /// 返金理由 (主催者入力 or イベント中止など)
   refundReason    String?
+  /// プロバイダ側の返金 ID (Stripe refund id 等)
   providerRefundId String?
+  /// クーポンによる割引額 (適用時のみ)
   discountAmount  Int?     @default(0)
   couponId        BigInt?
   receiptIssuedAt DateTime?
+  /// 領収データ: 通し番号 (発行時に採番)
   receiptNumber   String?
+  /// 領収データ: 宛名 (未指定なら参加者名)
   receiptName     String?
 
   participant     Participant   @relation(fields: [participantId], references: [id])
@@ -338,16 +356,23 @@ model Payment {
   @@index([couponId])
 }
 
+/// クーポン / 割引コード。イベント単位 or グループ単位で発行する。
 model Coupon {
   id              BigInt   @id @default(autoincrement())
+  /// 割引コード (大文字正規化して保存)
   code            String
+  /// スコープ: "event" | "group"
   scope           String   @default("event")
   eventId         BigInt?
   groupId         BigInt?
+  /// "percent" (率) | "fixed" (定額 JPY)
   discountType    String   @default("fixed")
+  /// percent なら 1-100、fixed なら JPY
   discountValue   Int
+  /// 利用上限 (null=無制限)
   maxRedemptions  Int?
   redeemedCount   Int      @default(0)
+  /// 1 ユーザーあたり利用上限 (既定 1)
   perUserLimit    Int      @default(1)
   expiresAt       DateTime?
   active          Boolean  @default(true)
@@ -365,12 +390,13 @@ model Coupon {
   @@map("coupons")
 }
 
+/// クーポン利用履歴 (per-user 上限の enforcement + 監査)。
 model CouponRedemption {
   id         BigInt   @id @default(autoincrement())
   couponId   BigInt
   userId     BigInt
   paymentId  BigInt?
-  amount     Int
+  amount     Int      // 実際に割り引いた額
   redeemedAt DateTime @default(now())
 
   coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
@@ -416,6 +442,7 @@ model Tag {
   @@index([usageCount])
 }
 
+/// ユーザー間フォロー (connpass 友達 / Luma フォロー相当)。
 model Follow {
   id          BigInt   @id @default(autoincrement())
   followerId  BigInt
@@ -430,6 +457,7 @@ model Follow {
   @@map("follows")
 }
 
+/// タグフォロー (興味タグの購読)。
 model TagFollow {
   id        BigInt   @id @default(autoincrement())
   userId    BigInt
@@ -442,6 +470,89 @@ model TagFollow {
   @@unique([userId, tagId])
   @@index([tagId])
   @@map("tag_follows")
+}
+
+/// 発行済み API キー (ユーザー / 契約単位)。生キーはハッシュのみ保存。
+model ApiKey {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt
+  /// 表示用ラベル
+  name        String
+  /// 生キーの sha256 ハッシュ (hex)
+  keyHash     String   @unique
+  /// 生キーの先頭 8 文字 (一覧表示用、キー全体は再表示しない)
+  prefix      String
+  /// スコープ (カンマ区切り: "read" / "write")。既定 read。
+  scopes      String   @default("read")
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
+}
+
+/// Outbound Webhook 購読エンドポイント (グループ単位)。
+model WebhookEndpoint {
+  id          BigInt   @id @default(autoincrement())
+  groupId     BigInt
+  url         String
+  /// 署名用シークレット (HMAC-SHA256)
+  secret      String
+  /// 購読イベント種別 (カンマ区切り: guest.registered / guest.cancelled / event.published 等)
+  events      String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@index([groupId])
+  @@map("webhook_endpoints")
+}
+
+/// Webhook 配信ログ (再送 / 監査)。
+model WebhookDelivery {
+  id            BigInt   @id @default(autoincrement())
+  endpointId    BigInt
+  eventType     String
+  payload       String   // JSON 文字列
+  /// pending|success|failed
+  status        String   @default("pending") @db.VarChar(32)
+  statusCode    Int?
+  attempts      Int      @default(0)
+  lastAttemptAt DateTime?
+  createdAt     DateTime @default(now())
+
+  endpoint      WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+  @@index([status])
+  @@map("webhook_deliveries")
+}
+
+/// ゲスト個別招待 + One-Tap RSVP (署名トークンでメールから 1 クリック登録)。
+model Invitation {
+  id            BigInt   @id @default(autoincrement())
+  eventId       BigInt
+  email         String @db.VarChar(320)
+  /// 招待トークンの sha256 ハッシュ (生トークンはメールのみ)
+  tokenHash     String   @unique
+  /// pending|accepted|declined|expired
+  status        String   @default("pending") @db.VarChar(32)
+  invitedByUserId BigInt?
+  expiresAt     DateTime?
+  acceptedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@map("invitations")
 }
 
 model EventTag {
@@ -584,7 +695,7 @@ model PasswordResetToken {
   id        BigInt   @id @default(autoincrement())
   userId    BigInt
   /// 生トークンの sha256 ハッシュ (hex 64 文字)
-  tokenHash String   @unique @db.VarChar(64)
+  tokenHash String   @unique
   /// 有効期限 (発行から 1 時間)
   expiresAt DateTime
   /// 使用済み日時 (未使用は null)
