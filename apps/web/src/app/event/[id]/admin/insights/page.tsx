@@ -21,7 +21,12 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-import { computeInsightsSQL, type Insights } from "@tech-event/web-feature-host-dashboard";
+import {
+  computeInsightsSQL,
+  computeTrafficInsights,
+  type Insights,
+  type TrafficInsights,
+} from "@tech-event/web-feature-host-dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +66,10 @@ export default async function EventAdminInsightsPage({
     !!admin && (admin.role === "owner" || admin.role === "admin");
   if (!isOwner && !isAdmin) notFound();
 
-  const insights = await computeInsightsSQL(event);
+  const [insights, traffic] = await Promise.all([
+    computeInsightsSQL(event),
+    computeTrafficInsights(event.id),
+  ]);
 
   return (
     <div data-testid="admin-panel-insights">
@@ -92,6 +100,8 @@ export default async function EventAdminInsightsPage({
         </div>
       </div>
 
+      <TrafficFunnel traffic={traffic} />
+      <TrafficSources traffic={traffic} />
       <KpiRow insights={insights} />
       <Affiliations insights={insights} />
       <HourlyHeatmap insights={insights} />
@@ -108,6 +118,167 @@ export default async function EventAdminInsightsPage({
 /* ============================================================
  * セクション群
  * ============================================================ */
+
+/**
+ * ファネル: Page views (ユニークセッション) → RSVP (申込) → Check-in (出席)。
+ * データソースは EventView (閲覧 beacon) + Participant。
+ */
+function TrafficFunnel({ traffic }: { traffic: TrafficInsights }) {
+  const { funnel, totalViews } = traffic;
+  const max = Math.max(1, funnel.views, funnel.rsvp, funnel.checkin);
+  const steps: {
+    key: string;
+    label: string;
+    count: number;
+    rate: number | null;
+    rateLabel: string | null;
+  }[] = [
+    {
+      key: "views",
+      label: "Page views (ユニーク)",
+      count: funnel.views,
+      rate: null,
+      rateLabel: null,
+    },
+    {
+      key: "rsvp",
+      label: "RSVP (申込)",
+      count: funnel.rsvp,
+      rate: funnel.viewToRsvpRate,
+      rateLabel: "閲覧→申込",
+    },
+    {
+      key: "checkin",
+      label: "Check-in (出席)",
+      count: funnel.checkin,
+      rate: funnel.rsvpToCheckinRate,
+      rateLabel: "申込→出席",
+    },
+  ];
+  return (
+    <section className="mt-6" data-testid="admin-insights-funnel">
+      <h3 className="text-base font-semibold">
+        ファネル (閲覧 → 申込 → 出席)
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        閲覧はユニークセッション数 (匿名 cookie ベース、総閲覧 {totalViews}{" "}
+        回)。個人特定情報は保存していません。
+      </p>
+      <div className="mt-3 space-y-2 rounded-md border border-border bg-surface p-4">
+        {steps.map((s) => (
+          <div key={s.key} className="flex items-center gap-3 text-sm">
+            <span className="w-44 shrink-0 truncate">{s.label}</span>
+            <div className="relative h-5 flex-1 overflow-hidden rounded bg-zinc-100">
+              <div
+                className={
+                  "absolute inset-y-0 left-0 " +
+                  (s.key === "views"
+                    ? "bg-brand-orange/40"
+                    : s.key === "rsvp"
+                      ? "bg-brand-orange/70"
+                      : "bg-brand-orange")
+                }
+                style={{ width: `${(s.count / max) * 100}%` }}
+              />
+            </div>
+            <span
+              className="w-12 shrink-0 text-right text-sm font-semibold tabular-nums"
+              data-testid={`insights-funnel-${s.key}`}
+            >
+              {s.count}
+            </span>
+            <span className="w-28 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+              {s.rate === null
+                ? "—"
+                : `${s.rateLabel} ${Math.round(s.rate * 100)}%`}
+            </span>
+          </div>
+        ))}
+        <p className="pt-1 text-xs text-muted-foreground">
+          全体転換率 (閲覧→出席):{" "}
+          <span
+            className="font-semibold text-foreground"
+            data-testid="insights-funnel-overall-rate"
+          >
+            {Math.round(funnel.overallRate * 100)}%
+          </span>
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 流入経路 / UTM: referrer ドメイン別 + utm_source / utm_medium /
+ * utm_campaign 別の閲覧数 Top10。
+ */
+function TrafficSources({ traffic }: { traffic: TrafficInsights }) {
+  const lists: {
+    key: string;
+    title: string;
+    items: { name: string; count: number }[];
+  }[] = [
+    { key: "referrers", title: "流入元 (referrer)", items: traffic.referrers },
+    { key: "utm-source", title: "utm_source", items: traffic.utmSources },
+    { key: "utm-medium", title: "utm_medium", items: traffic.utmMediums },
+    {
+      key: "utm-campaign",
+      title: "utm_campaign",
+      items: traffic.utmCampaigns,
+    },
+  ];
+  return (
+    <section className="mt-8" data-testid="admin-insights-sources">
+      <h3 className="text-base font-semibold">流入経路 / UTM</h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        イベントページ閲覧の referrer ドメイン別 / UTM パラメータ別 Top10。
+      </p>
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+        {lists.map((list) => {
+          const max = Math.max(1, ...list.items.map((i) => i.count));
+          return (
+            <div
+              key={list.key}
+              className="rounded-md border border-border bg-surface p-4"
+              data-testid={`insights-sources-${list.key}`}
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {list.title}
+              </p>
+              {list.items.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  記録がありません。
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-1">
+                  {list.items.map((item) => (
+                    <li
+                      key={item.name}
+                      className="flex items-center gap-3 text-sm"
+                    >
+                      <span className="w-36 truncate" title={item.name}>
+                        {item.name}
+                      </span>
+                      <div className="relative h-3 flex-1 overflow-hidden rounded bg-zinc-100">
+                        <div
+                          className="absolute inset-y-0 left-0 bg-brand-orange/70"
+                          style={{ width: `${(item.count / max) * 100}%` }}
+                        />
+                      </div>
+                      <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+                        {item.count}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function KpiRow({ insights }: { insights: Insights }) {
   const { totalParticipants, withAffiliation, withBio } = insights;

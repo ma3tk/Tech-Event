@@ -74,14 +74,19 @@ schema 基盤 (15b0742) は Opus 直実装。実装は APIキー+CRUD (A) / Webh
 
 ## Wave 6 — 大物 (工数大)
 
-- [ ] PWA (manifest / service worker / Push / オフライン)
-- [ ] Membership Tiers (有料/承認制カレンダー購読)
-- [ ] Organization 階層 (org > calendar > event)
-- [ ] Plus プラン課金 (サブスクリプション + 機能ゲート)
-- [ ] チケット QR + Wallet パス / カメラ QR スキャナ
-- [ ] Google Calendar OAuth 自動同期 / カスタムドメイン
-- [ ] SMS / WhatsApp 配信チャネル
-- [ ] Insights ファネル (Page views→RSVP→Check-in) + UTM / 流入経路
+### 6a 実装済み ✅ 2026-07-06 (typecheck 36 / build / lint 0 / 新規 E2E 10 passed)
+- [x] PWA (manifest.webmanifest / 手書き service worker / offline.html / install prompt。認証HTML非キャッシュ)
+- [x] チケット QR (署名トークン /event/[id]/ticket) + カメラ QR スキャナ (native BarcodeDetector + 手入力フォールバック)
+- [x] Insights ファネル (Page views→RSVP→Check-in) + 流入経路/UTM (EventView beacon + 集計)
+
+### 6b 外部依存で保留 (要ユーザー判断: 外部アカウント / 課金商品設計 / インフラが必要)
+- [ ] Plus プラン課金 (Stripe サブスクリプション商品 + 機能ゲート) — Stripe 商品/価格 ID の設計が必要
+- [ ] Membership Tiers (有料/承認制カレンダー購読) — 上記課金基盤に依存
+- [ ] Organization 階層 (org > calendar > event) — 既存データモデルの大規模再設計
+- [ ] Google Calendar OAuth 自動同期 — Google Cloud プロジェクト + OAuth 同意画面が必要
+- [ ] カスタムドメイン (CNAME ホワイトラベル) — DNS / 証明書インフラが必要
+- [ ] SMS / WhatsApp 配信チャネル — Twilio 等の外部プロバイダ契約が必要
+- [ ] Push 通知の実配信 (web-push VAPID) — PWA SW 基盤は導入済、VAPID 鍵運用は要判断
 
 ## 部分実装で残る磨き込み
 

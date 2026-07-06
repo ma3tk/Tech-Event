@@ -43,6 +43,7 @@ import EventStickyCTA, {
   type StickyState,
 } from "@/components/EventStickyCTA";
 import ActionForm from "../../../components/forms/ActionForm";
+import EventViewTracker from "../../../components/analytics/EventViewTracker";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -494,6 +495,7 @@ export default async function EventDetailPage({
       data-testid="event-detail-root"
       style={themeStyle}
     >
+      <EventViewTracker eventId={raw} />
       {/* ============ HERO 帯 (背景: coverImageUrl をぼかしてオーバーレイ) ============ */}
       <section
         aria-label="イベント概要"

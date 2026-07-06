@@ -5,6 +5,8 @@
  * - accepted / attended の参加者一覧を表示
  * - 各行にチェックインボタン / チェックイン取消ボタン
  * - 出席コードも表示 (主催者のみ参照可)
+ * - `Event.allowQrCheckIn` 有効時は参加者チケット QR のカメラスキャナ
+ *   (BarcodeDetector + 手動入力フォールバック) を表示
  */
 
 import Link from "next/link";
@@ -15,6 +17,7 @@ import {
   isEventAdmin,
   toggleParticipantAttendance,
 } from "@/app/actions/checkin-actions";
+import QrScanner from "../../../../../components/checkin/QrScanner";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +59,7 @@ export default async function AdminCheckInPage({
       title: true,
       attendanceCode: true,
       allowAttendanceCodeCheckIn: true,
+      allowQrCheckIn: true,
     },
   });
   if (!event) notFound();
@@ -123,6 +127,32 @@ export default async function AdminCheckInPage({
           </p>
         </div>
       </section>
+
+      {event.allowQrCheckIn && (
+        <section
+          className="mt-6 rounded-md border border-border bg-surface p-4"
+          aria-labelledby="qr-scanner-heading"
+          data-testid="qr-scanner-section"
+        >
+          <h2
+            id="qr-scanner-heading"
+            className="text-lg font-bold text-foreground"
+          >
+            QR チェックイン
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            参加者のチケット QR (
+            <Link
+              href={`/event/${eventIdStr}/ticket`}
+              className="text-link hover:underline"
+            >
+              /event/{eventIdStr}/ticket
+            </Link>
+            ) をカメラでスキャンするか、チケットコードを手動入力してチェックインします。
+          </p>
+          <QrScanner eventId={eventIdStr} />
+        </section>
+      )}
 
       <section
         className="mt-6 overflow-x-auto rounded-md border border-border bg-surface"

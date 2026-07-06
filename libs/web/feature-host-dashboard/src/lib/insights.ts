@@ -360,3 +360,170 @@ export async function computeInsights(
 ): Promise<Insights> {
   return computeInsightsSQL(event);
 }
+
+/* ============================================================
+ * トラフィック集計 (ファネル + 流入経路 / UTM)
+ *
+ * データソース: EventView (閲覧 beacon /api/track/view が記録)。
+ * Privacy: 匿名 sessionId / referrer / UTM のみ。個人特定情報は返さない。
+ * ============================================================ */
+
+/** 流入元 (referrer ドメイン / UTM 値) 別の件数 */
+export type SourceCount = { name: string; count: number };
+
+export type TrafficFunnel = {
+  /** ユニークセッション数 (EventView の distinct sessionId) */
+  views: number;
+  /** RSVP 数 (accepted + waiting + attended。attended も申込済みとして含む) */
+  rsvp: number;
+  /** チェックイン数 (status=attended または checkInAt 記録あり) */
+  checkin: number;
+  /** views → rsvp 転換率 (0-1) */
+  viewToRsvpRate: number;
+  /** rsvp → checkin 転換率 (0-1) */
+  rsvpToCheckinRate: number;
+  /** views → checkin 全体転換率 (0-1) */
+  overallRate: number;
+};
+
+export type TrafficInsights = {
+  /** 総閲覧数 (重複セッション込みの生 view 数) */
+  totalViews: number;
+  /** ユニークセッション数 */
+  uniqueSessions: number;
+  funnel: TrafficFunnel;
+  /** referrer ドメイン別 Top10 ("(直接アクセス)" = referrer 無し) */
+  referrers: SourceCount[];
+  /** utm_source 別 Top10 */
+  utmSources: SourceCount[];
+  /** utm_medium 別 Top10 */
+  utmMediums: SourceCount[];
+  /** utm_campaign 別 Top10 */
+  utmCampaigns: SourceCount[];
+};
+
+/** referrer ドメイン集計の「referrer 無し」ラベル */
+export const DIRECT_REFERRER_LABEL = "(直接アクセス)";
+
+/** referrer 文字列を集計用ドメインに正規化する */
+function referrerToDomain(ref: string | null): string {
+  if (!ref) return DIRECT_REFERRER_LABEL;
+  try {
+    const host = new URL(ref).hostname;
+    return host || DIRECT_REFERRER_LABEL;
+  } catch {
+    // URL でない referrer はそのまま (最大 100 文字に丸め)
+    const trimmed = ref.trim();
+    return trimmed ? trimmed.slice(0, 100) : DIRECT_REFERRER_LABEL;
+  }
+}
+
+/** Map<string, number> を count 降順 Top N の SourceCount[] へ */
+function topCounts(map: Map<string, number>, n = 10): SourceCount[] {
+  return Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .slice(0, n);
+}
+
+/**
+ * トラフィック insights (ファネル + 流入経路 / UTM) を SQL 集計ベースで返す。
+ *
+ * - views: EventView の distinct sessionId 数 (ユニークビジター推計)
+ * - rsvp: Participant のうち accepted / waiting / attended
+ *   (attended はチェックイン後 status が繰り上がるため RSVP に含める)
+ * - checkin: status=attended または checkInAt 非 null (既存 attendedCount と同基準)
+ * - referrer / UTM: groupBy で件数集計し Node 側で Top10 を作る
+ */
+export async function computeTrafficInsights(
+  eventId: bigint,
+): Promise<TrafficInsights> {
+  const [
+    totalViews,
+    uniqueSessionRows,
+    rsvp,
+    checkin,
+    referrerGroups,
+    utmSourceGroups,
+    utmMediumGroups,
+    utmCampaignGroups,
+  ] = await Promise.all([
+    prisma.eventView.count({ where: { eventId } }),
+    prisma.eventView.findMany({
+      where: { eventId },
+      select: { sessionId: true },
+      distinct: ["sessionId"],
+    }),
+    prisma.participant.count({
+      where: {
+        eventId,
+        status: { in: ["accepted", "waiting", "attended"] },
+      },
+    }),
+    prisma.participant.count({
+      where: {
+        eventId,
+        OR: [{ status: "attended" }, { checkInAt: { not: null } }],
+      },
+    }),
+    prisma.eventView.groupBy({
+      by: ["referrer"],
+      where: { eventId },
+      _count: { _all: true },
+    }),
+    prisma.eventView.groupBy({
+      by: ["utmSource"],
+      where: { eventId, utmSource: { not: null } },
+      _count: { _all: true },
+    }),
+    prisma.eventView.groupBy({
+      by: ["utmMedium"],
+      where: { eventId, utmMedium: { not: null } },
+      _count: { _all: true },
+    }),
+    prisma.eventView.groupBy({
+      by: ["utmCampaign"],
+      where: { eventId, utmCampaign: { not: null } },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const uniqueSessions = uniqueSessionRows.length;
+
+  const refMap = new Map<string, number>();
+  for (const g of referrerGroups) {
+    const domain = referrerToDomain(g.referrer);
+    refMap.set(domain, (refMap.get(domain) ?? 0) + g._count._all);
+  }
+
+  const utmMap = (
+    groups: { _count: { _all: number } }[],
+    key: "utmSource" | "utmMedium" | "utmCampaign",
+  ): Map<string, number> => {
+    const m = new Map<string, number>();
+    for (const g of groups) {
+      const v = (g as unknown as Record<string, string | null>)[key];
+      if (!v) continue;
+      m.set(v, (m.get(v) ?? 0) + g._count._all);
+    }
+    return m;
+  };
+
+  const views = uniqueSessions;
+  return {
+    totalViews,
+    uniqueSessions,
+    funnel: {
+      views,
+      rsvp,
+      checkin,
+      viewToRsvpRate: views > 0 ? rsvp / views : 0,
+      rsvpToCheckinRate: rsvp > 0 ? checkin / rsvp : 0,
+      overallRate: views > 0 ? checkin / views : 0,
+    },
+    referrers: topCounts(refMap),
+    utmSources: topCounts(utmMap(utmSourceGroups, "utmSource")),
+    utmMediums: topCounts(utmMap(utmMediumGroups, "utmMedium")),
+    utmCampaigns: topCounts(utmMap(utmCampaignGroups, "utmCampaign")),
+  };
+}
