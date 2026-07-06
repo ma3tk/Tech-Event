@@ -4,6 +4,8 @@
  * - `validateApiAuth`: `X-API-Key` ヘッダと `User-Agent` ヘッダの検証
  *   - APIキー未指定 or 不一致 → `{ ok: false, error: "unauthorized" }`
  *   - User-Agent 未送信 or 空白 or "curl" 単独 → `{ ok: false, error: "forbidden" }`
+ * - `validateApiAuthWithDb`: 上記に加えて DB 発行キー (`ApiKey` テーブル) も
+ *   受け付ける async 版。env キー (`PUBLIC_API_KEY`) は従来通り有効 (両対応)。
  * - `rateLimit`: APIキー単位の簡易インメモリレート制限 (1 req/sec)
  * - `serializeForApi`: BigInt → Number, Date → ISO 文字列 への再帰変換
  * - `errorResponse` / `jsonResponse`: CORS ヘッダ込みの共通レスポンス生成
@@ -16,7 +18,9 @@
  *    超えるケースが想定される場合は呼び出し側で string 変換に切り替えること。
  */
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
+
+import { prisma } from "@/lib/prisma";
 
 /** 認証検証結果 */
 export type AuthResult =
@@ -266,4 +270,176 @@ export function guardRequest(request: Request): NextResponse | null {
     return errorResponse(429, "rate_limited", "Too many requests (1 req/sec)");
   }
   return null;
+}
+
+/* ============================================================
+ * DB 発行 API キー (`ApiKey` テーブル) 対応の認証 (async)
+ *
+ * 既存の同期 `validateApiAuth` / `guardRequest` は env キー
+ * (`PUBLIC_API_KEY`) 専用のまま **完全に維持** し、書き込み系など
+ * userId / scope が必要なエンドポイントは以下の async 版を使う。
+ * env キーも従来通り受け付ける (両対応) が、ユーザーに紐づかないため
+ * `userId` は付かず scope は read のみとする。
+ * ============================================================ */
+
+/** ユーザー発行 API キーの生キー接頭辞 (生キー = `te_live_` + 32byte hex) */
+export const API_KEY_RAW_PREFIX = "te_live_";
+
+/** 一覧表示用に保存する生キーの先頭文字数 (`ApiKey.prefix`) */
+export const API_KEY_PREFIX_LENGTH = 12;
+
+/** API キーのスコープ */
+export type ApiScope = "read" | "write";
+
+/**
+ * `ApiKey.scopes` カラム (カンマ区切り文字列) → `ApiScope[]`。
+ * 未知の値は無視し、重複は除去する。
+ */
+export function parseApiScopes(raw: string): ApiScope[] {
+  const out: ApiScope[] = [];
+  for (const part of raw.split(",")) {
+    const s = part.trim();
+    if ((s === "read" || s === "write") && !out.includes(s)) {
+      out.push(s);
+    }
+  }
+  return out;
+}
+
+/**
+ * 生 API キーの sha256 hex ハッシュ。`ApiKey.keyHash` と同一形式。
+ *
+ * 生キーは DB に保存せず、このハッシュで検索・照合する
+ * (等値比較を DB の UNIQUE index lookup に置き換えることで
+ *  生キー同士の文字列比較そのものを行わない)。
+ */
+export function hashApiKey(rawKey: string): string {
+  return createHash("sha256").update(rawKey).digest("hex");
+}
+
+/** DB キー対応の認証検証結果 */
+export type DbAuthResult =
+  | {
+      ok: true;
+      /**
+       * レート制限などに使う識別子。
+       * env キー: 生キーそのまま (既存 `validateApiAuth` と同じ挙動) /
+       * DB キー: keyHash (生キーを持ち回らない)
+       */
+      apiKey: string;
+      /** このキーに許可されたスコープ */
+      scopes: ApiScope[];
+      /** DB キーの場合のみ: 発行ユーザーの id */
+      userId?: bigint;
+      /** どちらの方式で認証されたか */
+      source: "env" | "db";
+    }
+  | { ok: false; status: 401 | 403; error: string; message: string };
+
+/** `DbAuthResult` の成功側だけを取り出した型 */
+export type DbAuthOk = Extract<DbAuthResult, { ok: true }>;
+
+/**
+ * `X-API-Key` の検証 (env キー + DB 発行キーの両対応)。
+ *
+ * 1. User-Agent / env キー検証は既存 `validateApiAuth` に委譲
+ *    - env キー一致 → `source: "env"` (userId なし / scope は read のみ)
+ *    - User-Agent 不正 (403) → そのまま失敗
+ * 2. env キー不一致 (401) の場合、`te_live_` 接頭辞のキーであれば
+ *    sha256 ハッシュで `ApiKey` テーブルを検索
+ *    - `revokedAt` が null のキーのみ有効
+ *    - ヒットしたら `lastUsedAt` を更新 (失敗してもリクエストは通す)
+ */
+export async function validateApiAuthWithDb(
+  request: Request,
+): Promise<DbAuthResult> {
+  const envResult = validateApiAuth(request);
+  if (envResult.ok) {
+    // env キーはユーザーに紐づかないため read 専用として扱う
+    return {
+      ok: true,
+      apiKey: envResult.apiKey,
+      scopes: ["read"],
+      source: "env",
+    };
+  }
+  // User-Agent 違反 (403) は DB キーでも同様に拒否
+  if (envResult.status === 403) {
+    return envResult;
+  }
+
+  const provided = request.headers.get("x-api-key") ?? "";
+  if (!provided.startsWith(API_KEY_RAW_PREFIX)) {
+    return envResult; // 401 unauthorized
+  }
+
+  const keyHash = hashApiKey(provided);
+  const row = await prisma.apiKey.findUnique({ where: { keyHash } });
+  if (!row || row.revokedAt !== null) {
+    return {
+      ok: false,
+      status: 401,
+      error: "unauthorized",
+      message: "Invalid or missing X-API-Key header",
+    };
+  }
+
+  // lastUsedAt 更新はベストエフォート (失敗してもリクエスト自体は成功させる)
+  void prisma.apiKey
+    .update({ where: { id: row.id }, data: { lastUsedAt: new Date() } })
+    .catch(() => {
+      /* ignore */
+    });
+
+  return {
+    ok: true,
+    apiKey: keyHash,
+    scopes: parseApiScopes(row.scopes),
+    userId: row.userId,
+    source: "db",
+  };
+}
+
+/**
+ * `validateApiAuthWithDb` → scope 検証 → `rateLimit` を一括で行うガード。
+ *
+ * 失敗時は `{ ok: false, response }` (そのまま return できる NextResponse)、
+ * 成功時は `{ ok: true, auth }` を返す。
+ *
+ * ```ts
+ * const guard = await guardRequestWithDb(request, "write");
+ * if (!guard.ok) return guard.response;
+ * const { userId } = guard.auth;
+ * ```
+ */
+export async function guardRequestWithDb(
+  request: Request,
+  requiredScope: ApiScope = "read",
+): Promise<
+  { ok: true; auth: DbAuthOk } | { ok: false; response: NextResponse }
+> {
+  const auth = await validateApiAuthWithDb(request);
+  if (!auth.ok) {
+    return {
+      ok: false,
+      response: errorResponse(auth.status, auth.error, auth.message),
+    };
+  }
+  if (!auth.scopes.includes(requiredScope)) {
+    return {
+      ok: false,
+      response: errorResponse(
+        403,
+        "insufficient_scope",
+        `API key does not have the "${requiredScope}" scope`,
+      ),
+    };
+  }
+  if (!shouldBypassRateLimit(request) && !rateLimit(auth.apiKey)) {
+    return {
+      ok: false,
+      response: errorResponse(429, "rate_limited", "Too many requests (1 req/sec)"),
+    };
+  }
+  return { ok: true, auth };
 }

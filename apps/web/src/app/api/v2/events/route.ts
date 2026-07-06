@@ -25,17 +25,29 @@
  * 注: connpass の `prefecture` は都道府県スラグ enum (`tokyo` 等) だが、本実装の
  *     Event テーブルには都道府県カラムがないため、`address` への部分一致で代替する。
  *     完全な enum マッピングは要追加 (TODO)。
+ *
+ * POST /api/v2/events/
+ *
+ * イベント作成 (書き込み API)。
+ *  - 認証: DB 発行キー (`ApiKey`) の write スコープ必須 (`guardRequestWithDb`)。
+ *    env キー (`PUBLIC_API_KEY`) はユーザーに紐づかないため書き込み不可 (403)。
+ *  - 認可: キー発行ユーザーが対象 group の owner/admin であること。
+ *  - レスポンス: GET の events[] 要素と同じ形 (serializeForApi) を 201 で返す。
  */
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import {
   corsPreflightResponse,
+  errorResponse,
   guardRequest,
+  guardRequestWithDb,
   jsonResponse,
   parsePaging,
   serializeForApi,
 } from "@/lib/public-api";
+import { nextId, withRetry } from "@/lib/id-gen";
 import type { Prisma } from "@/generated/prisma";
 import { searchEvents } from "@/lib/search";
 
@@ -303,4 +315,212 @@ function deriveOpenStatus(
   if (now < startedAt.getTime()) return "preopen";
   if (now > endedAt.getTime()) return "close";
   return "open";
+}
+
+/* ============================================================
+ * POST /api/v2/events/ — イベント作成
+ * ============================================================ */
+
+/**
+ * 作成リクエストボディ (JSON)。フィールド名は GET レスポンス (connpass v2 互換)
+ * の snake_case に揃える。`limit` = 定員 (connpass の `limit` と同義)。
+ */
+const CreateEventBodySchema = z.object({
+  group_id: z.union([
+    z.number().int().positive(),
+    z.string().regex(/^\d+$/, "group_id must be a positive integer"),
+  ]),
+  title: z.string().trim().min(1).max(200),
+  catch: z.string().max(300).optional(),
+  description: z.string().max(50_000).optional(),
+  event_format: z.enum(["offline", "online", "hybrid"]).default("offline"),
+  place: z.string().max(200).optional(),
+  address: z.string().max(300).optional(),
+  online_url: z
+    .string()
+    .url()
+    .max(500)
+    .refine(
+      (u) => u.startsWith("http://") || u.startsWith("https://"),
+      "online_url must be an http(s) URL",
+    )
+    .optional(),
+  hash_tag: z.string().max(120).optional(),
+  started_at: z.string().min(1),
+  ended_at: z.string().min(1),
+  limit: z.number().int().min(0).max(100_000).optional(),
+  status: z.enum(["draft", "published"]).default("published"),
+});
+
+/** ISO 8601 (またはパース可能な日時文字列) → Date。不正なら null。 */
+function parseIsoDate(raw: string): Date | null {
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export async function POST(request: NextRequest): Promise<Response> {
+  // 認証 + write スコープ + レート制限。
+  // env キー (PUBLIC_API_KEY) は read 専用なのでここで 403 になる。
+  const guard = await guardRequestWithDb(request, "write");
+  if (!guard.ok) return guard.response;
+  const { auth } = guard;
+
+  if (auth.userId === undefined) {
+    return errorResponse(
+      403,
+      "forbidden",
+      "This API key is not associated with a user account",
+    );
+  }
+
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return errorResponse(400, "bad_request", "Request body must be valid JSON");
+  }
+
+  const parsed = CreateEventBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return errorResponse(
+      400,
+      "bad_request",
+      `${issue?.path.join(".") || "body"}: ${issue?.message ?? "invalid"}`,
+    );
+  }
+  const body = parsed.data;
+
+  const startedAt = parseIsoDate(body.started_at);
+  const endedAt = parseIsoDate(body.ended_at);
+  if (!startedAt || !endedAt) {
+    return errorResponse(
+      400,
+      "bad_request",
+      "started_at / ended_at must be valid ISO 8601 datetimes",
+    );
+  }
+  if (endedAt <= startedAt) {
+    return errorResponse(
+      400,
+      "bad_request",
+      "ended_at must be after started_at",
+    );
+  }
+
+  const groupId = BigInt(body.group_id);
+  const group = await prisma.group.findUnique({ where: { id: groupId } });
+  if (!group) {
+    return errorResponse(404, "not_found", `Group ${groupId.toString()} not found`);
+  }
+
+  // 認可: キー発行ユーザーが group の owner/admin であること (Server 側で厳格チェック)
+  const admin = await prisma.groupAdmin.findUnique({
+    where: { groupId_userId: { groupId, userId: auth.userId } },
+  });
+  if (!admin || (admin.role !== "owner" && admin.role !== "admin")) {
+    return errorResponse(
+      403,
+      "forbidden",
+      "API key user must be an owner or admin of the target group",
+    );
+  }
+
+  const owner = await prisma.user.findUnique({ where: { id: auth.userId } });
+  if (!owner || owner.status !== "active") {
+    return errorResponse(403, "forbidden", "API key user is not active");
+  }
+
+  const now = new Date();
+  const isPublished = body.status === "published";
+
+  // 採番レース (P2002) は withRetry で吸収 (feature-host-dashboard createEvent と同じ規約)
+  const created = await withRetry(() =>
+    prisma.$transaction(async (tx) => {
+      const eventId = await nextId(tx, "event");
+      const event = await tx.event.create({
+        data: {
+          id: eventId,
+          groupId,
+          title: body.title,
+          catchPhrase: body.catch || null,
+          description: body.description || null,
+          hashTag: body.hash_tag || null,
+          eventType: "participation",
+          eventFormat: body.event_format,
+          startedAt,
+          endedAt,
+          place: body.place || null,
+          address: body.address || null,
+          onlineUrl: body.online_url || null,
+          capacity: body.limit ?? null,
+          visibility: isPublished ? "public" : "draft",
+          status: body.status,
+          recruitmentMethod: "fcfs",
+          ownerId: owner.id,
+          ownerDisplayName: owner.displayName,
+          publishedAt: isPublished ? now : null,
+        },
+      });
+      // デフォルト参加枠 (UI の createEvent と同じフォールバック「一般」)
+      await tx.eventRole.create({
+        data: {
+          id: await nextId(tx, "eventRole"),
+          eventId,
+          displayOrder: 1,
+          name: "一般",
+          capacity: body.limit ?? null,
+          pricingType: "free",
+          price: 0,
+        },
+      });
+      return event;
+    }),
+  );
+
+  // レスポンスは GET の events[] 要素と同じ形 (フィールド・命名を揃える)
+  const protocol = request.headers.get("x-forwarded-proto") ?? "http";
+  const host = request.headers.get("host") ?? "localhost:3000";
+  const base = `${protocol}://${host}`;
+
+  return jsonResponse(
+    serializeForApi({
+      id: Number(created.id),
+      title: created.title,
+      catch: created.catchPhrase,
+      description: created.description,
+      url: `${base}/event/${created.id.toString()}`,
+      image_url: created.coverImageUrl,
+      hash_tag: created.hashTag,
+      started_at: created.startedAt.toISOString(),
+      ended_at: created.endedAt.toISOString(),
+      published_at: created.publishedAt
+        ? created.publishedAt.toISOString()
+        : null,
+      limit: created.capacity,
+      event_type: created.eventType,
+      open_status: deriveOpenStatus(
+        created.status,
+        created.startedAt,
+        created.endedAt,
+      ),
+      group: {
+        id: Number(group.id),
+        subdomain: group.subdomain,
+        title: group.name,
+        url: `${base}/group/${group.id.toString()}`,
+      },
+      address: created.address,
+      place: created.place,
+      lat: created.lat,
+      lon: created.lon,
+      owner_id: Number(created.ownerId),
+      owner_nickname: owner.nickname,
+      owner_display_name: created.ownerDisplayName ?? owner.displayName,
+      accepted: created.acceptedCount,
+      waiting: created.waitingCount,
+      updated_at: created.updatedAt.toISOString(),
+    }),
+    { status: 201 },
+  );
 }

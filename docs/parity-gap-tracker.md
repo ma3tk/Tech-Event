@@ -61,13 +61,16 @@ schema 基盤 (ea8c841) は Opus 直実装。実装は user-follow (S1) / tag-fo
 - [x] discover 都市別 LP (/discover/[city] 48件) + カテゴリ別 LP (/discover/category/[slug]) + JSON-LD + sitemap
 - [x] タグフォロー (/tag/[slug] + /following/tags) / 関連タグ (EventTag 共起) / タグサジェスト (前方一致)
 
-## Wave 5 — プラットフォーム / API
+## Wave 5 — プラットフォーム / API — 完了 ✅ 2026-07-06
 
-- [ ] Public API 書き込み系 CRUD (event create / add-guests 等)
-- [ ] Outbound Webhooks (guest.registered 等)
-- [ ] APIキー発行・管理 UI (現状 env 固定単一キー)
-- [ ] ゲスト個別招待 (Add Guests / CSV import / send-invites)
-- [ ] One-Tap RSVP (メール署名トークンで登録完了)
+schema 基盤 (15b0742) は Opus 直実装。実装は APIキー+CRUD (A) / Webhooks (B) / 招待+RSVP (C) 並列。
+検証: typecheck 36 / build / lint 0 errors / 新規 E2E 8 passed / 回帰 public-api·host-dashboard·participate·broadcast 13 passed。
+
+- [x] APIキー発行・管理 UI (/settings/api-keys, te_live_ キー sha256 保存, prefix 表示, 失効) + DB キー検証 (env キーと両対応)
+- [x] Public API 書き込み CRUD (POST /api/v2/events, POST /api/v2/events/[id]/participants, write スコープ + 認可)
+- [x] Outbound Webhooks (WebhookEndpoint CRUD + SSRF 二重検証 + HMAC 署名 + 配信ログ + joinEvent/publishEvent フック) + group admin/webhooks UI
+- [x] ゲスト個別招待 (inviteGuests + CSV import + 再送/取消) + guests admin UI
+- [x] One-Tap RSVP (/rsvp/[token], 署名トークン → セッション発行 → joinEvent, トークン rotate)
 
 ## Wave 6 — 大物 (工数大)
 

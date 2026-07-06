@@ -38,6 +38,8 @@ import {
   isNotificationKindEnabled,
 } from "@/lib/notification";
 
+import { dispatchWebhook } from "@tech-event/web-feature-group";
+
 import {
   buildEventIcsAttachment,
   createParticipantNotification,
@@ -582,6 +584,28 @@ export async function joinEvent(formData: FormData): Promise<void> {
 
   // メール送信は DB commit 後 (失敗しても throw しない)
   await sendParticipantMailsSafely([mailTask]);
+
+  // Outbound Webhook: guest.registered (DB commit 後)。
+  // 配信失敗は dispatchWebhook 内で握りつぶされ、申込処理は止めない。
+  try {
+    const webhookEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { groupId: true, title: true },
+    });
+    if (webhookEvent) {
+      await dispatchWebhook(webhookEvent.groupId, "guest.registered", {
+        eventId: eventId.toString(),
+        eventTitle: webhookEvent.title,
+        eventRoleId: eventRoleId.toString(),
+        userId: user.id.toString(),
+        nickname: user.nickname,
+        displayName: user.displayName,
+        registeredAt: new Date().toISOString(),
+      });
+    }
+  } catch {
+    // dispatchWebhook は throw しない設計だが、万一の失敗も申込成功を壊さない
+  }
 
   // 監査ログ (best-effort, トランザクション外)
   // donation 枠の場合は寄付額を metadata に記録する

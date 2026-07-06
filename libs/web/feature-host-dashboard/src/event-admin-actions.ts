@@ -38,6 +38,7 @@ import {
 
 import { fanoutNotifications, resolveBaseUrl } from "./lib/notification-fanout";
 import { refundPayment } from "@tech-event/web-feature-payment";
+import { dispatchWebhook } from "@tech-event/web-feature-group";
 
 /* ============================================================
  * バリデーション
@@ -809,6 +810,19 @@ export async function publishEvent(formData: FormData): Promise<void> {
         "event published member notification failed",
       );
     }
+  }
+
+  // Outbound Webhook: event.published (初回公開時のみ / DB commit 後)。
+  // 配信失敗は dispatchWebhook 内で握りつぶされ、公開処理は止めない。
+  if (!wasAlreadyPublished) {
+    await dispatchWebhook(event.groupId, "event.published", {
+      eventId: eventId.toString(),
+      title: event.title,
+      groupId: event.groupId.toString(),
+      groupName: event.group.name,
+      startedAt: event.startedAt.toISOString(),
+      publishedAt: (event.publishedAt ?? new Date()).toISOString(),
+    });
   }
 
   // 監査ログ
