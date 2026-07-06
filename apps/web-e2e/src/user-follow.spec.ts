@@ -14,20 +14,43 @@
  * followUser / unfollowUser は冪等 (既フォロー / 未フォローは no-op) なので、
  * clickUntil のリトライ click で二重送信になってもカウンタは壊れない。
  */
+import path from "node:path";
+import Database from "better-sqlite3";
 import { test, expect, type Page } from "@playwright/test";
 import { devLoginLegacy as devLogin } from "./_helpers/auth";
 import { clickUntil } from "./_helpers/actions";
 
 const FOLLOWER = "test_user";
+const DEV_DB_PATH = path.resolve(__dirname, "../../web/dev.db");
 
-/** project ごとに followee を分ける (desktop / mobile の並列衝突回避) */
-const FOLLOWEE_BY_PROJECT: Record<string, string> = {
-  "chromium-desktop": "wild_ocean_589",
-  "chromium-mobile": "happy_river_200",
-};
+/**
+ * followee は seed.ts が Math.random で生成する非決定的な nickname のため
+ * ハードコードできない (CI の fresh db:reset で存在しない)。実行時に dev.db から
+ * 実在する active ユーザー (test_user 以外) を 2 名取得し、project ごとに割り当てて
+ * desktop / mobile の並列カウンタ衝突を避ける。
+ */
+function resolveFollowees(): { desktop: string; mobile: string } {
+  const db = new Database(DEV_DB_PATH, { readonly: true });
+  try {
+    const rows = db
+      .prepare(
+        "SELECT nickname FROM users WHERE nickname != ? AND status = 'active' ORDER BY id LIMIT 2",
+      )
+      .all("test_user") as { nickname: string }[];
+    const desktop = rows[0]?.nickname ?? "test_user";
+    const mobile = rows[1]?.nickname ?? desktop;
+    return { desktop, mobile };
+  } finally {
+    db.close();
+  }
+}
+
+const FOLLOWEES = resolveFollowees();
 
 function followeeFor(projectName: string): string {
-  return FOLLOWEE_BY_PROJECT[projectName] ?? "wild_ocean_589";
+  return projectName === "chromium-mobile"
+    ? FOLLOWEES.mobile
+    : FOLLOWEES.desktop;
 }
 
 /** `user-followers-count` の表示テキストから数値を読む (例: "1,234 フォロワー") */
