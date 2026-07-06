@@ -26,6 +26,9 @@ import { isReservedSlug } from "@/lib/reserved-words";
 import { assertRateLimit, RATE_LIMITS, RateLimitError } from "@/lib/rate-limit";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
 import { SlugSchema, UrlOrEmpty, HexColorOrEmpty } from "@/lib/schemas";
+// feature-payment の Stripe helper (import のみ / 編集はしない)。
+// 有料 tier の Checkout Session 作成に使う。未設定なら「準備中」フォールバック。
+import { getStripe, isStripeEnabled } from "@/lib/stripe";
 
 /* ============================================================
  * 入力ヘルパー
@@ -273,6 +276,21 @@ export async function updateCalendar(formData: FormData): Promise<void> {
  * subscribe / unsubscribe
  * ============================================================ */
 
+/**
+ * カレンダーを購読する。
+ *
+ * 後方互換 (tierId 無し = 従来経路、挙動は無変更):
+ *   - 未購読なら status=active の無料購読を即時作成し subscriberCount を +1
+ *
+ * Membership Tier 拡張 (formData に `tierId` がある場合のみ):
+ *   - 承認制 tier (approvalRequired) → status=pending で作成 (承認待ち)。
+ *     subscriberCount は active のみ計上のため増やさない (承認時に +1)。
+ *   - 有料 tier (price>0) → Stripe Checkout へリダイレクト。Stripe 未設定なら
+ *     `?membership=payment-disabled` で「準備中」フォールバック
+ *     (課金なしで pending / active にはしない)。
+ *   - 無料 + 承認不要の tier → 従来同様 status=active 即時購読 (tierId 付き)。
+ *   - 却下済み (status=cancelled) の行が残っている場合は再申請として上書きする。
+ */
 export async function subscribeCalendar(formData: FormData): Promise<void> {
   const user = await getCurrentUser();
   const slug = formValue(formData, "slug");
@@ -287,8 +305,169 @@ export async function subscribeCalendar(formData: FormData): Promise<void> {
 
   const existing = await prisma.calendarSubscription.findUnique({
     where: { calendarId_userId: { calendarId: cal.id, userId: user.id } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
+
+  // ---- Membership Tier 経路 (tierId がある場合のみ / 無しは従来経路) ----
+  const tierIdRaw = formValue(formData, "tierId");
+  if (tierIdRaw) {
+    if (!/^\d+$/.test(tierIdRaw)) {
+      redirect(`/calendar/${cal.slug}?membership=invalid-tier`);
+    }
+    const tier = await prisma.calendarMembershipTier.findFirst({
+      where: { id: BigInt(tierIdRaw), calendarId: cal.id, active: true },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        currency: true,
+        approvalRequired: true,
+      },
+    });
+    if (!tier) {
+      redirect(`/calendar/${cal.slug}?membership=tier-not-found`);
+    }
+
+    // 既に active / pending の購読があるなら何もしない (従来の冪等挙動を踏襲)
+    if (existing && existing.status !== "cancelled") {
+      redirect(`/calendar/${cal.slug}`);
+    }
+
+    // ---- 有料 tier → Stripe Checkout (未設定なら「準備中」フォールバック) ----
+    if (tier.price > 0) {
+      const stripe = getStripe();
+      if (!isStripeEnabled() || !stripe) {
+        // 課金なしで pending / active にはしない (案内のみ)
+        redirect(`/calendar/${cal.slug}?membership=payment-disabled`);
+      }
+
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ||
+        "http://localhost:3000";
+      let checkoutUrl: string | null = null;
+      try {
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          payment_method_types: ["card"],
+          customer_email: user.email,
+          line_items: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: (tier.currency || "JPY").toLowerCase(),
+                unit_amount: tier.price,
+                product_data: {
+                  name: `${cal.slug} - ${tier.name}`,
+                  description: `カレンダー購読メンバーシップ (${tier.name})`,
+                },
+              },
+            },
+          ],
+          metadata: {
+            purpose: "calendar_membership",
+            calendarId: cal.id.toString(),
+            tierId: tier.id.toString(),
+            userId: user.id.toString(),
+          },
+          success_url: `${baseUrl}/calendar/${cal.slug}?membership=payment-success&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${baseUrl}/calendar/${cal.slug}?membership=payment-cancelled`,
+        });
+        checkoutUrl = session.url;
+      } catch (e) {
+        console.error("[stripe] calendar membership checkout failed", e);
+        redirect(`/calendar/${cal.slug}?membership=payment-error`);
+      }
+      if (!checkoutUrl) {
+        redirect(`/calendar/${cal.slug}?membership=payment-error`);
+      }
+      // 支払い成立 → 購読 activate は webhook 連携 (scaffold: 実課金は env 揃い時)。
+      // ここでは購読レコードを作らず Checkout へ送るだけに留める。
+      redirect(checkoutUrl);
+    }
+
+    // ---- 承認制 tier (無料) → status=pending で作成 (承認待ち) ----
+    if (tier.approvalRequired) {
+      if (existing) {
+        // 却下済み行の再申請: pending に上書き (cancelled は未計上なので count 変更なし)
+        await prisma.calendarSubscription.update({
+          where: { id: existing.id },
+          data: { status: "pending", tierId: tier.id, subscribedAt: new Date() },
+        });
+      } else {
+        await prisma.$transaction(async (tx) => {
+          const subId = await nextCalendarSubscriptionId(tx);
+          await tx.calendarSubscription.create({
+            data: {
+              id: subId,
+              calendarId: cal.id,
+              userId: user.id,
+              tierId: tier.id,
+              status: "pending",
+            },
+          });
+          // subscriberCount は active のみ計上 → pending では増やさない
+        });
+      }
+
+      void recordAudit({
+        actorUserId: user.id,
+        action: "calendar.subscribe.request",
+        targetType: "Calendar",
+        targetId: cal.id,
+        metadata: { tierId: tier.id.toString() },
+      });
+
+      revalidatePath(`/calendar/${cal.slug}`);
+      revalidatePath(`/calendar/${cal.slug}/manage`);
+      redirect(`/calendar/${cal.slug}?membership=pending`);
+    }
+
+    // ---- 無料 + 承認不要の tier → 即時 active (tierId 付き) ----
+    if (existing) {
+      await prisma.$transaction(async (tx) => {
+        await tx.calendarSubscription.update({
+          where: { id: existing.id },
+          data: { status: "active", tierId: tier.id, subscribedAt: new Date() },
+        });
+        await tx.calendar.update({
+          where: { id: cal.id },
+          data: { subscriberCount: { increment: 1 } },
+        });
+      });
+    } else {
+      await prisma.$transaction(async (tx) => {
+        const subId = await nextCalendarSubscriptionId(tx);
+        await tx.calendarSubscription.create({
+          data: {
+            id: subId,
+            calendarId: cal.id,
+            userId: user.id,
+            tierId: tier.id,
+            status: "active",
+          },
+        });
+        await tx.calendar.update({
+          where: { id: cal.id },
+          data: { subscriberCount: { increment: 1 } },
+        });
+      });
+    }
+
+    void recordAudit({
+      actorUserId: user.id,
+      action: "calendar.subscribe",
+      targetType: "Calendar",
+      targetId: cal.id,
+      metadata: { tierId: tier.id.toString() },
+    });
+
+    revalidatePath(`/calendar/${cal.slug}`);
+    revalidatePath("/calendars");
+    revalidatePath("/");
+    redirect(`/calendar/${cal.slug}`);
+  }
+
+  // ---- 従来経路 (tierId 無し): 無料即時購読。挙動は従来と同一 ----
   if (!existing) {
     await prisma.$transaction(async (tx) => {
       const subId = await nextCalendarSubscriptionId(tx);
@@ -298,6 +477,19 @@ export async function subscribeCalendar(formData: FormData): Promise<void> {
           calendarId: cal.id,
           userId: user.id,
         },
+      });
+      await tx.calendar.update({
+        where: { id: cal.id },
+        data: { subscriberCount: { increment: 1 } },
+      });
+    });
+  } else if (existing.status === "cancelled") {
+    // 却下済み行が残っている場合のみ再購読として active に戻す
+    // (従来経路では cancelled 行は発生しないため後方互換に影響しない)
+    await prisma.$transaction(async (tx) => {
+      await tx.calendarSubscription.update({
+        where: { id: existing.id },
+        data: { status: "active", tierId: null, subscribedAt: new Date() },
       });
       await tx.calendar.update({
         where: { id: cal.id },
@@ -334,17 +526,22 @@ export async function unsubscribeCalendar(formData: FormData): Promise<void> {
 
   const existing = await prisma.calendarSubscription.findUnique({
     where: { calendarId_userId: { calendarId: cal.id, userId: user.id } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
   if (existing) {
     await prisma.$transaction(async (tx) => {
       await tx.calendarSubscription.delete({
         where: { calendarId_userId: { calendarId: cal.id, userId: user.id } },
       });
-      await tx.calendar.update({
-        where: { id: cal.id },
-        data: { subscriberCount: { decrement: 1 } },
-      });
+      // subscriberCount は active のみ計上しているため、
+      // pending (承認待ち取り下げ) / cancelled の削除では decrement しない。
+      // 従来経路の購読は常に active なので後方互換 (挙動不変)。
+      if (existing.status === "active") {
+        await tx.calendar.update({
+          where: { id: cal.id },
+          data: { subscriberCount: { decrement: 1 } },
+        });
+      }
     });
   }
 

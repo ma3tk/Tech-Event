@@ -77,12 +77,53 @@ export async function generateMetadata({
   };
 }
 
+/** `?membership=` クエリごとの案内メッセージ (Membership Tier 用)。 */
+const MEMBERSHIP_MESSAGES: Record<string, { kind: "info" | "error"; text: string }> = {
+  pending: {
+    kind: "info",
+    text: "購読リクエストを送信しました。主催者の承認をお待ちください。",
+  },
+  "payment-disabled": {
+    kind: "info",
+    text: "有料メンバーシップは現在準備中です (決済が未設定のため、まだ購読できません)。",
+  },
+  "payment-cancelled": {
+    kind: "info",
+    text: "決済がキャンセルされました。購読は開始されていません。",
+  },
+  "payment-success": {
+    kind: "info",
+    text: "決済が完了しました。購読の反映まで少しお待ちください。",
+  },
+  "payment-error": {
+    kind: "error",
+    text: "決済の開始に失敗しました。時間をおいて再度お試しください。",
+  },
+  "tier-not-found": {
+    kind: "error",
+    text: "指定されたメンバーシッププランが見つかりません。",
+  },
+  "invalid-tier": {
+    kind: "error",
+    text: "メンバーシッププランの指定が不正です。",
+  },
+};
+
 export default async function CalendarDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
+  const sp = (await searchParams) ?? {};
+  const membershipParam = Array.isArray(sp.membership)
+    ? sp.membership[0]
+    : sp.membership;
+  const membershipMessage = membershipParam
+    ? MEMBERSHIP_MESSAGES[membershipParam] ?? null
+    : null;
 
   const calRow = await prisma.calendar.findUnique({
     where: { slug },
@@ -94,7 +135,7 @@ export default async function CalendarDetailPage({
 
   const currentUser = await getCurrentUser();
 
-  const [calendarEvents, mySub] = await Promise.all([
+  const [calendarEvents, mySub, tiers] = await Promise.all([
     prisma.calendarEvent.findMany({
       where: { calendarId: calRow.id },
       orderBy: { event: { startedAt: "asc" } },
@@ -112,16 +153,23 @@ export default async function CalendarDetailPage({
               userId: currentUser.id,
             },
           },
-          select: { id: true },
+          select: { id: true, status: true, tierId: true },
         })
       : Promise.resolve(null),
+    prisma.calendarMembershipTier.findMany({
+      where: { calendarId: calRow.id, active: true },
+      orderBy: [{ price: "asc" }, { id: "asc" }],
+    }),
   ]);
 
   const now = new Date();
   const upcoming = calendarEvents.filter((ce) => ce.event.endedAt >= now);
   const past = calendarEvents.filter((ce) => ce.event.endedAt < now);
 
-  const isSubscribed = !!mySub;
+  // 従来の購読 (status 未使用時代のレコード含む) は status=active。
+  // pending = 承認待ち / cancelled = 却下済み (未購読と同じ扱いで再申請可)。
+  const isSubscribed = !!mySub && mySub.status === "active";
+  const isPending = !!mySub && mySub.status === "pending";
   const isOwner = currentUser?.id === calRow.ownerUserId;
   const tintColor = calRow.tintColor ?? "#5b21b6";
 
@@ -197,6 +245,25 @@ export default async function CalendarDetailPage({
                     ✓ 購読中 (解除する)
                   </button>
                 </form>
+              ) : isPending ? (
+                <>
+                  <span
+                    data-testid="calendar-pending-badge"
+                    className="inline-flex items-center gap-1 rounded-md bg-white/20 px-5 py-2 text-sm font-semibold text-white shadow ring-1 ring-white"
+                  >
+                    承認待ち (主催者の承認をお待ちください)
+                  </span>
+                  <form action={unsubscribeCalendar}>
+                    <input type="hidden" name="slug" value={calRow.slug} />
+                    <button
+                      type="submit"
+                      data-testid="calendar-cancel-pending-button"
+                      className="inline-flex items-center gap-1 rounded-md bg-white/15 px-3 py-2 text-sm font-medium text-white hover:bg-white/25"
+                    >
+                      リクエストを取り下げる
+                    </button>
+                  </form>
+                </>
               ) : (
                 <form action={subscribeCalendar}>
                   <input type="hidden" name="slug" value={calRow.slug} />
@@ -244,6 +311,23 @@ export default async function CalendarDetailPage({
         </div>
       </header>
 
+      {/* ============ Membership 操作結果の案内バナー ============ */}
+      {membershipMessage && (
+        <div className="mx-auto w-full max-w-6xl px-6 pt-4">
+          <p
+            role={membershipMessage.kind === "error" ? "alert" : "status"}
+            data-testid="calendar-membership-banner"
+            className={
+              membershipMessage.kind === "error"
+                ? "rounded-md border border-status-full-bg bg-status-full-bg/20 px-4 py-3 text-sm text-status-full-fg"
+                : "rounded-md border border-border bg-surface px-4 py-3 text-sm text-foreground"
+            }
+          >
+            {membershipMessage.text}
+          </p>
+        </div>
+      )}
+
       {/* ============ 本体 (イベント一覧 + 説明) ============ */}
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-8 lg:flex-row">
         <div className="flex-1 space-y-12">
@@ -290,6 +374,98 @@ export default async function CalendarDetailPage({
 
         {/* ============ サイドバー ============ */}
         <aside className="w-full shrink-0 space-y-6 lg:w-80">
+          {/* ---- Membership Tiers (tier がある場合のみ表示 / 無ければ従来 UI のみ) ---- */}
+          {tiers.length > 0 && (
+            <div
+              data-testid="calendar-tiers-section"
+              className="rounded-md border border-border bg-surface p-4"
+            >
+              <h3 className="mb-3 text-sm font-bold text-foreground">
+                メンバーシップ プラン
+              </h3>
+              <ul className="space-y-3">
+                {tiers.map((tier) => {
+                  const isMyTier =
+                    !!mySub &&
+                    mySub.status !== "cancelled" &&
+                    mySub.tierId === tier.id;
+                  return (
+                    <li
+                      key={tier.id.toString()}
+                      data-testid={`calendar-tier-item-${tier.id.toString()}`}
+                      className="rounded-md border border-border p-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground">
+                          {tier.name}
+                        </p>
+                        <p className="shrink-0 text-sm font-bold" style={{ color: tintColor }}>
+                          {tier.price > 0
+                            ? `¥${formatNumber(tier.price)}/月`
+                            : "無料"}
+                        </p>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {tier.approvalRequired && (
+                          <span
+                            data-testid={`calendar-tier-approval-badge-${tier.id.toString()}`}
+                            className="rounded bg-surface-muted px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            承認制
+                          </span>
+                        )}
+                        {tier.price > 0 && (
+                          <span className="rounded bg-surface-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            有料
+                          </span>
+                        )}
+                      </div>
+                      {tier.description && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {tier.description}
+                        </p>
+                      )}
+                      {isMyTier ? (
+                        <p
+                          data-testid={`calendar-tier-status-${tier.id.toString()}`}
+                          className="mt-2 text-xs font-semibold text-foreground"
+                        >
+                          {mySub!.status === "pending"
+                            ? "承認待ちです"
+                            : "このプランで購読中です"}
+                        </p>
+                      ) : (
+                        !isSubscribed &&
+                        !isPending && (
+                          <form action={subscribeCalendar} className="mt-2">
+                            <input type="hidden" name="slug" value={calRow.slug} />
+                            <input
+                              type="hidden"
+                              name="tierId"
+                              value={tier.id.toString()}
+                            />
+                            <button
+                              type="submit"
+                              data-testid={`calendar-tier-subscribe-${tier.id.toString()}`}
+                              className="inline-flex h-9 w-full items-center justify-center rounded-md text-sm font-semibold text-white shadow-sm hover:opacity-90"
+                              style={{ backgroundColor: tintColor }}
+                            >
+                              {tier.price > 0
+                                ? "このプランで購読 (決済へ)"
+                                : tier.approvalRequired
+                                  ? "このプランで購読をリクエスト"
+                                  : "このプランで購読"}
+                            </button>
+                          </form>
+                        )
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           <div className="rounded-md border border-border bg-surface p-4">
             <h3 className="mb-3 text-sm font-bold text-foreground">
               このカレンダーを購読
@@ -370,6 +546,14 @@ export default async function CalendarDetailPage({
               ✓ 購読中 (解除する)
             </button>
           </form>
+        ) : isPending ? (
+          <p
+            data-testid="calendar-pending-badge-mobile"
+            className="inline-flex h-11 w-full items-center justify-center rounded-md border border-border bg-surface text-sm font-semibold"
+            style={{ color: tintColor }}
+          >
+            承認待ち (主催者の承認をお待ちください)
+          </p>
         ) : (
           <form action={subscribeCalendar} className="w-full">
             <input type="hidden" name="slug" value={calRow.slug} />

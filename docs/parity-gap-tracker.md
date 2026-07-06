@@ -79,14 +79,18 @@ schema 基盤 (15b0742) は Opus 直実装。実装は APIキー+CRUD (A) / Webh
 - [x] チケット QR (署名トークン /event/[id]/ticket) + カメラ QR スキャナ (native BarcodeDetector + 手入力フォールバック)
 - [x] Insights ファネル (Page views→RSVP→Check-in) + 流入経路/UTM (EventView beacon + 集計)
 
-### 6b 外部依存で保留 (要ユーザー判断: 外部アカウント / 課金商品設計 / インフラが必要)
-- [ ] Plus プラン課金 (Stripe サブスクリプション商品 + 機能ゲート) — Stripe 商品/価格 ID の設計が必要
-- [ ] Membership Tiers (有料/承認制カレンダー購読) — 上記課金基盤に依存
-- [ ] Organization 階層 (org > calendar > event) — 既存データモデルの大規模再設計
-- [ ] Google Calendar OAuth 自動同期 — Google Cloud プロジェクト + OAuth 同意画面が必要
-- [ ] カスタムドメイン (CNAME ホワイトラベル) — DNS / 証明書インフラが必要
-- [ ] SMS / WhatsApp 配信チャネル — Twilio 等の外部プロバイダ契約が必要
-- [ ] Push 通知の実配信 (web-push VAPID) — PWA SW 基盤は導入済、VAPID 鍵運用は要判断
+### 6b リポ内スキャフォールド実装済み ✅ 2026-07-06 (env フォールバック / 外部アカウント不要)
+- [x] Plus プラン課金 (Stripe subscription checkout + isGroupPlus 機能ゲート + billing UI, STRIPE_PLUS_PRICE_ID 未設定で準備中)
+- [x] Membership Tiers (CalendarMembershipTier CRUD + 承認制/有料購読 + 承認フロー, 無料購読は後方互換)
+- [x] Organization 階層 (Organization CRUD + /org/[slug] + カレンダー org 割り当て, 非破壊)
+- [x] Web Push (PushSubscription + sendWebPush dynamic import + PushToggle + sw.js, web-push+VAPID 揃い時に有効化)
+
+### 6b 外部インフラ待ち (実装は上記で完了、有効化に外部設定が必要)
+- [~] Plus/Membership 実課金: `STRIPE_SECRET_KEY` + `STRIPE_PLUS_PRICE_ID` 設定で有効化 (コードは実装済)
+- [~] Push 実配信: `pnpm add web-push` + VAPID 鍵 (`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`NEXT_PUBLIC_VAPID_PUBLIC_KEY`) で有効化 (コードは実装済)
+- [ ] Google Calendar OAuth 自動同期 — Google Cloud プロジェクト + OAuth 同意画面が必要 (未着手, インフラ依存)
+- [ ] カスタムドメイン (CNAME ホワイトラベル) — DNS / 証明書インフラが必要 (未着手, インフラ依存)
+- [ ] SMS / WhatsApp 配信チャネル — Twilio 等の外部プロバイダ契約が必要 (未着手, 外部契約依存)
 
 ## 部分実装で残る磨き込み
 
