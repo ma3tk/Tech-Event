@@ -3,6 +3,7 @@
  *
  * 含める URL:
  * - 静的ページ (/, /explore, /series, /ranking, /login, /signup, /about, /terms, /privacy)
+ * - Discover LP (/discover/[city] 47 都道府県 + online、/discover/category/[slug] 6 カテゴリ)
  * - イベント詳細 (/event/[id]) — 公開済み 1000 件まで
  * - グループ詳細 (/group/[subdomain]) — active 全件
  * - ユーザープロフィール (/user/[nickname]) — active 5000 件まで
@@ -14,6 +15,8 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/seo";
+import { DISCOVER_CATEGORIES } from "@/lib/categories";
+import { ONLINE_LOCATION, PREFECTURES } from "@/lib/prefectures";
 
 // SQLite の都合上 take は控えめにし、頻繁に再生成しないよう ISR 寄りで運用想定。
 const EVENT_TAKE = 1000;
@@ -38,6 +41,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/terms"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: absoluteUrl("/privacy"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
+
+  // ============ Discover LP (都市 / カテゴリ別 SEO ランディング) ============
+  const discoverCityEntries: MetadataRoute.Sitemap = [
+    ONLINE_LOCATION,
+    ...PREFECTURES,
+  ].map((p) => ({
+    url: absoluteUrl(`/discover/${p.slug}`),
+    lastModified: now,
+    changeFrequency: "daily",
+    priority: 0.7,
+  }));
+  const discoverCategoryEntries: MetadataRoute.Sitemap =
+    DISCOVER_CATEGORIES.map((c) => ({
+      url: absoluteUrl(`/discover/category/${c.slug}`),
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.7,
+    }));
 
   // ============ イベント詳細 ============
   const events = await prisma.event.findMany({
@@ -98,6 +119,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticEntries,
+    ...discoverCityEntries,
+    ...discoverCategoryEntries,
     ...eventEntries,
     ...groupEntries,
     ...userEntries,

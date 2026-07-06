@@ -45,6 +45,7 @@ import {
   type DiscoverCategory,
   type DiscoverCity,
 } from "@/lib/categories";
+import { ONLINE_LOCATION, PREFECTURES } from "@/lib/prefectures";
 import { loadDict, t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -468,12 +469,20 @@ export default async function DiscoverPage({
             {DISCOVER_CATEGORIES.map((cat) => {
               const stat = categoryStats.get(cat.slug);
               return (
-                <li key={cat.slug}>
+                <li key={cat.slug} className="flex flex-col gap-1.5">
                   <CategoryCard
                     category={cat}
                     eventCount={stat?.eventCount ?? 0}
                     href={buildCategoryExploreHref(cat, stat?.resolvedSlug)}
                   />
+                  {/* SEO ランディング (カテゴリ別 LP) への主導線 */}
+                  <Link
+                    href={`/discover/category/${cat.slug}`}
+                    data-testid={`discover-category-lp-${cat.slug}`}
+                    className="self-start text-xs font-semibold text-link hover:underline"
+                  >
+                    {cat.name}のイベント特集を見る →
+                  </Link>
                 </li>
               );
             })}
@@ -499,15 +508,46 @@ export default async function DiscoverPage({
           </header>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {DISCOVER_CITIES.map((city) => (
-              <li key={city.slug}>
+              <li key={city.slug} className="flex flex-col gap-1.5">
                 <CityCard
                   city={city}
                   eventCount={cityStats.get(city.slug) ?? 0}
                   href={buildCityExploreHref(city)}
                 />
+                {/* SEO ランディング (都市別 LP) への主導線 */}
+                <Link
+                  href={`/discover/${city.slug}`}
+                  data-testid={`discover-city-lp-${city.slug}`}
+                  className="self-start text-xs font-semibold text-link hover:underline"
+                >
+                  {city.name}のイベント特集を見る →
+                </Link>
               </li>
             ))}
           </ul>
+
+          {/* 47 都道府県 + オンラインの LP へのリンク集 (SEO クロール導線) */}
+          <nav
+            aria-label="都道府県別のイベント特集ページ"
+            data-testid="discover-prefecture-links"
+            className="mt-6"
+          >
+            <h3 className="mb-2 text-sm font-semibold text-foreground">
+              都道府県からイベント特集を探す
+            </h3>
+            <ul className="flex flex-wrap gap-2">
+              {[ONLINE_LOCATION, ...PREFECTURES].map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/discover/${p.slug}`}
+                    className="inline-flex h-8 items-center rounded-full border border-border bg-surface px-3 text-xs text-foreground transition-colors hover:border-brand-orange hover:text-brand-orange"
+                  >
+                    {p.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </section>
 
         {/* ============ Featured Calendars ============ */}

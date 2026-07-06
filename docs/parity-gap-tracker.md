@@ -50,12 +50,16 @@ schema 基盤 (8df3673) は Opus 直実装。実装は決済コア (P1) / 枠設
 - [x] Unlock Code (招待コード限定枠, timingSafeEqual 比較, apply ゲート)
 - [x] Donation チケット (任意額入力 → Stripe checkout に配線) / Tier 別販売期間 (saleStartsAt/saleEndsAt)
 
-## Wave 4 — 発見・ソーシャル
+## Wave 4 — 発見・ソーシャル — 完了 ✅ 2026-07-06
 
-- [ ] ユーザーフォロー (Follow / Followers / 友達の参加イベント dashboard)
-- [ ] discover 都市/カテゴリ別 SEO LP (`/discover/{city}`)
-- [ ] タグフォロー / 関連タグ / タグサジェスト
-- [ ] ホストプロフィール Follow ボタン / Going タブ
+schema 基盤 (ea8c841) は Opus 直実装。実装は user-follow (S1) / tag-follow (S2) / discover-LP (S3) 並列。
+検証: typecheck 36 / build / lint 0 errors / 新規 E2E 17 passed (desktop) / 回帰 discover·fts-search 緑。
+
+- [x] ユーザーフォロー (followUser/unfollowUser + カウンタ tx 整合 + 冪等)
+- [x] 友達の参加イベント dashboard (フォロー中ユーザーの主催/参加イベント)
+- [x] ホストプロフィール Follow ボタン / Followers·Following 一覧 / Going タブ (公開参加予定)
+- [x] discover 都市別 LP (/discover/[city] 48件) + カテゴリ別 LP (/discover/category/[slug]) + JSON-LD + sitemap
+- [x] タグフォロー (/tag/[slug] + /following/tags) / 関連タグ (EventTag 共起) / タグサジェスト (前方一致)
 
 ## Wave 5 — プラットフォーム / API
 

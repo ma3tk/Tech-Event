@@ -36,6 +36,14 @@ import {
 } from "@/lib/seo";
 import { applyFtsWhere } from "@/lib/search";
 import { LOCATION_OPTIONS, prefectureLabel } from "@/lib/prefectures";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  countTagFollowers,
+  getTagBySlug,
+  isFollowingTag,
+} from "@tech-event/web-feature-search";
+import TagPill from "@/components/TagPill";
+import TagFollowButton from "../tag/TagFollowButton";
 
 const PAGE_SIZE = 20;
 
@@ -186,6 +194,12 @@ export default async function ExplorePage({
     : baseWhere;
   const orderBy = buildOrderBy(filters);
 
+  // タグ絞り込み時のみ: タグフォロー導線 (タグが実在する場合に表示)。
+  // タグ未指定なら追加クエリは一切走らない (既存挙動を維持)。
+  const tagFollowCta = filters.tag
+    ? await loadTagFollowCta(filters.tag)
+    : null;
+
   // Server Component の SSR-time な現在時刻参照。Date.now() を直接書くと
   // react-hooks/purity に誤検知されるため、コンポーネント実行直後に const に束ねる。
   const now = new Date();
@@ -270,6 +284,45 @@ export default async function ExplorePage({
             </h1>
             <SearchHintsModal />
           </header>
+
+          {/* タグ絞り込み時: タグチップ + フォロー導線 (タグ詳細ページへ) */}
+          {tagFollowCta && (
+            <section
+              aria-label={`タグ「${tagFollowCta.tag.name}」のフォロー`}
+              data-testid="explore-tag-follow"
+              className="mb-3 flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface px-3 py-2"
+            >
+              <TagPill
+                label={tagFollowCta.tag.name}
+                href={`/tag/${encodeURIComponent(tagFollowCta.tag.slug)}`}
+                count={tagFollowCta.tag.usageCount}
+                variant="filter"
+              />
+              <span className="text-xs text-muted-foreground">
+                フォロワー{" "}
+                {new Intl.NumberFormat("ja-JP").format(
+                  tagFollowCta.followerCount,
+                )}
+                人
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <TagFollowButton
+                  tagId={tagFollowCta.tag.id.toString()}
+                  slug={tagFollowCta.tag.slug}
+                  following={tagFollowCta.following}
+                  loggedIn={tagFollowCta.loggedIn}
+                  size="sm"
+                  testId="explore-tag-follow-button"
+                />
+                <Link
+                  href={`/tag/${encodeURIComponent(tagFollowCta.tag.slug)}`}
+                  className="text-xs text-link hover:underline"
+                >
+                  タグページへ →
+                </Link>
+              </div>
+            </section>
+          )}
 
           {/* ソートタブ (常時表示・URLと同期) */}
           <nav
@@ -435,6 +488,35 @@ export default async function ExplorePage({
       </div>
     </div>
   );
+}
+
+/* ============================================================
+ * タグフォロー導線 (タグ絞り込み時のみ)
+ * ============================================================ */
+
+type TagFollowCtaData = {
+  tag: { id: bigint; name: string; slug: string; usageCount: number };
+  loggedIn: boolean;
+  following: boolean;
+  followerCount: number;
+};
+
+/**
+ * `?tag=` で指定された slug のタグ情報 + フォロー状態を読む。
+ * タグが実在しない場合は null (導線を出さない。イベント絞り込み自体は
+ * 従来どおり `where.tags` で行われるため既存挙動に影響しない)。
+ */
+async function loadTagFollowCta(
+  slug: string,
+): Promise<TagFollowCtaData | null> {
+  const tag = await getTagBySlug(slug);
+  if (!tag) return null;
+  const user = await getCurrentUser();
+  const [following, followerCount] = await Promise.all([
+    user ? isFollowingTag(user.id, tag.id) : Promise.resolve(false),
+    countTagFollowers(tag.id),
+  ]);
+  return { tag, loggedIn: user !== null, following, followerCount };
 }
 
 /* ============================================================

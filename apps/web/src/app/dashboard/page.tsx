@@ -101,6 +101,13 @@ export default async function DashboardPage({
       role: a.role,
     }));
 
+  // フォロー中ユーザー id (「フォロー中の人の新着イベント」セクション用)
+  const followRows = await prisma.follow.findMany({
+    where: { followerId: userRow.id },
+    select: { followeeId: true },
+  });
+  const followeeIds = followRows.map((f) => f.followeeId);
+
   // ============ 各タブのデータ取得 ============
   const [
     upcomingRows,
@@ -113,6 +120,7 @@ export default async function DashboardPage({
     bookmarksTotal,
     managedTotal,
     historyTotal,
+    followingEventRows,
   ] = await Promise.all([
     // 参加予定 (accepted/waiting/pending かつ event.startedAt >= now)
     prisma.participant.findMany({
@@ -227,6 +235,33 @@ export default async function DashboardPage({
         ],
       },
     }),
+    // フォロー中ユーザーが主催 or 参加 (accepted) する未来の公開イベント。
+    // privacy: 公開 (visibility=public) かつ published のみ表示する。
+    followeeIds.length === 0
+      ? Promise.resolve([])
+      : prisma.event.findMany({
+          where: {
+            status: "published",
+            visibility: "public",
+            startedAt: { gte: now },
+            OR: [
+              { ownerId: { in: followeeIds } },
+              {
+                participants: {
+                  some: {
+                    userId: { in: followeeIds },
+                    status: "accepted",
+                  },
+                },
+              },
+            ],
+          },
+          orderBy: { startedAt: "asc" },
+          take: 5,
+          include: {
+            group: { select: { id: true, name: true, subdomain: true } },
+          },
+        }),
   ]);
 
   const upcoming = upcomingRows.map((p) => ({
@@ -267,6 +302,13 @@ export default async function DashboardPage({
   }));
 
   const recommended = recommendedRows.map((e) => ({
+    id: e.id.toString(),
+    title: e.title,
+    startedAt: e.startedAt.toISOString(),
+    groupName: e.group.name,
+  }));
+
+  const followingEvents = followingEventRows.map((e) => ({
     id: e.id.toString(),
     title: e.title,
     startedAt: e.startedAt.toISOString(),
@@ -509,6 +551,47 @@ export default async function DashboardPage({
                         </p>
                         <p className="line-clamp-2 text-sm font-medium">
                           {r.title}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {/* ----- フォロー中の人の新着イベント ----- */}
+            <section
+              className="rounded-md border border-border bg-surface p-4"
+              data-testid="dashboard-following-events"
+              aria-labelledby="dashboard-following-events-heading"
+            >
+              <h2
+                id="dashboard-following-events-heading"
+                className="mb-3 text-sm font-bold"
+              >
+                フォロー中の人の新着イベント
+              </h2>
+              {followeeIds.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  ユーザーをフォローすると、その人が主催・参加する公開イベントがここに表示されます。
+                </p>
+              ) : followingEvents.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  フォロー中の人の新着イベントはまだありません
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {followingEvents.map((e) => (
+                    <li key={e.id}>
+                      <Link
+                        href={`/event/${e.id}`}
+                        className="block hover:opacity-80"
+                      >
+                        <p className="text-xs text-muted-foreground">
+                          {formatEventDateShort(e.startedAt)} ・ {e.groupName}
+                        </p>
+                        <p className="line-clamp-2 text-sm font-medium">
+                          {e.title}
                         </p>
                       </Link>
                     </li>
