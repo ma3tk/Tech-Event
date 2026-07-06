@@ -4,6 +4,8 @@
  * - 3 プラン (Free / Plus $29/month / Enterprise) を比較
  * - 12 項目の機能比較表
  * - 5 問の FAQ (アコーディオン)
+ * - 「グループをアップグレード」導線 (ログイン + グループ選択 →
+ *   グループ課金ページ → Stripe Checkout)。未ログイン時はログイン導線。
  *
  * Server Component で構築 (FAQ の折りたたみは Pure HTML `<details>` を使用)。
  */
@@ -12,8 +14,12 @@ import Link from "next/link";
 import { Check, X } from "lucide-react";
 
 import { absoluteUrl, SITE_NAME } from "@/lib/seo";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-static";
+// 「グループをアップグレード」セクションでログイン状態 (cookie) を参照するため
+// dynamic 化。静的な料金表 / FAQ の内容は従来と同一。
+export const dynamic = "force-dynamic";
 
 const PAGE_TITLE = "料金プラン";
 const PAGE_DESCRIPTION =
@@ -209,7 +215,32 @@ function FeatureValue({ value }: { value: string | boolean }) {
   return <span className="text-sm">{value}</span>;
 }
 
-export default function PricingPage() {
+/**
+ * ログイン中ユーザーが owner / admin を務めるグループの一覧。
+ * 「グループをアップグレード」導線のグループ選択に使う。
+ */
+async function getMyAdminGroups(
+  userId: bigint,
+): Promise<{ id: string; subdomain: string; name: string; plan: string }[]> {
+  const rows = await prisma.groupAdmin.findMany({
+    where: { userId, role: { in: ["owner", "admin"] } },
+    include: { group: true },
+    orderBy: { addedAt: "asc" },
+  });
+  return rows
+    .filter((a) => a.group.status === "active")
+    .map((a) => ({
+      id: a.group.id.toString(),
+      subdomain: a.group.subdomain,
+      name: a.group.name,
+      plan: a.group.plan,
+    }));
+}
+
+export default async function PricingPage() {
+  const user = await getCurrentUser();
+  const myGroups = user ? await getMyAdminGroups(user.id) : [];
+
   return (
     <div
       className="mx-auto max-w-6xl px-4 py-12 md:px-6"
@@ -231,6 +262,73 @@ export default function PricingPage() {
         {PLANS.map((p) => (
           <PlanCard key={p.key} plan={p} />
         ))}
+      </section>
+
+      {/* ============ グループをアップグレード導線 ============ */}
+      <section
+        className="mt-10 rounded-lg border border-border bg-surface p-6"
+        data-testid="pricing-upgrade-groups"
+      >
+        <h2 className="text-xl font-bold">グループを Plus にアップグレード</h2>
+        {!user ? (
+          <>
+            <p className="mt-2 text-sm text-muted-foreground">
+              グループの Plus アップグレードは、グループの管理者 (owner /
+              admin) がグループの課金ページから行えます。まずはログインして
+              ください。
+            </p>
+            <Link
+              href={`/login?next=${encodeURIComponent("/pricing")}`}
+              data-testid="pricing-upgrade-login"
+              className="mt-4 inline-flex h-9 items-center rounded-md bg-brand-orange px-4 text-sm font-semibold text-white hover:bg-brand-orange-hover"
+            >
+              ログインしてアップグレード
+            </Link>
+          </>
+        ) : myGroups.length === 0 ? (
+          <>
+            <p className="mt-2 text-sm text-muted-foreground">
+              管理しているグループがまだありません。グループを作成すると、
+              グループ単位で Plus プランにアップグレードできます。
+            </p>
+            <Link
+              href="/group/create"
+              data-testid="pricing-upgrade-create-group"
+              className="mt-4 inline-flex h-9 items-center rounded-md border border-border bg-surface px-4 text-sm font-medium hover:bg-brand-orange-soft"
+            >
+              グループを作成する
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-sm text-muted-foreground">
+              アップグレードするグループを選択してください。各グループの
+              課金ページからチェックアウトに進めます。
+            </p>
+            <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {myGroups.map((g) => (
+                <li key={g.id}>
+                  <Link
+                    href={`/group/${g.subdomain}/admin/billing`}
+                    data-testid={`pricing-upgrade-group-${g.subdomain}`}
+                    className="flex items-center justify-between rounded-md border border-border bg-background px-4 py-3 text-sm hover:border-brand-orange hover:bg-brand-orange-soft"
+                  >
+                    <span className="line-clamp-1 font-medium">{g.name}</span>
+                    <span
+                      className={
+                        g.plan === "plus"
+                          ? "ml-3 shrink-0 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white"
+                          : "ml-3 shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                      }
+                    >
+                      {g.plan === "plus" ? "Plus" : "Free"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </section>
 
       {/* ============ Compare Table ============ */}

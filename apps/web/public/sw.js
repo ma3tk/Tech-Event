@@ -121,3 +121,70 @@ self.addEventListener("fetch", (event) => {
 
   // それ以外 (SSR data / RSC payload 等) は介入しない = 常にネットワーク
 });
+
+/* ============================================================
+ * Web Push 通知
+ *
+ * サーバ側 `sendWebPush` (libs/web/feature-notification/src/lib/web-push.ts)
+ * が送る payload: `{ title, body?, url? }` (JSON)。
+ * - push:              showNotification で OS 通知を表示
+ * - notificationclick: payload.url (same-origin のみ) を開く。
+ *                      既に開いているタブがあれば focus する。
+ * 既存の fetch / install / activate (キャッシュ戦略) には一切影響しない。
+ * ============================================================ */
+
+const DEFAULT_NOTIFICATION_TITLE = "tech-event";
+const NOTIFICATION_ICON = "/icons/icon-192.svg";
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch {
+      // JSON でない payload はプレーンテキストとして title に使う
+      payload = { title: event.data.text() };
+    }
+  }
+  const title =
+    typeof payload.title === "string" && payload.title
+      ? payload.title
+      : DEFAULT_NOTIFICATION_TITLE;
+  const options = {
+    body: typeof payload.body === "string" ? payload.body : "",
+    icon: NOTIFICATION_ICON,
+    badge: NOTIFICATION_ICON,
+    data: { url: typeof payload.url === "string" ? payload.url : "/" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  // same-origin のみ許可 (payload 改ざんによる外部サイトへの誘導を防ぐ)
+  let targetUrl = "/";
+  try {
+    const raw =
+      (event.notification.data && event.notification.data.url) || "/";
+    const resolved = new URL(raw, self.location.origin);
+    if (resolved.origin === self.location.origin) {
+      targetUrl = resolved.href;
+    }
+  } catch {
+    // 不正な URL は "/" にフォールバック
+  }
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url === targetUrl && "focus" in client) {
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(targetUrl);
+      }),
+  );
+});

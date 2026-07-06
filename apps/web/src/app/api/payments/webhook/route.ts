@@ -15,6 +15,10 @@
  *   `payment_intent` で `Payment.providerTxnId` を突合し、
  *   refundedAmount / providerRefundId / refundedAt / status
  *   (refunded | partially_refunded) を更新する (冪等)。
+ * - `customer.subscription.created/updated/deleted` (グループ Plus プラン) は:
+ *   `Group.stripeSubscriptionId` で突合 (初回は subscription の
+ *   `metadata.groupId` で fallback) し、Group.plan / planExpiresAt /
+ *   stripeCustomerId / stripeSubscriptionId を更新する (冪等)。
  *
  * 開発時 / Stripe 未設定環境では:
  *   - 署名検証をスキップし、リクエストボディの JSON をそのまま信用する。
@@ -53,6 +57,8 @@ type CheckoutCompletedEvent = {
         /** クーポン適用時のみ (createCheckoutSession が付与) */
         couponId?: string;
         discountAmount?: string;
+        /** Plus subscription のみ (createPlusSubscriptionCheckout が付与) */
+        groupId?: string;
       } | null;
       // ---- charge.refunded (object = Charge) ----
       /** Charge の累計返金額 */
@@ -61,8 +67,15 @@ type CheckoutCompletedEvent = {
       // ---- refund.updated (object = Refund) ----
       /** Refund の返金額 */
       amount?: number | null;
-      /** Refund の状態 (succeeded | pending | failed | canceled) */
+      /** Refund / Subscription の状態
+       *  (Refund: succeeded | pending | failed | canceled /
+       *   Subscription: active | trialing | past_due | canceled | unpaid | ...) */
       status?: string | null;
+      // ---- customer.subscription.* (object = Subscription) ----
+      /** Stripe Customer id (string / expand 済み object の両対応) */
+      customer?: string | { id?: string } | null;
+      /** 現在の課金期間の終了 epoch 秒 (planExpiresAt に反映) */
+      current_period_end?: number | null;
     };
   };
 };
@@ -143,6 +156,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // ---- 返金系イベント (charge.refunded / refund.updated) ----
   if (event.type === "charge.refunded" || event.type === "refund.updated") {
     return handleRefundEvent(event);
+  }
+
+  // ---- グループ Plus プラン (customer.subscription.*) ----
+  if (event.type.startsWith("customer.subscription.")) {
+    return handleSubscriptionEvent(event);
   }
 
   if (event.type !== "checkout.session.completed") {
@@ -406,6 +424,122 @@ async function handleRefundEvent(
     return NextResponse.json({ ok: true, refund: nextStatus });
   } catch (e) {
     console.error("[stripe-webhook] refund update failed", e);
+    return NextResponse.json(
+      {
+        error: "internal_error",
+        message: e instanceof Error ? e.message : String(e),
+      },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * `customer.subscription.created / updated / deleted` の処理
+ * (グループ Plus プラン)。
+ *
+ * - `Group.stripeSubscriptionId == subscription.id` で突合。見つからなければ
+ *   subscription の `metadata.groupId` (createPlusSubscriptionCheckout が
+ *   `subscription_data.metadata` に付与) で fallback。どちらも無ければ
+ *   200 で無視 (自前レコード外の Stripe イベントをリトライさせない)。
+ * - `deleted` → plan="free" / planExpiresAt=null / stripeSubscriptionId=null。
+ * - `created` / `updated` → status が active | trialing | past_due なら
+ *   plan="plus" + planExpiresAt=current_period_end、それ以外
+ *   (canceled / unpaid / incomplete_expired 等) は free に戻す。
+ * - 同一イベントの再配信は同じ値の上書きになるだけ (冪等)。
+ * - それ以外の customer.subscription.* (trial_will_end 等) は無視。
+ */
+async function handleSubscriptionEvent(
+  event: CheckoutCompletedEvent,
+): Promise<NextResponse> {
+  if (
+    event.type !== "customer.subscription.created" &&
+    event.type !== "customer.subscription.updated" &&
+    event.type !== "customer.subscription.deleted"
+  ) {
+    return NextResponse.json({ ok: true, ignored: event.type });
+  }
+
+  const obj = event.data?.object;
+  const subscriptionId = obj?.id ?? null;
+  if (!subscriptionId) {
+    return NextResponse.json({ ok: true, ignored: "no_subscription_id" });
+  }
+
+  const customerId =
+    typeof obj?.customer === "string"
+      ? obj.customer
+      : obj?.customer?.id ?? null;
+
+  try {
+    // 1. stripeSubscriptionId で突合 (通常経路)
+    let group = await prisma.group.findFirst({
+      where: { stripeSubscriptionId: subscriptionId },
+    });
+
+    // 2. 初回 (created 直後) は未突合のため metadata.groupId で fallback
+    if (!group) {
+      const gid = obj?.metadata?.groupId;
+      if (gid && /^\d+$/.test(gid)) {
+        group = await prisma.group.findUnique({ where: { id: BigInt(gid) } });
+      }
+    }
+
+    if (!group) {
+      return NextResponse.json({ ok: true, ignored: "group_not_found" });
+    }
+
+    if (event.type === "customer.subscription.deleted") {
+      await prisma.group.update({
+        where: { id: group.id },
+        data: {
+          plan: "free",
+          planExpiresAt: null,
+          stripeSubscriptionId: null,
+          // stripeCustomerId は再アップグレード時の customer 再利用のため保持
+          ...(customerId ? { stripeCustomerId: customerId } : {}),
+        },
+      });
+      return NextResponse.json({ ok: true, plan: "free" });
+    }
+
+    // created / updated
+    const status = obj?.status ?? "active"; // dev フォールバックで省略時は active 扱い
+    const isActive =
+      status === "active" || status === "trialing" || status === "past_due";
+    const periodEnd =
+      typeof obj?.current_period_end === "number" && obj.current_period_end > 0
+        ? new Date(obj.current_period_end * 1000)
+        : null;
+
+    if (isActive) {
+      await prisma.group.update({
+        where: { id: group.id },
+        data: {
+          plan: "plus",
+          planExpiresAt: periodEnd,
+          stripeSubscriptionId: subscriptionId,
+          ...(customerId ? { stripeCustomerId: customerId } : {}),
+        },
+      });
+      return NextResponse.json({ ok: true, plan: "plus" });
+    }
+
+    // 非アクティブ status (canceled / unpaid / incomplete_expired 等) → free
+    await prisma.group.update({
+      where: { id: group.id },
+      data: {
+        plan: "free",
+        planExpiresAt: null,
+        ...(group.stripeSubscriptionId === subscriptionId
+          ? { stripeSubscriptionId: null }
+          : {}),
+        ...(customerId ? { stripeCustomerId: customerId } : {}),
+      },
+    });
+    return NextResponse.json({ ok: true, plan: "free" });
+  } catch (e) {
+    console.error("[stripe-webhook] subscription update failed", e);
     return NextResponse.json(
       {
         error: "internal_error",
