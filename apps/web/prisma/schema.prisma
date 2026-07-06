@@ -69,6 +69,9 @@ model User {
   tagFollows       TagFollow[]
   // ============ プラットフォーム / API ============
   apiKeys          ApiKey[]
+  // ============ Organization / Push (Wave 6b) ============
+  ownedOrganizations Organization[] @relation("OrganizationOwner")
+  pushSubscriptions  PushSubscription[]
 
   @@map("users")
   @@index([status])
@@ -109,6 +112,11 @@ model Group {
   eventCount          Int      @default(0)
   presentationCount   Int      @default(0)
   status              String   @default("active") // active|archived
+  /// 課金プラン: free|plus (Plus は機能ゲート解放)
+  plan                String   @default("free")
+  planExpiresAt       DateTime?
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
   /// 領収データ: 発行者名 (未指定ならグループ名)
   receiptIssuerName   String?
   /// 領収データ: 適格請求書発行事業者の登録番号 (T + 13 桁)
@@ -768,17 +776,22 @@ model Calendar {
   coverImageUrl   String?
   tintColor       String?  // Luma 風テーマ色 (#hex)
   ownerUserId     BigInt
+  /// Organization (org > calendar > event 階層) 所属 (null=個人カレンダー)
+  organizationId  BigInt?
   subscriberCount Int      @default(0)
   eventCount      Int      @default(0)
   status          String   @default("active") // active|archived
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  owner       User                   @relation("CalendarOwner", fields: [ownerUserId], references: [id])
-  events      CalendarEvent[]
-  subscribers CalendarSubscription[]
+  owner        User                   @relation("CalendarOwner", fields: [ownerUserId], references: [id])
+  organization Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  events       CalendarEvent[]
+  subscribers  CalendarSubscription[]
+  membershipTiers CalendarMembershipTier[]
 
   @@map("calendars")
+  @@index([organizationId])
   @@index([status])
   @@index([ownerUserId])
   // 人気のカレンダー一覧 (status + subscriberCount desc) で使う
@@ -802,14 +815,74 @@ model CalendarSubscription {
   id           BigInt   @id @default(autoincrement())
   calendarId   BigInt
   userId       BigInt
+  /// Membership tier (null=無料購読)
+  tierId       BigInt?
+  /// active|pending (承認待ち)|cancelled
+  status       String   @default("active")
   subscribedAt DateTime @default(now())
 
   calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier     CalendarMembershipTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
 
   @@unique([calendarId, userId])
   @@map("calendar_subscriptions")
   @@index([userId])
+  @@index([tierId])
+}
+
+/// カレンダー購読の会員プラン (有料 / 承認制メンバーシップ)。
+model CalendarMembershipTier {
+  id               BigInt   @id @default(autoincrement())
+  calendarId       BigInt
+  name             String
+  description      String?
+  /// 月額 (JPY, 0=無料承認制)
+  price            Int      @default(0)
+  currency         String   @default("JPY")
+  approvalRequired Boolean  @default(false)
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  calendar      Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  subscriptions CalendarSubscription[]
+
+  @@index([calendarId])
+  @@map("calendar_membership_tiers")
+}
+
+/// Organization (org > calendar > event 階層)。
+model Organization {
+  id          BigInt   @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  description String?
+  logoUrl     String?
+  ownerUserId BigInt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User       @relation("OrganizationOwner", fields: [ownerUserId], references: [id])
+  calendars   Calendar[]
+
+  @@index([ownerUserId])
+  @@map("organizations")
+}
+
+/// Web Push 購読 (PWA 通知)。実配信は web-push + VAPID (env) が揃ったときのみ。
+model PushSubscription {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // ============ NotificationPreference ============
