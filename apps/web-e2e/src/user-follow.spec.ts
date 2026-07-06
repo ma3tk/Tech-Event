@@ -40,13 +40,26 @@ async function readFollowersCount(page: Page): Promise<number> {
 }
 
 /**
+ * フォロー対象ページを開き、認証済み状態 (follow-button 表示) が確立するまで待つ。
+ * フルスイート並列 (CI) では dev-login の session cookie 反映が navigation に間に合わず
+ * 未認証描画 (follow-login-link) になることがあるため、reload リトライで整地する。
+ */
+async function gotoFolloweeAuthed(page: Page, followee: string): Promise<void> {
+  await expect(async () => {
+    await page.goto(`/user/${followee}`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("follow-button")).toBeVisible({
+      timeout: 3000,
+    });
+  }).toPass({ timeout: 20_000 });
+}
+
+/**
  * フォロー状態を「未フォロー」に整地する (テスト前提の掃除)。
  * follow-button が data-following="true" なら解除 click して false になるまで待つ。
  */
 async function ensureNotFollowing(page: Page, followee: string): Promise<void> {
-  await page.goto(`/user/${followee}`, { waitUntil: "domcontentloaded" });
+  await gotoFolloweeAuthed(page, followee);
   const btn = page.getByTestId("follow-button");
-  await expect(btn).toBeVisible();
   if ((await btn.getAttribute("data-following")) !== "true") return;
   await clickUntil(btn, async () => {
     await expect(page.getByTestId("follow-button")).toHaveAttribute(
@@ -102,7 +115,7 @@ test.describe("ユーザーフォロー", () => {
     ).toBeVisible();
 
     // ---- フォロー解除 ----
-    await page.goto(`/user/${followee}`, { waitUntil: "domcontentloaded" });
+    await gotoFolloweeAuthed(page, followee);
     const unfollowBtn = page.getByTestId("follow-button");
     await expect(unfollowBtn).toHaveAttribute("data-following", "true");
     await clickUntil(unfollowBtn, async () => {

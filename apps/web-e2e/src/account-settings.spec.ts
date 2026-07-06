@@ -165,9 +165,22 @@ test.describe("プロフィール編集", () => {
     const stamp = Date.now();
     const newBio = `E2E で更新した自己紹介 (${stamp})`;
     const newAffiliation = `E2E株式会社 ${stamp}`;
-    await page.getByTestId("profile-bio").fill(newBio);
-    await page.getByTestId("profile-affiliation").fill(newAffiliation);
-    await page.getByTestId("profile-githubAccount").fill("e2e-octocat");
+
+    // フルスイート並列 (CI) では textarea のハイドレーション完了前に fill が走ると
+    // seed 値がクリアされず prepend されて保存されることがある。
+    // clear→fill→値確認を toPass でリトライし、ハイドレーション後の安定入力を保証する。
+    const fillStable = async (testId: string, value: string): Promise<void> => {
+      const loc = page.getByTestId(testId);
+      await expect(loc).toBeVisible();
+      await expect(async () => {
+        await loc.fill("");
+        await loc.fill(value);
+        await expect(loc).toHaveValue(value, { timeout: 1000 });
+      }).toPass({ timeout: 10_000 });
+    };
+    await fillStable("profile-bio", newBio);
+    await fillStable("profile-affiliation", newAffiliation);
+    await fillStable("profile-githubAccount", "e2e-octocat");
     await page.getByTestId("profile-save").click();
 
     // 保存メッセージ + 再表示で値が反映されている
