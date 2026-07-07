@@ -40,6 +40,12 @@ export default defineConfig({
     screenshot: "only-on-failure",
     locale: "ja-JP",
     timezoneId: "Asia/Tokyo",
+    // PWA の Service Worker (本番ビルドで登録される) は E2E のナビゲーションを
+    // network-first で respondWith し、CI 負荷下で waitForLoadState を稀に hang させる
+    // (navigation abort / load state timeout の flake 源)。E2E では SW を一律ブロックする。
+    // 本番挙動には影響しない (Playwright context 限定)。SW 自体の検証は pwa.spec.ts で
+    // ファイル配信・manifest を静的に確認している。
+    serviceWorkers: "block",
     // `useNotificationStream` (SSE) は EventSource で長時間接続を貼るため、
     // Playwright の `networkidle` 待ちと衝突する。E2E では cookie で off にしておき、
     // SSE 専用テスト (`e2e/sse-notifications.spec.ts`) だけ context cookie で force on する。
