@@ -45,12 +45,14 @@ function resolveFollowees(): { desktop: string; mobile: string } {
   }
 }
 
-const FOLLOWEES = resolveFollowees();
-
+// dev.db アクセスは遅延・メモ化する。モジュール読込時に開くと dev.db を用意しない
+// job (storybook-rendering の @sb-rendering grep 等) で全 spec 読込が SqliteError で落ちる。
+let _followees: { desktop: string; mobile: string } | null = null;
 function followeeFor(projectName: string): string {
+  if (!_followees) _followees = resolveFollowees();
   return projectName === "chromium-mobile"
-    ? FOLLOWEES.mobile
-    : FOLLOWEES.desktop;
+    ? _followees.mobile
+    : _followees.desktop;
 }
 
 /** `user-followers-count` の表示テキストから数値を読む (例: "1,234 フォロワー") */
