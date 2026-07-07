@@ -1,0 +1,61 @@
+{
+  "name": "tech-event - エンジニアのための勉強会・イベント支援",
+  "short_name": "tech-event",
+  "description": "tech-event はエンジニア向けの勉強会・カンファレンス・ミートアップを探せるイベント支援プラットフォームです。",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "ja",
+  "dir": "ltr",
+  "theme_color": "#c2410c",
+  "background_color": "#f7f7f5",
+  "categories": ["events", "productivity", "social"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "イベントを探す",
+      "short_name": "検索",
+      "url": "/search",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "ダッシュボード",
+      "short_name": "ダッシュボード",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}
