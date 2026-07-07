@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import { headers } from "next/headers";
 import { Suspense } from "react";
@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ToastListener from "@/components/ToastListener";
+import ServiceWorkerRegister from "../components/pwa/ServiceWorkerRegister";
 import {
   BASE_URL,
   DEFAULT_DESCRIPTION,
@@ -76,10 +77,23 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
   },
+  // PWA: Web App Manifest (`<link rel="manifest">` を出力)
+  manifest: "/manifest.webmanifest",
   robots: {
     index: true,
     follow: true,
   },
+};
+
+/**
+ * PWA: theme-color meta。ブラウザ UI (アドレスバー等) の色をテーマに合わせる。
+ * manifest.webmanifest の `theme_color` (#c2410c) と light 側を一致させる。
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#c2410c" },
+    { media: "(prefers-color-scheme: dark)", color: "#030712" },
+  ],
 };
 
 /**
@@ -164,6 +178,8 @@ export default async function RootLayout({
             <Suspense fallback={null}>
               <ToastListener />
             </Suspense>
+            {/* PWA: Service Worker 登録 (production のみ動作、UI なし) */}
+            <ServiceWorkerRegister />
           </TooltipProvider>
         </ThemeProvider>
       </body>

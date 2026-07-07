@@ -25,11 +25,29 @@ import type { Transporter } from "nodemailer";
 import { env } from "@/env";
 
 /** 送信ペイロード */
+/**
+ * メール添付。`.ics` (カレンダー招待) 等に使う。
+ * `content` は `encoding` に従って解釈する (既定 utf-8)。
+ */
+export interface MailAttachment {
+  filename: string;
+  content: string;
+  contentType?: string;
+  encoding?: "utf-8" | "base64";
+}
+
 export interface SendMailInput {
   to: string;
   subject: string;
   html?: string;
   text?: string;
+  attachments?: MailAttachment[];
+}
+
+/** 添付 content を base64 文字列へ正規化 (resend / sendgrid 用)。 */
+function attachmentToBase64(a: MailAttachment): string {
+  if (a.encoding === "base64") return a.content;
+  return Buffer.from(a.content, "utf-8").toString("base64");
 }
 
 export type MailProvider = "smtp" | "resend" | "sendgrid" | "console";
@@ -82,6 +100,12 @@ async function sendViaSmtp(
       subject: input.subject,
       html: input.html,
       text: input.text,
+      attachments: input.attachments?.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+        encoding: a.encoding ?? "utf-8",
+      })),
     });
     return { delivered: true, messageId: info.messageId };
   } catch (err) {
@@ -111,6 +135,11 @@ async function sendViaResend(
           subject: string;
           html?: string;
           text?: string;
+          attachments?: {
+            filename: string;
+            content: string;
+            contentType?: string;
+          }[];
         }) => Promise<{
           data?: { id?: string } | null;
           error?: { message?: string } | null;
@@ -123,6 +152,11 @@ async function sendViaResend(
       subject: input.subject,
       html: input.html,
       text: input.text,
+      attachments: input.attachments?.map((a) => ({
+        filename: a.filename,
+        content: attachmentToBase64(a),
+        contentType: a.contentType,
+      })),
     });
     if (result.error) {
       console.error(`[mail:resend:error] ${result.error.message ?? "unknown"}`);
@@ -157,6 +191,12 @@ async function sendViaSendgrid(
         subject: string;
         html?: string;
         text?: string;
+        attachments?: {
+          filename: string;
+          content: string;
+          type?: string;
+          disposition?: string;
+        }[];
       }) => Promise<[{ headers: Record<string, string> }, unknown]>;
     };
     sgmail.setApiKey(key);
@@ -166,6 +206,12 @@ async function sendViaSendgrid(
       subject: input.subject,
       html: input.html,
       text: input.text,
+      attachments: input.attachments?.map((a) => ({
+        filename: a.filename,
+        content: attachmentToBase64(a),
+        type: a.contentType,
+        disposition: "attachment",
+      })),
     });
     return {
       delivered: true,
@@ -193,6 +239,11 @@ function sendViaConsole(
   ];
   if (input.text) lines.push(`[${tag}] text=${input.text}`);
   if (input.html && !input.text) lines.push(`[${tag}] html=${input.html}`);
+  if (input.attachments?.length) {
+    lines.push(
+      `[${tag}] attachments=${input.attachments.map((a) => a.filename).join(",")}`,
+    );
+  }
   for (const l of lines) console.log(l);
   return { delivered: false };
 }

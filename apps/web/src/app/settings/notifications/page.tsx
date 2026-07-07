@@ -23,6 +23,7 @@ import {
 } from "@/lib/notification";
 import { bulkUpdateNotificationPreferences } from "@/app/actions/notification-preferences-actions";
 import Breadcrumb from "@/components/Breadcrumb";
+import PushToggle from "../../../components/pwa/PushToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +151,9 @@ export default async function NotificationSettingsPage({
           </button>
         </div>
       </form>
+
+      {/* Web Push: このブラウザ (端末) 単位の購読トグル */}
+      <PushToggle />
 
       <section
         aria-labelledby="legacy-email-flags"

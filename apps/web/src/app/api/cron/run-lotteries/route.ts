@@ -20,6 +20,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { runLotteryForEvent } from "@/app/actions/lottery-actions";
+import { sendLotteryResultNotifications } from "@tech-event/web-feature-host-dashboard";
 import { enqueueLottery, isRedisEnabled } from "@tech-event/shared-data-access-queue";
 
 // 動的レンダリングが必要 (環境変数 / DB クエリに依存)
@@ -73,6 +74,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           await prisma.$transaction(async (tx) => {
             await runLotteryForEvent(tx, c.id);
           });
+          // 抽選結果の参加者通知 (payload 補完 + 抽選結果メール)。
+          // 冪等 (Notification.sentAt マーカー) なので再実行しても二重送信しない。
+          // 通知の失敗は抽選確定自体を巻き戻さない (errors に積むだけ)。
+          try {
+            await sendLotteryResultNotifications(c.id);
+          } catch (e) {
+            errors.push({
+              eventId: c.id.toString(),
+              message: `notify_failed: ${e instanceof Error ? e.message : String(e)}`,
+            });
+          }
         },
       );
       if (result.mode === "queued") {

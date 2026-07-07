@@ -13,10 +13,17 @@
  * 該当ユーザーが無い / withdrawn の場合は `notFound()`。
  */
 
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  followUserAction,
+  unfollowUserAction,
+  isFollowing,
+} from "@tech-event/web-feature-user";
 import { renderMarkdown, safeJsonLd } from "@/lib/markdown";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   serializeUser,
@@ -106,6 +113,7 @@ type PageProps = {
 
 const USER_TABS = [
   { key: "joined", label: "参加履歴" },
+  { key: "going", label: "参加予定 (Going)" },
   { key: "owned", label: "主催イベント" },
   { key: "presentations", label: "発表資料" },
   { key: "groups", label: "所属グループ" },
@@ -138,6 +146,16 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
   }
   const user = serializeUser(userRow);
 
+  // ============ フォロー状態 (viewer 視点) ============
+  const viewer = await getCurrentUser();
+  const viewerIsSelf = viewer !== null && viewer.id === userRow.id;
+  const viewerFollows =
+    viewer !== null && !viewerIsSelf
+      ? await isFollowing(viewer.id, userRow.id)
+      : false;
+  const followerCount = userRow.followerCount;
+  const followingCount = userRow.followingCount;
+
   // ============ 参加履歴 ============
   const participantRows = await prisma.participant.findMany({
     where: {
@@ -164,6 +182,37 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
   }));
   // タイムライン用 (EventCardData)
   const joinedEventCards = participantRows.map((p) => toEventCardData(p.event));
+
+  // ============ Going (公開参加予定: accepted × 未来 × 公開イベントのみ) ============
+  // privacy: 非公開 (private_link / draft) イベントは他人のプロフィールに出さない。
+  const goingWhere = {
+    userId: userRow.id,
+    status: "accepted",
+    event: {
+      startedAt: { gte: new Date() },
+      visibility: "public",
+      status: "published",
+    },
+  } as const;
+  const goingRows = await prisma.participant.findMany({
+    where: goingWhere,
+    orderBy: { event: { startedAt: "asc" } },
+    take: 30,
+    include: {
+      event: {
+        include: {
+          group: true,
+          tags: { include: { tag: true } },
+        },
+      },
+    },
+  });
+  const goingEvents = goingRows.map((p) => ({
+    event: serializeEvent(p.event),
+    groupName: p.event.group.name,
+    groupSubdomain: p.event.group.subdomain,
+  }));
+  const goingTotal = await prisma.participant.count({ where: goingWhere });
 
   // ============ 主催イベント ============
   const ownedRows = await prisma.event.findMany({
@@ -274,6 +323,17 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
         ownedCount={ownedCount}
         presentationCount={presentationCount}
         groupCount={groupCount}
+        followerCount={followerCount}
+        followingCount={followingCount}
+        followControl={
+          <FollowControl
+            profileUserId={user.id}
+            nickname={user.nickname}
+            viewerLoggedIn={viewer !== null}
+            viewerIsSelf={viewerIsSelf}
+            following={viewerFollows}
+          />
+        }
       />
     );
   }
@@ -301,6 +361,39 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold leading-tight">{user.displayName}</h1>
               <p className="mt-1 text-sm text-muted-foreground">@{user.nickname}</p>
+              {/* ----- フォロワー / フォロー中 + フォローボタン ----- */}
+              <div
+                className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
+                data-testid="user-follow-stats"
+              >
+                <Link
+                  href={`/user/${user.nickname}/followers`}
+                  data-testid="user-followers-count"
+                  className="hover:underline"
+                >
+                  <span className="font-bold text-foreground">
+                    {formatNumber(followerCount)}
+                  </span>{" "}
+                  <span className="text-muted-foreground">フォロワー</span>
+                </Link>
+                <Link
+                  href={`/user/${user.nickname}/following`}
+                  data-testid="user-following-count"
+                  className="hover:underline"
+                >
+                  <span className="font-bold text-foreground">
+                    {formatNumber(followingCount)}
+                  </span>{" "}
+                  <span className="text-muted-foreground">フォロー中</span>
+                </Link>
+                <FollowControl
+                  profileUserId={user.id}
+                  nickname={user.nickname}
+                  viewerLoggedIn={viewer !== null}
+                  viewerIsSelf={viewerIsSelf}
+                  following={viewerFollows}
+                />
+              </div>
               {user.affiliation && (
                 <p className="mt-2 text-sm">所属: {user.affiliation}</p>
               )}
@@ -418,6 +511,39 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
                           statusBadge={
                             j.status === "attended" ? "出席済" : "参加確定"
                           }
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+
+            {/* ----- 参加予定 (Going: accepted × 未来 × 公開のみ) ----- */}
+            {activeTab === "going" && (
+              <section data-testid="user-going-panel">
+                <h2 className="mb-4 text-xl font-bold">
+                  参加予定 (Going){" "}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    ({formatNumber(goingTotal)} 件)
+                  </span>
+                </h2>
+                {goingEvents.length === 0 ? (
+                  <p
+                    className="rounded-md border border-border bg-surface p-6 text-sm text-muted-foreground"
+                    data-testid="user-going-empty"
+                  >
+                    公開されている参加予定のイベントはありません。
+                  </p>
+                ) : (
+                  <ul className="space-y-3" data-testid="user-going-list">
+                    {goingEvents.map((g) => (
+                      <li key={g.event.id}>
+                        <EventRow
+                          event={g.event}
+                          groupName={g.groupName}
+                          groupSubdomain={g.groupSubdomain}
+                          statusBadge="参加予定"
                         />
                       </li>
                     ))}
@@ -582,6 +708,64 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
         </div>
       </div>
     </div>
+  );
+}
+
+/* ============================================================
+ * フォローボタン (Server Component + Server Action form)
+ *
+ * - 本人のプロフィールでは何も表示しない
+ * - 未ログインなら /login?next=/user/<nickname> への誘導リンク
+ * - ログイン済みなら follow/unfollow の Server Action form
+ * ============================================================ */
+
+function FollowControl({
+  profileUserId,
+  nickname,
+  viewerLoggedIn,
+  viewerIsSelf,
+  following,
+}: {
+  profileUserId: string;
+  nickname: string;
+  viewerLoggedIn: boolean;
+  viewerIsSelf: boolean;
+  following: boolean;
+}) {
+  if (viewerIsSelf) return null;
+
+  if (!viewerLoggedIn) {
+    return (
+      <Link
+        href={`/login?next=${encodeURIComponent(`/user/${nickname}`)}`}
+        data-testid="follow-login-link"
+        className="inline-flex h-8 items-center rounded-md bg-brand-orange px-4 text-sm font-semibold text-white hover:bg-brand-orange-hover"
+      >
+        フォローする
+      </Link>
+    );
+  }
+
+  return (
+    <form
+      action={following ? unfollowUserAction : followUserAction}
+      className="inline-flex"
+    >
+      <input type="hidden" name="followeeId" value={profileUserId} />
+      <button
+        type="submit"
+        data-testid="follow-button"
+        data-following={following ? "true" : "false"}
+        aria-pressed={following}
+        className={
+          following
+            ? "inline-flex h-8 items-center rounded-md border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:border-brand-orange hover:text-brand-orange"
+            : "inline-flex h-8 items-center rounded-md bg-brand-orange px-4 text-sm font-semibold text-white hover:bg-brand-orange-hover"
+        }
+      >
+        {following ? "フォロー中 (解除)" : "フォローする"}
+      </button>
+    </form>
   );
 }
 
@@ -769,6 +953,9 @@ function UserProfileTimelineView({
   ownedCount,
   presentationCount,
   groupCount,
+  followerCount,
+  followingCount,
+  followControl,
 }: {
   user: {
     nickname: string;
@@ -792,9 +979,12 @@ function UserProfileTimelineView({
   ownedCount: number;
   presentationCount: number;
   groupCount: number;
+  followerCount: number;
+  followingCount: number;
+  followControl: ReactNode;
 }) {
-  // フォロワー数 (仮: 0)。将来 Subscribe 機能と結線する。
-  const subscriberCount = 0;
+  // フォロワー数 (User.followerCount — Follow 機能と結線済み)
+  const subscriberCount = followerCount;
 
   return (
     <div
@@ -886,12 +1076,26 @@ function UserProfileTimelineView({
             className="mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-sm"
             data-testid="user-timeline-stats"
           >
-            <span>
+            <Link
+              href={`/user/${user.nickname}/followers`}
+              data-testid="user-followers-count"
+              className="hover:underline"
+            >
               <span className="font-bold text-foreground">
                 {formatNumber(subscriberCount)}
               </span>
               <span className="ml-1 text-muted-foreground">フォロワー</span>
-            </span>
+            </Link>
+            <Link
+              href={`/user/${user.nickname}/following`}
+              data-testid="user-following-count"
+              className="hover:underline"
+            >
+              <span className="font-bold text-foreground">
+                {formatNumber(followingCount)}
+              </span>
+              <span className="ml-1 text-muted-foreground">フォロー中</span>
+            </Link>
             <span>
               <span className="font-bold text-foreground">
                 {formatNumber(ownedCount)}
@@ -905,6 +1109,9 @@ function UserProfileTimelineView({
               <span className="ml-1 text-muted-foreground">参加</span>
             </span>
           </div>
+
+          {/* フォローボタン (本人には表示されない) */}
+          {followControl && <div className="mt-2">{followControl}</div>}
 
           {bioHtml && (
             <article

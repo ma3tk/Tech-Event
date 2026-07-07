@@ -3,7 +3,10 @@
  *
  * Query:
  *  - q          フリーワード (title / catchPhrase / description にマッチ)
- *  - prefecture 都道府県スラッグ (address LIKE)
+ *  - prefecture 都道府県スラッグ (address LIKE)。47 都道府県 + overseas は
+ *               `@/lib/prefectures` の LOCATION_OPTIONS を参照。`online` は
+ *               eventFormat online/hybrid に絞り込み。旧地域スラッグ (tohoku 等)
+ *               もレガシーエイリアスとして後方互換
  *  - online     "1" のときオフライン除外
  *  - order      new(default) | popular | started_at
  *  - tag        タグ slug
@@ -32,27 +35,17 @@ import {
   absoluteUrl,
 } from "@/lib/seo";
 import { applyFtsWhere } from "@/lib/search";
+import { LOCATION_OPTIONS, prefectureLabel } from "@/lib/prefectures";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  countTagFollowers,
+  getTagBySlug,
+  isFollowingTag,
+} from "@tech-event/web-feature-search";
+import TagPill from "@/components/TagPill";
+import TagFollowButton from "../tag/TagFollowButton";
 
 const PAGE_SIZE = 20;
-
-/* ============================================================
- * 都道府県スラッグ -> 表示名のテーブル (47 都道府県の代表的なもの)
- *
- * フィルタ UI のセレクトオプションと、住所文字列マッチ用の正規化に使う。
- * ============================================================ */
-const PREFECTURES = [
-  { slug: "hokkaido", label: "北海道" },
-  { slug: "tohoku", label: "東北" },
-  { slug: "tokyo", label: "東京都" },
-  { slug: "kanagawa", label: "神奈川県" },
-  { slug: "chiba", label: "千葉県" },
-  { slug: "saitama", label: "埼玉県" },
-  { slug: "aichi", label: "愛知県" },
-  { slug: "osaka", label: "大阪府" },
-  { slug: "kyoto", label: "京都府" },
-  { slug: "hyogo", label: "兵庫県" },
-  { slug: "fukuoka", label: "福岡県" },
-] as const;
 
 type ExplorePageSearchParams = {
   q?: string;
@@ -134,9 +127,15 @@ function buildWhere(f: ParsedFilters): Prisma.EventWhereInput {
 
   // 都道府県は online との両立を許容 (hybrid 開催を考慮)
   if (f.prefecture) {
-    const label =
-      PREFECTURES.find((p) => p.slug === f.prefecture)?.label ?? f.prefecture;
-    where.address = { contains: label };
+    if (f.prefecture === "online") {
+      // 開催地セレクトの「オンライン」= オンラインのみチェックボックスと同義
+      where.eventFormat = { in: ["online", "hybrid"] };
+    } else {
+      // 47 都道府県 + 海外 + レガシー地域スラグ (tohoku 等) をラベルに解決して
+      // 住所文字列に部分一致。未知の slug は従来どおり生値でマッチ (後方互換)。
+      const label = prefectureLabel(f.prefecture) ?? f.prefecture;
+      where.address = { contains: label };
+    }
   }
 
   if (f.tag) {
@@ -194,6 +193,12 @@ export default async function ExplorePage({
     ? await applyFtsWhere(filters.q, baseWhere)
     : baseWhere;
   const orderBy = buildOrderBy(filters);
+
+  // タグ絞り込み時のみ: タグフォロー導線 (タグが実在する場合に表示)。
+  // タグ未指定なら追加クエリは一切走らない (既存挙動を維持)。
+  const tagFollowCta = filters.tag
+    ? await loadTagFollowCta(filters.tag)
+    : null;
 
   // Server Component の SSR-time な現在時刻参照。Date.now() を直接書くと
   // react-hooks/purity に誤検知されるため、コンポーネント実行直後に const に束ねる。
@@ -279,6 +284,45 @@ export default async function ExplorePage({
             </h1>
             <SearchHintsModal />
           </header>
+
+          {/* タグ絞り込み時: タグチップ + フォロー導線 (タグ詳細ページへ) */}
+          {tagFollowCta && (
+            <section
+              aria-label={`タグ「${tagFollowCta.tag.name}」のフォロー`}
+              data-testid="explore-tag-follow"
+              className="mb-3 flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface px-3 py-2"
+            >
+              <TagPill
+                label={tagFollowCta.tag.name}
+                href={`/tag/${encodeURIComponent(tagFollowCta.tag.slug)}`}
+                count={tagFollowCta.tag.usageCount}
+                variant="filter"
+              />
+              <span className="text-xs text-muted-foreground">
+                フォロワー{" "}
+                {new Intl.NumberFormat("ja-JP").format(
+                  tagFollowCta.followerCount,
+                )}
+                人
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <TagFollowButton
+                  tagId={tagFollowCta.tag.id.toString()}
+                  slug={tagFollowCta.tag.slug}
+                  following={tagFollowCta.following}
+                  loggedIn={tagFollowCta.loggedIn}
+                  size="sm"
+                  testId="explore-tag-follow-button"
+                />
+                <Link
+                  href={`/tag/${encodeURIComponent(tagFollowCta.tag.slug)}`}
+                  className="text-xs text-link hover:underline"
+                >
+                  タグページへ →
+                </Link>
+              </div>
+            </section>
+          )}
 
           {/* ソートタブ (常時表示・URLと同期) */}
           <nav
@@ -447,6 +491,35 @@ export default async function ExplorePage({
 }
 
 /* ============================================================
+ * タグフォロー導線 (タグ絞り込み時のみ)
+ * ============================================================ */
+
+type TagFollowCtaData = {
+  tag: { id: bigint; name: string; slug: string; usageCount: number };
+  loggedIn: boolean;
+  following: boolean;
+  followerCount: number;
+};
+
+/**
+ * `?tag=` で指定された slug のタグ情報 + フォロー状態を読む。
+ * タグが実在しない場合は null (導線を出さない。イベント絞り込み自体は
+ * 従来どおり `where.tags` で行われるため既存挙動に影響しない)。
+ */
+async function loadTagFollowCta(
+  slug: string,
+): Promise<TagFollowCtaData | null> {
+  const tag = await getTagBySlug(slug);
+  if (!tag) return null;
+  const user = await getCurrentUser();
+  const [following, followerCount] = await Promise.all([
+    user ? isFollowingTag(user.id, tag.id) : Promise.resolve(false),
+    countTagFollowers(tag.id),
+  ]);
+  return { tag, loggedIn: user !== null, following, followerCount };
+}
+
+/* ============================================================
  * 検索フィルタパネル (このページ内に閉じた Server Component)
  *
  * - `<form method="get" action="/explore">` で JS なしでも動く
@@ -506,7 +579,7 @@ function SearchFilterPanel({ filters }: { filters: ParsedFilters }) {
           className="h-9 rounded-md border border-border bg-background px-2 text-sm focus:border-brand-orange focus:outline-none"
         >
           <option value="">指定なし</option>
-          {PREFECTURES.map((p) => (
+          {LOCATION_OPTIONS.map((p) => (
             <option key={p.slug} value={p.slug}>
               {p.label}
             </option>

@@ -116,8 +116,8 @@ export default async function EventAdminMorePage({
           イベントを中止する
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          状態を <code>cancelled</code> にします。参加者には通知は自動送信されないため
-          別途 Blasts タブからお知らせを送ってください。
+          状態を <code>cancelled</code> にします。参加確定・補欠の参加者には
+          中止のお知らせ (サイト内通知 + メール) が自動送信されます。
         </p>
         {isCancelled ? (
           <p className="mt-3 text-sm text-muted-foreground">

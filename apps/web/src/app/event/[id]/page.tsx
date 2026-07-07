@@ -43,6 +43,7 @@ import EventStickyCTA, {
   type StickyState,
 } from "@/components/EventStickyCTA";
 import ActionForm from "../../../components/forms/ActionForm";
+import EventViewTracker from "../../../components/analytics/EventViewTracker";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -494,6 +495,7 @@ export default async function EventDetailPage({
       data-testid="event-detail-root"
       style={themeStyle}
     >
+      <EventViewTracker eventId={raw} />
       {/* ============ HERO 帯 (背景: coverImageUrl をぼかしてオーバーレイ) ============ */}
       <section
         aria-label="イベント概要"
@@ -705,6 +707,70 @@ export default async function EventDetailPage({
               </ul>
             </section>
           )}
+
+          {/* ============ 会場 (地図埋め込み) ============
+           * lat/lon があるオフライン/ハイブリッド開催のみ OpenStreetMap を
+           * iframe 埋め込みで表示する (API キー不要)。
+           * lat/lon が無い場合は従来どおりヒーローの住所テキスト表示のみ。
+           * オンライン開催では表示しない。 */}
+          {event.eventFormat !== "online" &&
+            event.lat != null &&
+            event.lon != null && (
+              <section className="mb-8" aria-labelledby="venue-map-heading">
+                <h2
+                  id="venue-map-heading"
+                  className="mb-3 border-b border-border pb-2 text-xl font-bold text-foreground"
+                >
+                  会場
+                </h2>
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <p className="flex items-start gap-1.5 text-sm font-semibold text-foreground">
+                    <MapPin
+                      aria-hidden="true"
+                      className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                    />
+                    <span>
+                      {event.place ?? event.address ?? "会場"}
+                      {event.place && event.address && (
+                        <span className="block text-xs font-normal text-muted-foreground">
+                          {event.address}
+                        </span>
+                      )}
+                    </span>
+                  </p>
+                  <div className="mt-3 overflow-hidden rounded-md border border-border">
+                    <iframe
+                      title="会場の地図 (OpenStreetMap)"
+                      data-testid="venue-map"
+                      src={osmEmbedUrl(event.lat, event.lon)}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="h-64 w-full border-0 md:h-80"
+                    />
+                  </div>
+                  <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                    <a
+                      href={osmLargeMapUrl(event.lat, event.lon)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-link hover:underline"
+                    >
+                      大きい地図で見る (OpenStreetMap)
+                      <ExternalLink aria-hidden="true" className="h-3 w-3" />
+                    </a>
+                    <a
+                      href={googleMapsUrl(event.lat, event.lon)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-link hover:underline"
+                    >
+                      Google マップで開く
+                      <ExternalLink aria-hidden="true" className="h-3 w-3" />
+                    </a>
+                  </p>
+                </div>
+              </section>
+            )}
 
           {/* 発表資料 (closed のとき) */}
           {event.status === "closed" && event.presentations.length > 0 && (
@@ -2354,6 +2420,33 @@ function parseHashTags(raw: string | null | undefined): string[] {
     .split(/[\s,]+/)
     .map((t) => t.replace(/^#/, "").trim())
     .filter((t) => t.length > 0);
+}
+
+/* ============================================================
+ * 会場地図 (OpenStreetMap 埋め込み) URL ヘルパー
+ *
+ * API キー不要の OSM export/embed.html を使う。bbox は緯度経度の
+ * 周囲 ±0.005° (約 500m) の矩形。
+ * ============================================================ */
+
+/** OSM iframe 埋め込み URL */
+function osmEmbedUrl(lat: number, lon: number): string {
+  const d = 0.005;
+  const bbox = [lon - d, lat - d, lon + d, lat + d]
+    .map((v) => v.toFixed(6))
+    .join(",");
+  const marker = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(marker)}`;
+}
+
+/** 「大きい地図で見る」用の OSM 本体 URL */
+function osmLargeMapUrl(lat: number, lon: number): string {
+  return `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lon.toFixed(6)}#map=17/${lat.toFixed(6)}/${lon.toFixed(6)}`;
+}
+
+/** Google マップで開く URL */
+function googleMapsUrl(lat: number, lon: number): string {
+  return `https://www.google.com/maps?q=${lat.toFixed(6)},${lon.toFixed(6)}`;
 }
 
 /** schema.org Event の JSON-LD を生成 */

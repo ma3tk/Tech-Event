@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192">
+  <!-- tech-event PWA icon 192px (内容は icon-512.svg と同一、SVG のためスケール自由) -->
+  <rect width="512" height="512" rx="104" fill="#c2410c"/>
+  <rect x="108" y="132" width="296" height="272" rx="32" fill="#ffffff"/>
+  <path d="M140 132h232a32 32 0 0 1 32 32v40H108v-40a32 32 0 0 1 32-32z" fill="#ffedd5"/>
+  <rect x="164" y="96" width="28" height="72" rx="14" fill="#ffffff"/>
+  <rect x="320" y="96" width="28" height="72" rx="14" fill="#ffffff"/>
+  <path d="M276 220l-64 92h44l-20 76 72-100h-46l14-68z" fill="#c2410c"/>
+</svg>

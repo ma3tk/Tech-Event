@@ -48,6 +48,8 @@ Vercel ダッシュボード → Project → Settings → Environment Variables 
 | 機能 | 必要な env |
 | --- | --- |
 | Stripe Checkout | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` |
+| Plus プラン課金 (subscription, 2026-07-06 追加) | 上記 Stripe 3 変数 + `STRIPE_PLUS_PRICE_ID` (Plus プランの Price ID)。未設定なら billing UI は「準備中」 |
+| Web Push (2026-07-06 追加) | `pnpm add web-push` + `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`。鍵は `npx web-push generate-vapid-keys` で生成。未設定なら no-op |
 | Magic Link / 通知メール | `SMTP_URL`, `SMTP_FROM` (Resend 利用なら `MAIL_PROVIDER=resend`, `RESEND_API_KEY`) |
 | OAuth (X) | `TWITTER_CLIENT_ID`, `TWITTER_CLIENT_SECRET` |
 | OAuth (GitHub) | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` |
@@ -90,6 +92,13 @@ DATABASE_URL=postgres://... pnpm tsx prisma/seed.ts
 ```
 
 Vercel は `$CRON_SECRET` を Environment Variables から解決する。
+
+リマインダー通知 (24h / 1h 前、2026-07-06 追加) を使う場合は `crons` に以下も追加する
+(`vercel.json` には未登録なので運用時に追記):
+
+```json
+{ "path": "/api/cron/run-reminders?secret=$CRON_SECRET", "schedule": "*/15 * * * *" }
+```
 
 ### 2.7 Stripe Webhook 設定
 
@@ -161,6 +170,7 @@ Docker は cron 機能を持たないので、別途以下のいずれかで叩�
 
    ```cron
    0 * * * * curl -fsS "https://your-domain.com/api/cron/run-lotteries?secret=$CRON_SECRET" > /dev/null
+   */15 * * * * curl -fsS "https://your-domain.com/api/cron/run-reminders?secret=$CRON_SECRET" > /dev/null
    ```
 
 2. **k8s CronJob**:
@@ -265,7 +275,7 @@ pgloader sqlite://./dev.db postgresql://user:pass@host:5432/techevent
 
 | 名前 | 説明 |
 | --- | --- |
-| `CRON_SECRET` | `/api/cron/run-lotteries?secret=xxx` の認証。未設定なら cron は 503。 |
+| `CRON_SECRET` | `/api/cron/run-lotteries?secret=xxx` と `/api/cron/run-reminders?secret=xxx` (リマインダー 24h/1h、2026-07-06 追加) の共通認証。未設定なら cron は 503。 |
 | `PUBLIC_API_KEY` | `/api/v2/*` の `X-API-Key` 認証。未設定なら 401。 |
 
 ### 6.3 Feature flags
@@ -315,6 +325,7 @@ pgloader sqlite://./dev.db postgresql://user:pass@host:5432/techevent
 | `STRIPE_SECRET_KEY` | `sk_live_...` or `sk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | webhook 検証 (`whsec_...`) |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | client 用公開可能キー |
+| `STRIPE_PLUS_PRICE_ID` | Plus プラン (グループ向け subscription) の Price ID。`STRIPE_SECRET_KEY` と両方設定で `/group/[subdomain]/admin/billing` の課金が有効化 (2026-07-06 追加) |
 
 #### Stripe webhook secret の作り方
 
@@ -322,6 +333,18 @@ pgloader sqlite://./dev.db postgresql://user:pass@host:5432/techevent
 2. URL に `https://your-domain.com/api/payments/webhook` を入れる
 3. Events: `checkout.session.completed`, `checkout.session.expired`, `charge.refunded`
 4. 作成後、表示される `Signing secret` (`whsec_...`) を `STRIPE_WEBHOOK_SECRET` に設定
+
+### 6.7.5 Web Push (VAPID, 2026-07-06 追加)
+
+| 名前 | 説明 |
+| --- | --- |
+| `VAPID_PUBLIC_KEY` | VAPID 公開鍵 (`npx web-push generate-vapid-keys` で生成) |
+| `VAPID_PRIVATE_KEY` | VAPID 秘密鍵 (ログ出力禁止) |
+| `VAPID_SUBJECT` | `mailto:` or https URL (未設定時は `mailto:noreply@tech-event.local`) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `VAPID_PUBLIC_KEY` と同値 (client 側の購読登録に使用) |
+
+`web-push` パッケージは dynamic import。`pnpm add web-push` + 上記 env が揃うと実配信が有効化され、
+未設定なら no-op スキャフォールドとして安全に動作する。
 
 ### 6.8 Observability (Sentry / Logging)
 

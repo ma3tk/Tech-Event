@@ -65,7 +65,9 @@ test.describe("ブックマーク", () => {
     await expect(initial).toBeVisible();
     if ((await initial.getAttribute("data-bookmarked")) === "true") {
       await initial.click();
-      await page.waitForLoadState("networkidle");
+      // Server Action + revalidate 後の状態変化は locator 側で待つ
+      // (waitForLoadState("networkidle") は SSE 等で 60s hang する flake 源のため使わない)
+      await expect(initial).toHaveAttribute("data-bookmarked", "false");
     }
 
     // 解除状態 (OFF) になっているはず
@@ -74,7 +76,6 @@ test.describe("ブックマーク", () => {
 
     // ON にする
     await offButton.click();
-    await page.waitForLoadState("networkidle");
 
     const onButton = page.getByTestId("bookmark-button");
     await expect(onButton).toHaveAttribute("data-bookmarked", "true");
@@ -82,7 +83,6 @@ test.describe("ブックマーク", () => {
 
     // 解除
     await onButton.click();
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByTestId("bookmark-button")).toHaveAttribute(
       "data-bookmarked",

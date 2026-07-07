@@ -28,6 +28,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { notifyLotteryResult } from "@/lib/slack";
 import { nextId } from "@/lib/id-gen";
+import { sendLotteryResultNotifications } from "@tech-event/web-feature-host-dashboard";
 import { ActionError } from "@/lib/action-error";
 import { getStringRaw as formValue } from "@/lib/form-data";
 import { BigIntIdSchema } from "@/lib/schemas";
@@ -296,6 +297,17 @@ export async function runLottery(formData: FormData): Promise<void> {
     }
   } catch {
     /* 通知失敗は無視 */
+  }
+
+  // 当落確定後、参加者へ抽選結果通知 + メール (当選は .ics 添付) を送信する。
+  // cron 経路 (api/cron/run-lotteries) と同じヘルパーを使い、手動実行でも通知が飛ぶようにする。
+  // 冪等 (同一 userId,eventId,kind の既存 Notification をチェック) なので二重送信しない。
+  try {
+    await sendLotteryResultNotifications(eventId);
+  } catch (err) {
+    console.error(
+      `[runLottery] sendLotteryResultNotifications failed: ${(err as Error).message}`,
+    );
   }
 
   revalidatePath(`/event/${eventId.toString()}`);

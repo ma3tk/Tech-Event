@@ -57,6 +57,21 @@ model User {
   notificationPreferences NotificationPreference[]
   // ============ コンポーネントフィードバック (DS 改善ループ) ============
   componentFeedbacks ComponentFeedback[]
+  // ============ パスワードリセット ============
+  passwordResetTokens PasswordResetToken[]
+  // ============ クーポン利用履歴 ============
+  couponRedemptions CouponRedemption[]
+  // ============ ソーシャル (フォロー) ============
+  following        Follow[]    @relation("Follower")
+  followers        Follow[]    @relation("Followee")
+  followerCount    Int         @default(0)
+  followingCount   Int         @default(0)
+  tagFollows       TagFollow[]
+  // ============ プラットフォーム / API ============
+  apiKeys          ApiKey[]
+  // ============ Organization / Push (Wave 6b) ============
+  ownedOrganizations Organization[] @relation("OrganizationOwner")
+  pushSubscriptions  PushSubscription[]
 
   @@map("users")
   @@index([status])
@@ -97,6 +112,15 @@ model Group {
   eventCount          Int      @default(0)
   presentationCount   Int      @default(0)
   status              String   @default("active") // active|archived
+  /// 課金プラン: free|plus (Plus は機能ゲート解放)
+  plan                String   @default("free")
+  planExpiresAt       DateTime?
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
+  /// 領収データ: 発行者名 (未指定ならグループ名)
+  receiptIssuerName   String?
+  /// 領収データ: 適格請求書発行事業者の登録番号 (T + 13 桁)
+  invoiceRegistrationNumber String?
   publishedAt         DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -106,6 +130,8 @@ model Group {
   members      GroupMember[]
   blacklist    GroupBlacklist[]
   messages     Message[]
+  coupons      Coupon[]
+  webhookEndpoints WebhookEndpoint[]
 
   @@map("groups")
   @@index([status])
@@ -222,6 +248,9 @@ model Event {
   notifications Notification[]
   messages      Message[]
   calendars     CalendarEvent[]
+  coupons       Coupon[]
+  invitations   Invitation[]
+  views         EventView[]
 
   @@map("events")
   @@index([groupId, startedAt])
@@ -239,11 +268,19 @@ model EventRole {
   description               String?
   capacity                  Int?
   recruitmentMethod         String   @default("fcfs") // fcfs|lottery|designated
-  pricingType               String   @default("free") // free|on_site|prepaid
+  pricingType               String   @default("free") // free|on_site|prepaid|donation
   price                     Int      @default(0)
   currency                  String   @default("JPY")
   autoPromoteFromWaiting    Boolean  @default(true)
   visibleAfterFull          Boolean  @default(true)
+  /// チケット販売開始日時 (null=即時)。Early Bird 等の tier 別販売期間に使う。
+  saleStartsAt              DateTime?
+  /// チケット販売終了日時 (null=イベント受付終了まで)
+  saleEndsAt                DateTime?
+  /// 招待コード限定枠: 設定時はこのコードを知る人のみ申込可 (Unlock Code)
+  unlockCode                String?
+  /// pricingType=donation のときの最低寄付額 (JPY)。price は推奨額として扱う。
+  donationMinAmount         Int?
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
@@ -295,16 +332,82 @@ model Payment {
   participantId   BigInt   @unique
   amount          Int
   currency        String   @default("JPY")
-  provider        String   // paypal
+  provider        String   // paypal|stripe
   providerTxnId   String?
-  status          String   // pending|succeeded|refunded|failed
+  status          String   // pending|succeeded|refunded|partially_refunded|failed
   paidAt          DateTime?
   refundedAt      DateTime?
+  /// 返金額 (部分返金対応)。全額返金なら amount と同額。
+  refundedAmount  Int?
+  /// 返金理由 (主催者入力 or イベント中止など)
+  refundReason    String?
+  /// プロバイダ側の返金 ID (Stripe refund id 等)
+  providerRefundId String?
+  /// クーポンによる割引額 (適用時のみ)
+  discountAmount  Int?     @default(0)
+  couponId        BigInt?
   receiptIssuedAt DateTime?
+  /// 領収データ: 通し番号 (発行時に採番)
+  receiptNumber   String?
+  /// 領収データ: 宛名 (未指定なら参加者名)
+  receiptName     String?
 
   participant     Participant   @relation(fields: [participantId], references: [id])
+  coupon          Coupon?       @relation(fields: [couponId], references: [id])
 
   @@map("payments")
+  @@index([couponId])
+}
+
+/// クーポン / 割引コード。イベント単位 or グループ単位で発行する。
+model Coupon {
+  id              BigInt   @id @default(autoincrement())
+  /// 割引コード (大文字正規化して保存)
+  code            String
+  /// スコープ: "event" | "group"
+  scope           String   @default("event")
+  eventId         BigInt?
+  groupId         BigInt?
+  /// "percent" (率) | "fixed" (定額 JPY)
+  discountType    String   @default("fixed")
+  /// percent なら 1-100、fixed なら JPY
+  discountValue   Int
+  /// 利用上限 (null=無制限)
+  maxRedemptions  Int?
+  redeemedCount   Int      @default(0)
+  /// 1 ユーザーあたり利用上限 (既定 1)
+  perUserLimit    Int      @default(1)
+  expiresAt       DateTime?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  event           Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  group           Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  redemptions     CouponRedemption[]
+  payments        Payment[]
+
+  @@unique([scope, eventId, groupId, code])
+  @@index([eventId])
+  @@index([groupId])
+  @@map("coupons")
+}
+
+/// クーポン利用履歴 (per-user 上限の enforcement + 監査)。
+model CouponRedemption {
+  id         BigInt   @id @default(autoincrement())
+  couponId   BigInt
+  userId     BigInt
+  paymentId  BigInt?
+  amount     Int      // 実際に割り引いた額
+  redeemedAt DateTime @default(now())
+
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
 }
 
 // ============ Content ============
@@ -335,10 +438,144 @@ model Tag {
   usageCount  Int      @default(0)
 
   events      EventTag[]
+  followers   TagFollow[]
 
   @@map("tags")
   // 人気タグランキング (`orderBy: { usageCount: 'desc' }`) で利用
   @@index([usageCount])
+}
+
+/// ユーザー間フォロー (connpass 友達 / Luma フォロー相当)。
+model Follow {
+  id          BigInt   @id @default(autoincrement())
+  followerId  BigInt
+  followeeId  BigInt
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followee    User     @relation("Followee", fields: [followeeId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followeeId])
+  @@index([followeeId])
+  @@map("follows")
+}
+
+/// タグフォロー (興味タグの購読)。
+model TagFollow {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  tagId     BigInt
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tagId])
+  @@index([tagId])
+  @@map("tag_follows")
+}
+
+/// 発行済み API キー (ユーザー / 契約単位)。生キーはハッシュのみ保存。
+model ApiKey {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt
+  /// 表示用ラベル
+  name        String
+  /// 生キーの sha256 ハッシュ (hex)
+  keyHash     String   @unique
+  /// 生キーの先頭 8 文字 (一覧表示用、キー全体は再表示しない)
+  prefix      String
+  /// スコープ (カンマ区切り: "read" / "write")。既定 read。
+  scopes      String   @default("read")
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
+}
+
+/// Outbound Webhook 購読エンドポイント (グループ単位)。
+model WebhookEndpoint {
+  id          BigInt   @id @default(autoincrement())
+  groupId     BigInt
+  url         String
+  /// 署名用シークレット (HMAC-SHA256)
+  secret      String
+  /// 購読イベント種別 (カンマ区切り: guest.registered / guest.cancelled / event.published 等)
+  events      String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@index([groupId])
+  @@map("webhook_endpoints")
+}
+
+/// Webhook 配信ログ (再送 / 監査)。
+model WebhookDelivery {
+  id            BigInt   @id @default(autoincrement())
+  endpointId    BigInt
+  eventType     String
+  payload       String   // JSON 文字列
+  /// pending|success|failed
+  status        String   @default("pending")
+  statusCode    Int?
+  attempts      Int      @default(0)
+  lastAttemptAt DateTime?
+  createdAt     DateTime @default(now())
+
+  endpoint      WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+  @@index([status])
+  @@map("webhook_deliveries")
+}
+
+/// ゲスト個別招待 + One-Tap RSVP (署名トークンでメールから 1 クリック登録)。
+model Invitation {
+  id            BigInt   @id @default(autoincrement())
+  eventId       BigInt
+  email         String
+  /// 招待トークンの sha256 ハッシュ (生トークンはメールのみ)
+  tokenHash     String   @unique
+  /// pending|accepted|declined|expired
+  status        String   @default("pending")
+  invitedByUserId BigInt?
+  expiresAt     DateTime?
+  acceptedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@map("invitations")
+}
+
+/// イベントページ閲覧ログ (Insights ファネル: Page views→RSVP→Check-in + 流入経路/UTM)。
+model EventView {
+  id          BigInt   @id @default(autoincrement())
+  eventId     BigInt
+  /// 匿名セッション識別子 (cookie ベース, ユニークビジター推計用)
+  sessionId   String
+  userId      BigInt?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  createdAt   DateTime @default(now())
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@index([eventId, sessionId])
+  @@map("event_views")
 }
 
 model EventTag {
@@ -471,6 +708,31 @@ model Message {
 
 // ============ Magic Link (Luma inspired) ============
 
+// ============ パスワードリセット ============
+
+// パスワードリセット用ワンタイムトークン。
+// - 生トークン (32byte hex) はメール本文でのみ送付し、DB には sha256 ハッシュのみ保存する
+//   (DB 漏洩時にトークンを直接使えなくするため)。
+// - 有効期限は発行から 1 時間。使用済みは usedAt を set してワンタイム化する。
+model PasswordResetToken {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  /// 生トークンの sha256 ハッシュ (hex 64 文字)
+  tokenHash String   @unique
+  /// 有効期限 (発行から 1 時間)
+  expiresAt DateTime
+  /// 使用済み日時 (未使用は null)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  // 期限切れ token のクリーンアップ (`DELETE WHERE expiresAt < now()`) で使う index
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
 model MagicLinkToken {
   id        String   @id @default(uuid())
   email     String
@@ -514,17 +776,22 @@ model Calendar {
   coverImageUrl   String?
   tintColor       String?  // Luma 風テーマ色 (#hex)
   ownerUserId     BigInt
+  /// Organization (org > calendar > event 階層) 所属 (null=個人カレンダー)
+  organizationId  BigInt?
   subscriberCount Int      @default(0)
   eventCount      Int      @default(0)
   status          String   @default("active") // active|archived
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  owner       User                   @relation("CalendarOwner", fields: [ownerUserId], references: [id])
-  events      CalendarEvent[]
-  subscribers CalendarSubscription[]
+  owner        User                   @relation("CalendarOwner", fields: [ownerUserId], references: [id])
+  organization Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  events       CalendarEvent[]
+  subscribers  CalendarSubscription[]
+  membershipTiers CalendarMembershipTier[]
 
   @@map("calendars")
+  @@index([organizationId])
   @@index([status])
   @@index([ownerUserId])
   // 人気のカレンダー一覧 (status + subscriberCount desc) で使う
@@ -548,14 +815,74 @@ model CalendarSubscription {
   id           BigInt   @id @default(autoincrement())
   calendarId   BigInt
   userId       BigInt
+  /// Membership tier (null=無料購読)
+  tierId       BigInt?
+  /// active|pending (承認待ち)|cancelled
+  status       String   @default("active")
   subscribedAt DateTime @default(now())
 
   calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier     CalendarMembershipTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
 
   @@unique([calendarId, userId])
   @@map("calendar_subscriptions")
   @@index([userId])
+  @@index([tierId])
+}
+
+/// カレンダー購読の会員プラン (有料 / 承認制メンバーシップ)。
+model CalendarMembershipTier {
+  id               BigInt   @id @default(autoincrement())
+  calendarId       BigInt
+  name             String
+  description      String?
+  /// 月額 (JPY, 0=無料承認制)
+  price            Int      @default(0)
+  currency         String   @default("JPY")
+  approvalRequired Boolean  @default(false)
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  calendar      Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  subscriptions CalendarSubscription[]
+
+  @@index([calendarId])
+  @@map("calendar_membership_tiers")
+}
+
+/// Organization (org > calendar > event 階層)。
+model Organization {
+  id          BigInt   @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  description String?
+  logoUrl     String?
+  ownerUserId BigInt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User       @relation("OrganizationOwner", fields: [ownerUserId], references: [id])
+  calendars   Calendar[]
+
+  @@index([ownerUserId])
+  @@map("organizations")
+}
+
+/// Web Push 購読 (PWA 通知)。実配信は web-push + VAPID (env) が揃ったときのみ。
+model PushSubscription {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // ============ NotificationPreference ============

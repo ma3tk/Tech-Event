@@ -3,7 +3,7 @@
  *
  * 含むもの:
  * - Server Actions (event / survey / approval / lottery / checkin / comment / presentation)
- * - lib (event-card)
+ * - lib (event-card / participant-notify)
  * - types (event)
  */
 export * from "./event-actions";
@@ -14,3 +14,4 @@ export * from "./checkin-actions";
 export * from "./comment-actions";
 export * from "./presentation-actions";
 export * from "./lib/event-card";
+export * from "./lib/participant-notify";

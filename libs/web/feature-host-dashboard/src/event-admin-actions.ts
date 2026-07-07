@@ -30,6 +30,15 @@ import { logger } from "@/lib/logger";
 import { incrementCounter, METRIC_NAMES } from "@/lib/metrics";
 import { getString as formValue, getStringRaw as formValueRaw, getInt as formInt } from "@/lib/form-data";
 import { BigIntIdString, UrlOrEmpty } from "@/lib/schemas";
+import {
+  buildEventCancelledMailContent,
+  buildGroupMessageMailContent,
+  formatEventDateJst,
+} from "@/lib/notification";
+
+import { fanoutNotifications, resolveBaseUrl } from "./lib/notification-fanout";
+import { refundPayment } from "@tech-event/web-feature-payment";
+import { dispatchWebhook } from "@tech-event/web-feature-group";
 
 /* ============================================================
  * バリデーション
@@ -37,7 +46,8 @@ import { BigIntIdString, UrlOrEmpty } from "@/lib/schemas";
 
 const EventFormatEnum = z.enum(["offline", "online", "hybrid"]);
 const RecruitmentEnum = z.enum(["fcfs", "lottery"]);
-const PricingEnum = z.enum(["free", "on_site", "prepaid"]);
+// donation = 寄付型 (donationMinAmount 以上の任意額。price は推奨額)
+const PricingEnum = z.enum(["free", "on_site", "prepaid", "donation"]);
 
 const EventRoleInputSchema = z.object({
   name: z.string().min(1).max(120),
@@ -119,43 +129,223 @@ async function isGroupAdmin(
   return !!row && (row.role === "owner" || row.role === "admin");
 }
 
-/** form から 3 件分の EventRole 入力を読み出す */
-function parseRoles(form: FormData): {
+type EventRolePricing = "free" | "on_site" | "prepaid" | "donation";
+
+type EventRoleInput = {
   name: string;
   capacity?: number;
-  pricingType: "free" | "on_site" | "prepaid";
+  pricingType: EventRolePricing;
   price: number;
-}[] {
-  const out: ReturnType<typeof parseRoles> = [];
+  /** 販売開始日時 (null = 即時販売) */
+  saleStartsAt: Date | null;
+  /** 販売終了日時 (null = イベント受付終了まで) */
+  saleEndsAt: Date | null;
+  /** 招待コード限定枠のコード (null = 制限なし) */
+  unlockCode: string | null;
+  /** pricingType=donation のときの最低寄付額 (null = 0 円扱い) */
+  donationMinAmount: number | null;
+};
+
+const PRICING_VALUES = ["free", "on_site", "prepaid", "donation"] as const;
+
+/**
+ * form から i 番目の EventRole 入力 1 行を読み出す。
+ * 枠名が空なら null (= 無効な行としてスキップ)。
+ * 販売期間の逆転や不正な招待コードは ActionError で弾く。
+ */
+function parseRoleRow(form: FormData, i: number): EventRoleInput | null {
+  const name = formValue(form, `eventRole[${i}].name`);
+  if (!name) return null;
+  const capRaw = formValue(form, `eventRole[${i}].capacity`);
+  const capacity = capRaw === "" ? undefined : Number(capRaw);
+  const priceRaw = formValue(form, `eventRole[${i}].price`);
+  const price = priceRaw === "" ? 0 : Number(priceRaw);
+  const pricingRaw = formValue(form, `eventRole[${i}].pricingType`);
+  const pricing = (PRICING_VALUES as readonly string[]).includes(pricingRaw)
+    ? (pricingRaw as EventRolePricing)
+    : "free";
+  const parsed = EventRoleInputSchema.safeParse({
+    name,
+    capacity:
+      capacity != null && Number.isFinite(capacity) ? capacity : undefined,
+    pricingType: pricing,
+    price: Number.isFinite(price) ? price : 0,
+  });
+  if (!parsed.success) return null;
+
+  // ---- 販売期間 (Early Bird 等) ----
+  const saleStartsAt = parseDateTimeLocal(
+    formValue(form, `eventRole[${i}].saleStartsAt`),
+  );
+  const saleEndsAt = parseDateTimeLocal(
+    formValue(form, `eventRole[${i}].saleEndsAt`),
+  );
+  if (saleStartsAt && saleEndsAt && saleEndsAt <= saleStartsAt) {
+    throw new ActionError(
+      "invalid_input",
+      `参加枠「${name}」の販売終了日時は販売開始日時より後にしてください`,
+    );
+  }
+
+  // ---- Unlock Code (招待コード限定枠) ----
+  const unlockRaw = formValue(form, `eventRole[${i}].unlockCode`).trim();
+  if (unlockRaw.length > 64) {
+    throw new ActionError(
+      "invalid_input",
+      `参加枠「${name}」の招待コードは 64 文字以内で入力してください`,
+    );
+  }
+  const unlockCode = unlockRaw || null;
+
+  // ---- Donation (寄付型) の最低寄付額 ----
+  const donationRaw = formValue(form, `eventRole[${i}].donationMinAmount`);
+  const donationNum = donationRaw === "" ? NaN : Number(donationRaw);
+  const donationMinAmount =
+    parsed.data.pricingType === "donation" &&
+    Number.isFinite(donationNum) &&
+    donationNum >= 0 &&
+    donationNum <= 10_000_000
+      ? Math.floor(donationNum)
+      : null;
+
+  return {
+    ...parsed.data,
+    saleStartsAt,
+    saleEndsAt,
+    unlockCode,
+    donationMinAmount,
+  };
+}
+
+/** form から 5 件分の EventRole 入力を読み出す */
+function parseRoles(form: FormData): EventRoleInput[] {
+  const out: EventRoleInput[] = [];
   for (let i = 0; i < 5; i++) {
-    const name = formValue(form, `eventRole[${i}].name`);
-    if (!name) continue;
-    const capRaw = formValue(form, `eventRole[${i}].capacity`);
-    const capacity = capRaw === "" ? undefined : Number(capRaw);
-    const priceRaw = formValue(form, `eventRole[${i}].price`);
-    const price = priceRaw === "" ? 0 : Number(priceRaw);
-    const pricingRaw = formValue(form, `eventRole[${i}].pricingType`);
-    const pricing = (["free", "on_site", "prepaid"] as const).includes(
-      pricingRaw as "free" | "on_site" | "prepaid",
-    )
-      ? (pricingRaw as "free" | "on_site" | "prepaid")
-      : "free";
-    const parsed = EventRoleInputSchema.safeParse({
-      name,
-      capacity:
-        capacity != null && Number.isFinite(capacity) ? capacity : undefined,
-      pricingType: pricing,
-      price: Number.isFinite(price) ? price : 0,
-    });
-    if (parsed.success) {
-      out.push(parsed.data);
-    }
+    const row = parseRoleRow(form, i);
+    if (row) out.push(row);
   }
   if (out.length === 0) {
     // フォールバック: 一般 (定員/料金は親 capacity に従う)
-    out.push({ name: "一般", pricingType: "free", price: 0 });
+    out.push({
+      name: "一般",
+      pricingType: "free",
+      price: 0,
+      saleStartsAt: null,
+      saleEndsAt: null,
+      unlockCode: null,
+      donationMinAmount: null,
+    });
   }
   return out;
+}
+
+/* ============================================================
+ * イベントタグ (Tag / EventTag)
+ * ============================================================ */
+
+/**
+ * カンマ区切りのタグ入力をパースする。
+ *
+ * - 半角カンマ / 全角読点の両方を区切りとして受け付ける
+ * - 前後空白除去・空要素除去・大文字小文字を無視した重複除去
+ * - 1 件 50 文字まで、最大 10 件
+ */
+function parseTagsInput(raw: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of raw.split(/[,、]/)) {
+    const name = part.trim();
+    if (!name || name.length > 50) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+    if (out.length >= 10) break;
+  }
+  return out;
+}
+
+/**
+ * Tag.slug の生成 (seed.ts の生成規則を踏襲しつつ日本語も許容)。
+ * 記号・空白は `-` に落とし、全て潰れた場合は hex fallback で一意性を確保する。
+ */
+function tagSlug(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || `tag-${Buffer.from(name, "utf8").toString("hex").slice(0, 24)}`;
+}
+
+/**
+ * イベントとタグ名リストの紐付けを同期する (トランザクション内で呼ぶ)。
+ *
+ * - 未知のタグ名は Tag を新規作成 (slug 衝突時は suffix を付与)
+ * - mode="create": EventTag を単純追加 (新規イベント用)
+ * - mode="replace": 既存 EventTag との差分を取り、外れたタグは削除
+ * - Tag.usageCount は EventTag 作成時 increment / 削除時 decrement
+ *   (duplicateEvent と同じ規約, data-model review Critical #5)
+ */
+async function syncEventTags(
+  tx: Tx2,
+  eventId: bigint,
+  tagNames: string[],
+  mode: "create" | "replace",
+): Promise<void> {
+  // タグ名 → Tag.id を解決 (無ければ作成)
+  const tagIds: bigint[] = [];
+  for (const name of tagNames) {
+    let tag = await tx.tag.findUnique({ where: { name } });
+    if (!tag) {
+      let slug = tagSlug(name);
+      const slugTaken = await tx.tag.findUnique({ where: { slug } });
+      const id = await nextId(tx, "tag");
+      if (slugTaken) slug = `${slug}-${id.toString()}`;
+      tag = await tx.tag.create({
+        data: { id, name, slug, usageCount: 0 },
+      });
+    }
+    tagIds.push(tag.id);
+  }
+
+  const wanted = new Set(tagIds.map((id) => id.toString()));
+
+  if (mode === "replace") {
+    const existing = await tx.eventTag.findMany({ where: { eventId } });
+    const existingIds = new Set(existing.map((e) => e.tagId.toString()));
+    // 外れたタグを削除
+    for (const et of existing) {
+      if (!wanted.has(et.tagId.toString())) {
+        await tx.eventTag.delete({
+          where: { eventId_tagId: { eventId, tagId: et.tagId } },
+        });
+        await tx.tag.update({
+          where: { id: et.tagId },
+          data: { usageCount: { decrement: 1 } },
+        });
+      }
+    }
+    // 増えたタグを追加
+    for (const tid of tagIds) {
+      if (!existingIds.has(tid.toString())) {
+        await tx.eventTag.create({ data: { eventId, tagId: tid } });
+        await tx.tag.update({
+          where: { id: tid },
+          data: { usageCount: { increment: 1 } },
+        });
+      }
+    }
+    return;
+  }
+
+  // mode === "create": 新規イベントなので単純追加
+  for (const tid of tagIds) {
+    await tx.eventTag.create({ data: { eventId, tagId: tid } });
+    await tx.tag.update({
+      where: { id: tid },
+      data: { usageCount: { increment: 1 } },
+    });
+  }
 }
 
 /* ============================================================
@@ -232,6 +422,7 @@ export async function createEvent(formData: FormData): Promise<void> {
   const lotteryAnnounceAt = parseDateTimeLocal(data.lotteryAnnounceAt);
 
   const roles = parseRoles(formData);
+  const tagNames = parseTagsInput(formValue(formData, "tags"));
 
   let newEventId: bigint = BigInt(0);
   const finalStatus = data.status === "published" ? "published" : "draft";
@@ -282,8 +473,17 @@ export async function createEvent(formData: FormData): Promise<void> {
           pricingType: r.pricingType,
           price: r.price,
           currency: "JPY",
+          saleStartsAt: r.saleStartsAt,
+          saleEndsAt: r.saleEndsAt,
+          unlockCode: r.unlockCode,
+          donationMinAmount: r.donationMinAmount,
         },
       });
+    }
+
+    // タグ紐付け (入力タグを Tag に upsert して EventTag を作成)
+    if (tagNames.length > 0) {
+      await syncEventTags(tx, eventId, tagNames, "create");
     }
 
     // group.eventCount は status=published のみカウント (draft はカウント外)。
@@ -433,6 +633,53 @@ export async function updateEvent(formData: FormData): Promise<void> {
     },
   });
 
+  // ---- 参加枠 (EventRole) の設定更新 ----
+  // form に eventRole[i].id が含まれる場合のみ、該当枠の販売設定
+  // (name / capacity / pricingType / price / saleStartsAt / saleEndsAt /
+  //  unlockCode / donationMinAmount) を更新する。
+  // 旧フォーム / 既存テストはこれらのキーを送らないため、その場合は
+  // 参加枠を一切変更しない (後方互換)。枠の削除は行わない (参加者が参照するため)。
+  const roleUpdates: { id: bigint; input: EventRoleInput }[] = [];
+  for (let i = 0; i < 10; i++) {
+    const idRaw = formValue(formData, `eventRole[${i}].id`);
+    if (!/^\d+$/.test(idRaw)) continue;
+    const input = parseRoleRow(formData, i);
+    if (!input) continue; // 枠名が空の行はスキップ (変更しない)
+    roleUpdates.push({ id: BigInt(idRaw), input });
+  }
+  if (roleUpdates.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      for (const { id, input } of roleUpdates) {
+        const role = await tx.eventRole.findUnique({ where: { id } });
+        // 他イベントの枠 id が紛れ込んでいた場合は無視 (認可済み event のみ更新)
+        if (!role || role.eventId !== eventId) continue;
+        await tx.eventRole.update({
+          where: { id },
+          data: {
+            name: input.name,
+            capacity: input.capacity ?? null,
+            pricingType: input.pricingType,
+            price: input.price,
+            saleStartsAt: input.saleStartsAt,
+            saleEndsAt: input.saleEndsAt,
+            unlockCode: input.unlockCode,
+            donationMinAmount: input.donationMinAmount,
+          },
+        });
+      }
+    });
+  }
+
+  // タグ同期: form に tags フィールドが存在する場合のみ差分反映する。
+  // (旧フォーム / 既存テストは tags を送らないため、その場合はタグを変更しない)
+  if (formData.has("tags")) {
+    const tagNames = parseTagsInput(formValue(formData, "tags"));
+    await prisma.$transaction(async (tx) => {
+      await syncEventTags(tx, eventId, tagNames, "replace");
+    });
+    revalidatePath("/explore");
+  }
+
   // 監査ログ
   void recordAudit({
     actorUserId: user.id,
@@ -503,6 +750,81 @@ export async function publishEvent(formData: FormData): Promise<void> {
     });
   }
 
+  // グループメンバーへの新着イベント通知 (event_published): 初回公開時のみ。
+  // - GroupMember.receiveAnnouncement=false / 退会済 (leftAt) / 公開者本人は対象外
+  // - NotificationPreference (event_published × in_app/email) を尊重
+  // - 冪等性: 同一 (recipientUserId, eventId, kind) の既存行があればスキップ
+  // - 通知処理の失敗は公開処理自体を止めない (握りつぶしてログ)
+  if (!wasAlreadyPublished) {
+    try {
+      const members = await prisma.groupMember.findMany({
+        where: {
+          groupId: event.groupId,
+          leftAt: null,
+          receiveAnnouncement: true,
+          userId: { not: user.id },
+        },
+        select: {
+          userId: true,
+          user: { select: { email: true, status: true } },
+        },
+      });
+      const recipients = members
+        .filter((m) => m.user.status === "active")
+        .map((m) => ({ userId: m.userId, email: m.user.email }));
+      const eventUrl = `${resolveBaseUrl()}/event/${eventId.toString()}`;
+      const mail = buildGroupMessageMailContent({
+        groupName: event.group.name,
+        subject: `新着イベント: ${event.title}`,
+        body: [
+          `${event.group.name} の新しいイベントが公開されました。`,
+          "",
+          `イベント名: ${event.title}`,
+          `開催日時: ${formatEventDateJst(event.startedAt)}`,
+        ].join("\n"),
+        url: eventUrl,
+      });
+      const result = await fanoutNotifications({
+        kind: "event_published",
+        eventId,
+        groupId: event.groupId,
+        recipients,
+        payload: { eventTitle: event.title, groupName: event.group.name },
+        dedupeByEvent: true,
+        buildMail: () => mail,
+      });
+      logger.info(
+        {
+          action: "event.publish.notify-members",
+          eventId: eventId.toString(),
+          ...result,
+        },
+        "event published notifications dispatched",
+      );
+    } catch (e) {
+      logger.warn(
+        {
+          eventId: eventId.toString(),
+          err: e instanceof Error ? e.message : String(e),
+        },
+        "event published member notification failed",
+      );
+    }
+  }
+
+  // Outbound Webhook: event.published (初回公開時のみ / DB commit 後)。
+  // 配信失敗は dispatchWebhook 内で握りつぶされ、公開処理は止めない。
+  if (!wasAlreadyPublished) {
+    await dispatchWebhook(event.groupId, "event.published", {
+      eventId: eventId.toString(),
+      title: event.title,
+      groupId: event.groupId.toString(),
+      groupName: event.group.name,
+      startedAt: event.startedAt.toISOString(),
+      publishedAt: (event.publishedAt ?? new Date()).toISOString(),
+    });
+  }
+
   // 監査ログ
   void recordAudit({
     actorUserId: user.id,
@@ -553,6 +875,99 @@ export async function cancelEvent(formData: FormData): Promise<void> {
       });
     }
   });
+
+  // 参加者 (accepted + waiting) への中止通知 (event_cancelled)。
+  // - NotificationPreference (event_cancelled × in_app/email) を尊重
+  // - 冪等性: 同一 (recipientUserId, eventId, kind) の既存行があればスキップ
+  //   (既に cancelled の event を再中止しても二重送信されない)
+  // - form の `reason` (任意, 500 文字まで) があればメール / payload に含める
+  // - 通知処理の失敗は中止処理自体を止めない (commit 済のため握りつぶしてログ)
+  const cancelReason = formValue(formData, "reason").trim().slice(0, 500);
+  try {
+    const participants = await prisma.participant.findMany({
+      where: { eventId, status: { in: ["accepted", "waiting"] } },
+      select: {
+        userId: true,
+        user: { select: { email: true, status: true } },
+      },
+    });
+    const recipients = participants
+      .filter((p) => p.user.status === "active")
+      .map((p) => ({ userId: p.userId, email: p.user.email }));
+    const eventUrl = `${resolveBaseUrl()}/event/${eventId.toString()}`;
+    const mail = buildEventCancelledMailContent({
+      eventTitle: event.title,
+      reason: cancelReason || undefined,
+      eventUrl,
+    });
+    const result = await fanoutNotifications({
+      kind: "event_cancelled",
+      eventId,
+      recipients,
+      payload: {
+        eventTitle: event.title,
+        ...(cancelReason ? { reason: cancelReason } : {}),
+      },
+      dedupeByEvent: true,
+      buildMail: () => mail,
+    });
+    logger.info(
+      {
+        action: "event.cancel.notify-participants",
+        eventId: eventId.toString(),
+        ...result,
+      },
+      "event cancelled notifications dispatched",
+    );
+  } catch (e) {
+    logger.warn(
+      {
+        eventId: eventId.toString(),
+        err: e instanceof Error ? e.message : String(e),
+      },
+      "event cancelled participant notification failed",
+    );
+  }
+
+  // 有料参加者への自動返金 (イベント中止時)。
+  // - 支払い済み (succeeded / partially_refunded) の Payment を持つ参加者を全額返金。
+  // - refundPayment 内部で認可 (owner/GroupAdmin) と冪等 (残額 0 はスキップ) を担保。
+  // - Stripe 未設定 (現地払い) 時は DB のみ更新。個別失敗は握りつぶしてログ。
+  try {
+    const paidParticipants = await prisma.participant.findMany({
+      where: {
+        eventId,
+        payment: { is: { status: { in: ["succeeded", "partially_refunded"] } } },
+      },
+      select: { id: true },
+    });
+    for (const p of paidParticipants) {
+      try {
+        await refundPayment(p.id.toString(), {
+          reason: cancelReason
+            ? `イベント中止による自動返金: ${cancelReason}`
+            : "イベント中止による自動返金",
+        });
+      } catch (e) {
+        logger.warn(
+          {
+            eventId: eventId.toString(),
+            participantId: p.id.toString(),
+            err: e instanceof Error ? e.message : String(e),
+          },
+          "event cancel auto-refund failed for participant",
+        );
+      }
+    }
+  } catch (e) {
+    logger.warn(
+      {
+        eventId: eventId.toString(),
+        err: e instanceof Error ? e.message : String(e),
+      },
+      "event cancel auto-refund lookup failed",
+    );
+  }
 
   // 監査ログ
   void recordAudit({
@@ -1105,6 +1520,15 @@ export async function duplicateEvent(formData: FormData): Promise<void> {
             currency: r.currency,
             autoPromoteFromWaiting: r.autoPromoteFromWaiting,
             visibleAfterFull: r.visibleAfterFull,
+            // 販売期間は開催日時と同様に shiftDays 分シフトしてコピー
+            saleStartsAt: r.saleStartsAt
+              ? new Date(r.saleStartsAt.getTime() + shiftMs)
+              : null,
+            saleEndsAt: r.saleEndsAt
+              ? new Date(r.saleEndsAt.getTime() + shiftMs)
+              : null,
+            unlockCode: r.unlockCode,
+            donationMinAmount: r.donationMinAmount,
           },
         });
       }

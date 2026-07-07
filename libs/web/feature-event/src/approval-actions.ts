@@ -24,6 +24,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { nextId } from "@/lib/id-gen";
 import { recordAudit } from "@/lib/audit";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
+import { buildApprovalResultMailContent } from "@/lib/notification";
+
+import {
+  eventAbsoluteUrl,
+  resolveRequestOrigin,
+  sendParticipantMailsSafely,
+  type ParticipantMailTask,
+} from "./lib/participant-notify";
 
 /* ============================================================
  * バリデーション
@@ -55,6 +63,47 @@ async function isPreferenceEnabled(
     where: { userId_kind_channel: { userId, kind, channel } },
   });
   return pref ? pref.enabled : true;
+}
+
+/**
+ * 申請者への承認結果メールタスクを組み立てる (トランザクション内で呼ぶ)。
+ * `User.receiveNotificationEmail` + NotificationPreference (approval_result × email)
+ * を尊重し、無効なら null。送信自体は commit 後に `sendParticipantMailsSafely` で行う。
+ */
+async function buildApprovalMailTask(
+  tx: Tx,
+  params: {
+    recipientUserId: bigint;
+    eventId: bigint;
+    eventTitle: string;
+    result: "approved" | "rejected";
+    reason: string | null;
+    origin: string;
+  },
+): Promise<ParticipantMailTask | null> {
+  const applicant = await tx.user.findUnique({
+    where: { id: params.recipientUserId },
+    select: { email: true, status: true, receiveNotificationEmail: true },
+  });
+  if (!applicant || applicant.status !== "active") return null;
+  const emailEnabled =
+    applicant.receiveNotificationEmail &&
+    (await isPreferenceEnabled(
+      tx,
+      params.recipientUserId,
+      "approval_result",
+      "email",
+    ));
+  if (!emailEnabled) return null;
+  return {
+    to: applicant.email,
+    content: buildApprovalResultMailContent({
+      eventTitle: params.eventTitle,
+      result: params.result,
+      reason: params.reason ?? undefined,
+      eventUrl: eventAbsoluteUrl(params.origin, params.eventId),
+    }),
+  };
 }
 
 async function canManageEvent(
@@ -91,7 +140,11 @@ export async function approveParticipant(formData: FormData): Promise<void> {
   const user = await getCurrentUser();
   if (!user) loginRedirect(parsed.data.eventId);
 
-  await prisma.$transaction(async (tx) => {
+  // 絶対 URL (メール内リンク) 用の origin はトランザクション前に解決しておく
+  const origin = await resolveRequestOrigin();
+
+  // 戻り値 = commit 後に申請者へ送る承認結果メール (不要なら null)
+  const mailTask = await prisma.$transaction(async (tx): Promise<ParticipantMailTask | null> => {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new Error("event_not_found");
     if (!(await canManageEvent(event.ownerId, event.groupId, user.id))) {
@@ -104,7 +157,8 @@ export async function approveParticipant(formData: FormData): Promise<void> {
       throw new Error("participant_not_found");
     }
     // すでに承認済 (= status accepted/waiting で approvalStatus approved) なら no-op
-    if (participant.approvalStatus === "approved") return;
+    // (この no-op ガードが通知/メールの二重送信防止も兼ねる)
+    if (participant.approvalStatus === "approved") return null;
 
     const role = await tx.eventRole.findUnique({
       where: { id: participant.eventRoleId },
@@ -178,14 +232,30 @@ export async function approveParticipant(formData: FormData): Promise<void> {
           eventId,
           payload: JSON.stringify({
             result: "approved",
+            // formatNotificationText が参照するフィールド
+            approvalResult: "approved",
             eventTitle: event.title,
             note: note ?? "",
+            reason: note ?? "",
           }),
           channel: "in_app",
         },
       });
     }
+
+    // 申請者への承認結果メール (email pref 有効時のみ、送信は commit 後)
+    return buildApprovalMailTask(tx, {
+      recipientUserId: participant.userId,
+      eventId,
+      eventTitle: event.title,
+      result: "approved",
+      reason: note,
+      origin,
+    });
   });
+
+  // メール送信は DB commit 後 (失敗しても throw しない)
+  await sendParticipantMailsSafely([mailTask]);
 
   // 監査ログ
   void recordAudit({
@@ -219,7 +289,11 @@ export async function rejectParticipant(formData: FormData): Promise<void> {
   const user = await getCurrentUser();
   if (!user) loginRedirect(parsed.data.eventId);
 
-  await prisma.$transaction(async (tx) => {
+  // 絶対 URL (メール内リンク) 用の origin はトランザクション前に解決しておく
+  const origin = await resolveRequestOrigin();
+
+  // 戻り値 = commit 後に申請者へ送る却下結果メール (不要なら null)
+  const mailTask = await prisma.$transaction(async (tx): Promise<ParticipantMailTask | null> => {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new Error("event_not_found");
     if (!(await canManageEvent(event.ownerId, event.groupId, user.id))) {
@@ -231,7 +305,8 @@ export async function rejectParticipant(formData: FormData): Promise<void> {
     if (!participant || participant.eventId !== eventId) {
       throw new Error("participant_not_found");
     }
-    if (participant.approvalStatus === "rejected") return;
+    // (この no-op ガードが通知/メールの二重送信防止も兼ねる)
+    if (participant.approvalStatus === "rejected") return null;
 
     const wasAccepted = participant.status === "accepted";
     const wasWaiting = participant.status === "waiting";
@@ -275,14 +350,30 @@ export async function rejectParticipant(formData: FormData): Promise<void> {
           eventId,
           payload: JSON.stringify({
             result: "rejected",
+            // formatNotificationText が参照するフィールド
+            approvalResult: "rejected",
             eventTitle: event.title,
             note: note ?? "",
+            reason: note ?? "",
           }),
           channel: "in_app",
         },
       });
     }
+
+    // 申請者への却下結果メール (email pref 有効時のみ、送信は commit 後)
+    return buildApprovalMailTask(tx, {
+      recipientUserId: participant.userId,
+      eventId,
+      eventTitle: event.title,
+      result: "rejected",
+      reason: note,
+      origin,
+    });
   });
+
+  // メール送信は DB commit 後 (失敗しても throw しない)
+  await sendParticipantMailsSafely([mailTask]);
 
   // 監査ログ
   void recordAudit({

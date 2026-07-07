@@ -4,18 +4,21 @@
 コード品質レビュー (`research/code-review/*.md`) の Medium / Low 指摘のうち
 **実装には踏み切らないが追跡が必要なもの** をリストアップしています。
 
-最終更新: 2026-06-05
+最終更新: 2026-07-06 (connpass/Luma 1:1 パリティ Wave 1-6b 完了分を反映。
+パリティ残課題の source of truth は [`parity-gap-tracker.md`](./parity-gap-tracker.md))
 
 ---
 
 ## A. UI 未実装 (Schema 先行済み)
 
 ### A1. `GroupBlacklist` — グループ BAN UI
-- 位置: `prisma/schema.prisma:142` (`/// TODO: UI実装`)
-- 状況: テーブル定義は存在 (空テーブル) / Server Action 無し / UI 無し。
-- 仕様: `research/luma/features/` 参照。
-- 想定実装場所: `src/app/group/[subdomain]/admin/blacklist/page.tsx`,
-  `src/app/actions/group-actions.ts` に `addToBlacklist` / `removeFromBlacklist` を追加。
+- 状況: **2026-07-06 実装済み**。
+  - `apps/web/src/app/group/[subdomain]/admin/blacklist/page.tsx` (一覧 + 追加 / 解除)
+  - `libs/web/feature-group/src/group-actions.ts` に `addToBlacklist` / `removeFromBlacklist`
+    (+ form 用ラッパ `addToBlacklistAction` / `removeFromBlacklistAction`)
+  - `joinEvent` / `submitSurveyAndJoin` の入口で BL ユーザーの申込をブロック
+  - E2E: `apps/web-e2e/src/group-blacklist-tags.spec.ts`
+  - 残: `prisma/schema.prisma` の `/// TODO: UI実装` コメント除去 (schema は別作業者所有のため未変更)
 
 ### A2. 公開 API v2 — カテゴリ enum マッピング
 - 位置: `src/app/api/v2/events/route.ts:23`
@@ -140,6 +143,8 @@
 - 想定: sitemap に `/calendars`, `/discover`, `/calendar/[slug]` を追加。
   robots disallow に `/notifications`, `/settings`, `/bookmarks`, `/account`,
   `/event/*/apply`, `/calendar/*/edit`, `/calendar/*/manage`, `/logout`。
+- 一部対応 (2026-07-06 Wave 4): sitemap に `/discover` + 都市別 LP (`/discover/[city]` 47 都道府県
+  + online) + カテゴリ別 LP (`/discover/category/[slug]`) を追加済み。robots disallow 側は未対応。
 
 ### E10. `LanguageSwitcher` 切替で full reload
 - 位置: `src/components/LanguageSwitcher.tsx:41-46`

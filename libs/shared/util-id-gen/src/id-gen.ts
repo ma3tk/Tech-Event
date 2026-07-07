@@ -30,6 +30,8 @@ export type IdGenTable =
   | "group"
   | "groupAdmin"
   | "groupMember"
+  | "groupBlacklist"
+  | "tag"
   | "event"
   | "eventRole"
   | "participant"
@@ -46,7 +48,20 @@ export type IdGenTable =
   | "payment"
   | "presentationMaterial"
   | "auditLog"
-  | "componentFeedback";
+  | "componentFeedback"
+  | "passwordResetToken"
+  | "coupon"
+  | "couponRedemption"
+  | "follow"
+  | "tagFollow"
+  | "apiKey"
+  | "webhookEndpoint"
+  | "webhookDelivery"
+  | "invitation"
+  | "eventView"
+  | "organization"
+  | "calendarMembershipTier"
+  | "pushSubscription";
 
 /**
  * tx (or prisma) と table 名を受け取り、現存最大 id + 1 を返す。

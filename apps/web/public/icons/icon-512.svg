@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- tech-event PWA icon (brand orange #c2410c, カレンダー + 稲妻) -->
+  <rect width="512" height="512" rx="104" fill="#c2410c"/>
+  <!-- カレンダー本体 -->
+  <rect x="108" y="132" width="296" height="272" rx="32" fill="#ffffff"/>
+  <!-- カレンダーヘッダー -->
+  <path d="M140 132h232a32 32 0 0 1 32 32v40H108v-40a32 32 0 0 1 32-32z" fill="#ffedd5"/>
+  <!-- 綴じリング -->
+  <rect x="164" y="96" width="28" height="72" rx="14" fill="#ffffff"/>
+  <rect x="320" y="96" width="28" height="72" rx="14" fill="#ffffff"/>
+  <!-- 稲妻 (イベントの「今」を象徴) -->
+  <path d="M276 220l-64 92h44l-20 76 72-100h-46l14-68z" fill="#c2410c"/>
+</svg>

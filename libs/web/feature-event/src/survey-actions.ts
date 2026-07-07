@@ -21,16 +21,32 @@
  *   scale    -> 1〜5 などの段階評価 (options: { min:1, max:5 })
  */
 
+import { timingSafeEqual } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
 import { nextId } from "@/lib/id-gen";
 import { ActionError } from "@/lib/action-error";
 import { getString as formValue, getStringRaw as formValueRaw } from "@/lib/form-data";
 import { BigIntIdString } from "@/lib/schemas";
+import {
+  buildJoinConfirmedMailContent,
+  buildWaitlistedMailContent,
+} from "@/lib/notification";
+
+import {
+  buildEventIcsAttachment,
+  createParticipantNotification,
+  eventAbsoluteUrl,
+  resolveRequestOrigin,
+  sendParticipantMailsSafely,
+  type ParticipantMailTask,
+} from "./lib/participant-notify";
 
 /* ============================================================
  * 共通ヘルパー
@@ -293,6 +309,13 @@ const SubmitSchema = z.object({
   eventRoleId: BigIntIdString,
 });
 
+/** タイミング攻撃を避けた文字列比較 (招待コード照合用) */
+function safeCodeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
 /**
  * アンケート回答を保存しつつ参加申込を行う。
  *
@@ -315,6 +338,55 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
     redirect(
       `/login?next=${encodeURIComponent(`/event/${eventId.toString()}/apply`)}`,
     );
+  }
+
+  // ============ 参加枠ゲート (販売期間 / Unlock Code / 寄付額) ============
+  // apply ページ経由の申込では、入力ミス (コード不一致 / 寄付額不足) は
+  // フォームに戻して再入力させる (既存の error=required と同じ流儀)。
+  // 販売期間外は入力で回復できないため ActionError で拒否する。
+  const gateRole = await prisma.eventRole.findUnique({
+    where: { id: eventRoleId },
+  });
+  if (!gateRole || gateRole.eventId !== eventId) {
+    throw new ActionError("not_found", "参加枠が見つかりません");
+  }
+  const gateNow = new Date();
+  if (gateRole.saleStartsAt && gateNow < gateRole.saleStartsAt) {
+    throw new ActionError(
+      "forbidden",
+      "この参加枠はまだ販売開始前です (販売期間外)",
+    );
+  }
+  if (gateRole.saleEndsAt && gateNow > gateRole.saleEndsAt) {
+    throw new ActionError(
+      "forbidden",
+      "この参加枠の販売期間は終了しました (販売期間外)",
+    );
+  }
+  if (gateRole.unlockCode) {
+    const code = formValueRaw(formData, "unlockCode").trim();
+    if (!code || !safeCodeEqual(code, gateRole.unlockCode)) {
+      redirect(
+        `/event/${eventId.toString()}/apply?eventRoleId=${eventRoleId.toString()}&error=unlock`,
+      );
+    }
+  }
+  let donationAmount: number | null = null;
+  if (gateRole.pricingType === "donation") {
+    const raw = formValueRaw(formData, "donationAmount").trim();
+    const amount = Number(raw);
+    const min = gateRole.donationMinAmount ?? 0;
+    if (
+      !raw ||
+      !Number.isInteger(amount) ||
+      amount < min ||
+      amount > 10_000_000
+    ) {
+      redirect(
+        `/event/${eventId.toString()}/apply?eventRoleId=${eventRoleId.toString()}&error=donation`,
+      );
+    }
+    donationAmount = amount;
   }
 
   // 質問取得 (validation 用)
@@ -362,10 +434,27 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
     }
   }
 
+  // 絶対 URL (メール/通知内リンク) 用の origin はトランザクション前に解決しておく
+  const origin = await resolveRequestOrigin();
+
   // ============ Participant 作成 + SurveyAnswer 保存 (joinEvent と同じロジック) ============
-  await prisma.$transaction(async (tx) => {
+  // 戻り値 = commit 後に送信する参加者向けメール (不要なら null)
+  const mailTask = await prisma.$transaction(async (tx): Promise<ParticipantMailTask | null> => {
     const event = await tx.event.findUnique({ where: { id: eventId } });
     if (!event) throw new Error("event_not_found");
+
+    // グループブラックリスト: BL 登録済みユーザーの申込は入口でブロックする
+    // (joinEvent と同じ判定。アンケート付き申込経路もカバーする)
+    const blacklisted = await tx.groupBlacklist.findUnique({
+      where: { groupId_userId: { groupId: event.groupId, userId: user.id } },
+    });
+    if (blacklisted) {
+      throw new ActionError(
+        "forbidden",
+        "このグループの主催者により参加申込がブロックされています",
+      );
+    }
+
     const role = await tx.eventRole.findUnique({ where: { id: eventRoleId } });
     if (!role || role.eventId !== eventId) {
       throw new Error("role_not_found");
@@ -381,6 +470,8 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
     });
 
     let participantId: bigint;
+    // fcfs で新規に参加が確定/補欠になったか (既参加 no-op や抽選 pending は null)
+    let joinOutcome: "accepted" | "waiting" | null = null;
     const now = new Date();
 
     if (existing) {
@@ -467,6 +558,7 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
           where: { id: eventId },
           data: { waitingCount: { increment: 1 } },
         });
+        joinOutcome = "waiting";
       } else {
         const cancelled = await tx.participant.findFirst({
           where: { eventId, userId: user.id, status: "cancelled" },
@@ -503,6 +595,7 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
           where: { id: eventId },
           data: { acceptedCount: { increment: 1 } },
         });
+        joinOutcome = "accepted";
       }
     }
 
@@ -545,7 +638,73 @@ export async function submitSurveyAndJoin(formData: FormData): Promise<void> {
         },
       });
     }
+
+    // ---- 参加者本人向け通知 (join_confirmed / waitlisted) + メールタスク ----
+    // (joinEvent と同じ配線。fcfs で新規に確定/補欠になった場合のみ)
+    if (joinOutcome == null) return null;
+
+    const eventUrl = eventAbsoluteUrl(origin, eventId);
+    const { emailEnabled } = await createParticipantNotification(tx, {
+      recipientUserId: user.id,
+      eventId,
+      kind: joinOutcome === "waiting" ? "waitlisted" : "join_confirmed",
+      payload: {
+        eventTitle: event.title,
+        startedAt: event.startedAt.toISOString(),
+      },
+      receiveNotificationEmail: user.receiveNotificationEmail,
+    });
+    if (!emailEnabled) return null;
+
+    if (joinOutcome === "waiting") {
+      return {
+        to: user.email,
+        content: buildWaitlistedMailContent({
+          eventTitle: event.title,
+          eventUrl,
+        }),
+      };
+    }
+    return {
+      to: user.email,
+      content: buildJoinConfirmedMailContent({
+        eventTitle: event.title,
+        startedAt: event.startedAt,
+        venue: [event.place, event.address].filter(Boolean).join(" ") || undefined,
+        eventUrl,
+        roleName: role.name,
+      }),
+      attachments: [
+        buildEventIcsAttachment({
+          eventId,
+          title: event.title,
+          startedAt: event.startedAt,
+          endedAt: event.endedAt,
+          place: event.place,
+          address: event.address,
+          eventUrl,
+        }),
+      ],
+    };
   });
+
+  // メール送信は DB commit 後 (失敗しても throw しない)
+  await sendParticipantMailsSafely([mailTask]);
+
+  // donation 枠の場合は寄付額を監査ログに記録する
+  // (prepaid 相当の決済は P1 の決済アクションに委譲。ここは金額記録のみ)
+  if (donationAmount != null) {
+    void recordAudit({
+      actorUserId: user.id,
+      action: "event.join-donation",
+      targetType: "Event",
+      targetId: eventId,
+      metadata: {
+        donationAmount,
+        eventRoleId: eventRoleId.toString(),
+      },
+    });
+  }
 
   revalidatePath(`/event/${eventId.toString()}`);
   revalidatePath(`/dashboard`);
