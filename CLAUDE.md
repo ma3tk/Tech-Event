@@ -219,8 +219,11 @@ src/stories/design-system/ — Storybook MDX (21 ページ)
 - **Semgrep (SAST)**: PR + nightly + push (main) + workflow_dispatch で `p/owasp-top-ten` + `p/typescript` + `p/nextjs` + `p/react` + `p/secrets` + `p/javascript` + `p/jwt` + `p/sql-injection` + `p/xss` + `p/insecure-transport` + `p/security-audit` を走査。findings は SARIF で GitHub Code Scanning に統合
 - **gitleaks (secrets)**: PR の `base..head` 差分 + nightly / push main の full history で secrets / API key hardcode を検出。SARIF を Code Scanning に統合
 - **LLM 生成コードへの警戒**: AI assistant (Claude / Copilot 等) が secrets を hardcode することがあるため、両者を **required check** に含める方針 (ブランチ保護で設定)
-- 設定ファイル: `.gitleaks.toml` (allowlist + custom rules)、`.semgrepignore` (走査除外)
+- 設定ファイル: `.gitleaks.toml` (allowlist + custom rules)、`.semgrepignore` (走査除外)、`.github/requirements-semgrep.txt` (Semgrep エンジンのバージョン固定)
 - allowlist は `.gitleaks.toml` の `regexes` で **dev placeholder のみ** 許可 (`dev-public-api-key-please-change` / `ci-cron-secret` 等)。本物の secret を allowlist 化することは禁止
+- **PR が緑でも nightly は落ちうる**。PR は差分スキャン (Semgrep `--baseline-commit` / gitleaks `base..head`) なので「その PR で増えた分」しか見ない。nightly / push は full scan なので既存分も全部出る。**nightly の赤を「PR は緑だから大丈夫」で放置しないこと** (実例: 2026-06〜07 に約 1 ヶ月間 nightly が赤のまま見過ごされた)
+- **抑制は `nosemgrep` + 理由コメント**で行う。ルール ID を明示し、なぜ安全かを併記する (例: `renderMarkdown()` で DOMPurify sanitize 済み)。`.semgrepignore` でのパス除外は generated / vendor に限る
+- **サプライチェーン**: action は commit SHA ピン留め + Dependabot 追従、`pnpm-workspace.yaml` に `trustPolicy` / `minimumReleaseAge` / `blockExoticSubdeps`。`trustPolicyExclude` へ足すときは **npm registry の provenance と公開日を実際に照合してから**にする (「先行公開版の方が信頼情報が強い」= 古い保守系列へのバックポートで頻出する良性パターン)。詳細は [docs/ci.md](./docs/ci.md)
 - 違反検出時の対応:
   1. **該当 secret を即時 rotate** (本番影響あれば最優先)
   2. コミット履歴から除去 (`git filter-repo --replace-text` または BFG Repo-Cleaner)

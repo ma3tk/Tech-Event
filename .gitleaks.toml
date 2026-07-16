@@ -35,6 +35,27 @@ paths = [
   '''\.next/''',
   '''dist/''',
   '''storybook-static/''',
+
+  # ---- gh-pages ブランチの Storybook ビルド成果物 ----
+  # nightly / push の full history scan は `git log --all` で gh-pages まで
+  # 舐めるため、`peaceiris/actions-gh-pages` が deploy した *ビルド済み* の
+  # Storybook が走査対象に入る。minify 済み JS の高エントロピー定数
+  # (React 内部コード / lz-string の base64 アルファベット等) が
+  # generic-api-key として誤検知されるので除外する。
+  #
+  # gh-pages ではビルド出力がリポジトリ直下に展開されるため、上の
+  # `storybook-static/` では拾えない。`^` でアンカーしているので main 側の
+  # ソース (apps/web/public/... 等) は引き続き走査対象のまま。
+  # main に同名の top-level ディレクトリが無いことは確認済み (2026-07-16)。
+  '''^assets/''',
+  '''^sb-addons/''',
+  '''^sb-common-assets/''',
+  '''^sb-manager/''',
+  '''^sb-preview/''',
+  '''^addon-visual-tests-assets/''',
+  '''^vite-inject-mocker-entry\.js$''',
+  '''^iframe\.html$''',
+  '''^sw\.js$''',
   '''playwright-report/''',
   '''test-results/''',
   '''pnpm-lock\.yaml$''',

@@ -1,0 +1,58 @@
+# ============================================================
+# Dependabot — GitHub Actions の SHA ピン留めを追従更新する
+#
+# `.github/workflows/*` の `uses:` は semgrep の
+# `github-actions-mutable-action-tag` 対応で commit SHA に固定している
+# (可変タグはタグ付け替えでコードがすり替わるため)。
+#
+# SHA 固定は更新機構が無いと action が凍結して upstream の
+# セキュリティ修正を取り込めなくなるので、Dependabot で追従する。
+# ノイズ抑制のため週次 + 1 PR にグループ化する。
+# ============================================================
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Asia/Tokyo
+    # 公開直後の版を掴まない。pnpm 側の minimumReleaseAge: 10080 (= 7 日) と
+    # 意図的に揃えている (乗っ取り直後の malware 版は数時間〜数日で unpublish
+    # されるため、待つだけで大半を回避できる)。
+    # NOTE: cooldown は「最新版だけ」を見るため、リリース頻度が非常に高い
+    #   action では更新が止まりうる (dependabot-core#13691 / #14579)。
+    #   本リポの action はいずれも低頻度なので 7 日で問題ない。
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    groups:
+      # 全 action をまとめて 1 PR にする (週あたり最大 1 本)
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
+      include: scope
+    labels:
+      - dependencies
+      - ci
+
+  # Semgrep エンジンのバージョン追従 (.github/requirements-semgrep.txt)
+  - package-ecosystem: pip
+    directory: "/.github"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci"
+      include: scope
+    labels:
+      - dependencies
+      - ci

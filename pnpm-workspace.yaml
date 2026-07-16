@@ -2,6 +2,53 @@ packages:
   - "apps/*"
   - "libs/web/*"
   - "libs/shared/*"
+
+# ============================================================
+# サプライチェーン防御 (CLAUDE.md §7.5)
+# pnpm のバージョンは package.json の `packageManager` で固定している。
+# ------------------------------------------------------------
+# trustPolicy: セキュリティ設定のダウングレードを伴う更新を拒否する。
+#   悪意ある更新が「保護設定を弱める」形の攻撃を防ぐ (pnpm v10.21+)
+# minimumReleaseAge: 公開から 10080 分 (= 7 日) 未満の版を入れない。
+#   npm アカウント乗っ取り直後の malware 版は概ね数時間〜数日で unpublish
+#   されるため、待つだけで大半を回避できる (pnpm v10.16+)
+# blockExoticSubdeps: 推移的依存が git / http 等の非レジストリ経由で
+#   入るのを禁止する。現在の lockfile には exotic 依存 0 件 (検証済み)
+#   なので実害なく効かせられる (pnpm v10.26+)
+# ============================================================
+trustPolicy: no-downgrade
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+
+# ------------------------------------------------------------
+# trustPolicy の検証済み除外リスト
+#
+# pnpm の判定は「対象版より *前に公開された* 版がより強い信頼情報
+# (trusted publisher > provenance > 無し) を持っていたら拒否」であり、
+# semver の新旧ではなく公開日時で比較される。
+#
+# 下記 7 件はいずれも「パッケージが新しいリリース系列で provenance を
+# 採用した後に、古い保守系列 / beta へ provenance 無しでバックポート公開
+# した」ケース。npm レジストリの provenance と公開日を実際に照合して
+# 良性であることを確認済み (2026-07-16 時点)。乗っ取りではない。
+#
+# 例: semver@5.7.2 / 6.3.1 (2023-07-10) は CVE-2022-25883 (ReDoS) の
+#     5.x / 6.x 系バックポート。provenance 付きの semver@7.5.1
+#     (2023-05-12) より後に公開されたため downgrade 判定になる。
+#
+# 方針: gitleaks allowlist と同じく「検証済みのものだけを列挙」する。
+#   ここに載っていない新規の trust downgrade は install を fail させる
+#   (= 本物の乗っ取りは引き続き止まる)。エントリ追加時は必ず
+#   registry の provenance / 公開日を確認してから足すこと。
+# ------------------------------------------------------------
+trustPolicyExclude:
+  - "chokidar@4.0.3" # 先行: 3.6.0 (2024-02-06) に provenance 有り
+  - "eslint-import-resolver-typescript@3.10.1" # 先行: 4.2.6 (2025-03-28)
+  - "next-auth@5.0.0-beta.31" # beta 系列。先行: 0.0.0-manual.2824fa11
+  - "semver@5.7.2 || 6.3.1" # CVE-2022-25883 バックポート。先行: 7.5.1
+  - "ua-parser-js@1.0.41" # 1.x 保守系列。先行: 2.0.0-alpha.3
+  - "undici-types@6.21.0" # 先行: 6.13.0 (2024-04-12)
+
 allowBuilds:
   '@parcel/watcher': true
   '@prisma/engines': true
