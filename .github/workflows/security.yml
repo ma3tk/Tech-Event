@@ -55,7 +55,7 @@ jobs:
     # → ベース動作だけ実行 (job 自体は走らせる)
     if: (github.actor != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           # baseline diff のため少し深めに fetch (PR の base..head 確実取得)
           fetch-depth: ${{ github.event_name == 'pull_request' && 100 || 1 }}
@@ -149,13 +149,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           # full history が必要 (PR 差分も base..head のため base sha を fetch する必要あり)
           fetch-depth: 0
 
       - name: gitleaks scan
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           # action 内部で git log --no-merges {base}..{head} の差分検査になる
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
