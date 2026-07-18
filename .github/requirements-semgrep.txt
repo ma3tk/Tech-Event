@@ -1,0 +1,10 @@
+# Semgrep エンジンのバージョン固定 (security.yml が参照)。
+#
+# 未固定 (`pip install semgrep`) だと同じコミットでも実行日によって結果が
+# 変わり、ローカルで CI を再現できない。固定して Dependabot (pip ecosystem)
+# に週次で追従させる。
+#
+# NOTE: これで固定できるのは *エンジン* のみ。ルール (`--config p/...`) は
+#   実行時に Semgrep レジストリから取得されるため、上流のルール追加で
+#   findings が増えることは依然ありうる (それは検知器として正常な挙動)。
+semgrep==1.170.0

@@ -8,8 +8,25 @@
 | **tokens** | `.github/workflows/tokens.yml` | PR (token 関連 path に変更) | `tokens:validate` + CSS↔JSON 同期チェック |
 | **storybook** | `.github/workflows/storybook.yml` | main push | `build-storybook` + GitHub Pages デプロイ |
 
-すべて **Node.js 22 LTS** + **pnpm 9** + **Ubuntu latest** で実行する
+すべて **Node.js 22 LTS** + **pnpm 11** + **Ubuntu latest** で実行する
 (ローカル開発は Node 26 を使用しているが、CI は安定性重視で LTS を採用)。
+
+pnpm のバージョンは `package.json` の `packageManager` フィールド
+(`pnpm@11.5.2`) が single source of truth。`pnpm/action-setup` はこれを読むので、
+workflow 側で `version:` を指定しない (指定するとローカルとズレる)。
+バージョンを上げるときは `packageManager` だけを書き換える。
+
+## サプライチェーン防御
+
+- **action は commit SHA でピン留め**する (`uses: actions/checkout@df4cb1c... # v6`)。
+  可変タグ (`@v6`) はタグ付け替えで中身がすり替わるため使わない。
+  SHA は凍結すると upstream の修正を取り込めなくなるので、
+  `.github/dependabot.yml` (github-actions ecosystem / 週次 / 1 PR にグループ化) で追従する
+- **`pnpm-workspace.yaml`** に `trustPolicy: no-downgrade` / `minimumReleaseAge: 10080` (7 日) /
+  `blockExoticSubdeps: true` を設定。検証済みの例外のみ `trustPolicyExclude` に列挙する
+  (詳細は同ファイルのコメント)
+- **Semgrep のエンジンは `.github/requirements-semgrep.txt` で固定**する。
+  未固定だと同一コミットでも実行日によって結果が変わり、ローカルで CI を再現できない
 
 ---
 
